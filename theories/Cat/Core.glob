@@ -1,4 +1,4 @@
-DIGEST 329418e86958ed6c3f686d59bc027b7a
+DIGEST 0f663b5511b0327849bf5f7a312a65ea
 FHyperLogic.Cat.Core
 R15:18 Coq.Lists.List <> <> lib
 R28:40 Coq.Lists.List ListNotations <> mod
@@ -250,3 +250,19 @@ R1612:1612 HyperLogic.Cat.Core <> x:56 var
 R1614:1614 HyperLogic.Cat.Core <> z:58 var
 R1688:1698 HyperLogic.Cat.Core <> comp_proper meth
 R1688:1698 HyperLogic.Cat.Core <> comp_proper meth
+ind 1750:1753 <> Thin
+constr 1781:1791 <> thin_unique
+rec 1750:1753 <> Thin
+proj 1781:1791 <> thin_unique
+R1760:1773 HyperLogic.Cat.Core <> SetoidCategory class
+binder 1756:1756 <> C:59
+binder 1803:1803 <> x:61
+binder 1805:1805 <> y:62
+R1815:1817 HyperLogic.Cat.Core <> hom meth
+R1821:1821 HyperLogic.Cat.Core <> y:62 var
+R1819:1819 HyperLogic.Cat.Core <> x:61 var
+binder 1809:1809 <> f:63
+binder 1811:1811 <> g:64
+R1826:1830 HyperLogic.Cat.Core <> ::type_scope:x_'≅'_x not
+R1825:1825 HyperLogic.Cat.Core <> f:63 var
+R1831:1831 HyperLogic.Cat.Core <> g:64 var

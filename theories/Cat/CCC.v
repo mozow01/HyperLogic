@@ -140,3 +140,32 @@ Proof.
   split.
   all: reflexivity.
 Qed.
+
+(* --- Thin CCC Constructor --- *)
+
+Definition Build_Thin_CCC 
+  (C : SetoidCategory)         
+  (HThin : Thin C)              
+  (terminal_item : @obj C)
+  (terminal_map_item : forall {x}, hom x terminal_item)
+  (prod_item : @obj C -> @obj C -> @obj C)
+  (prod_map_item : forall {x y z} (f : hom x y) (g : hom x z), hom x (prod_item y z))
+  (prod_fst_item : forall {x y}, hom (prod_item x y) x)
+  (prod_snd_item : forall {x y}, hom (prod_item x y) y)
+  (exp_item : @obj C -> @obj C -> @obj C)
+  (eval_item : forall {y z}, hom (prod_item (exp_item z y) y) z)
+  (curry_item : forall {x y z} (g : hom (prod_item x y) z), hom x (exp_item z y))
+  : CartesianClosedCategory C.
+Proof.
+  apply mk_CartesianClosedCategory with
+    (terminal := terminal_item)
+    (terminal_map := @terminal_map_item)
+    (prod := prod_item)
+    (prod_map := @prod_map_item)
+    (prod_fst := @prod_fst_item)
+    (prod_snd := @prod_snd_item)
+    (exp := exp_item)
+    (eval := @eval_item)
+    (curry := @curry_item).
+  all: intros; apply thin_unique.
+Defined.
