@@ -40,3 +40,7 @@ Proof.
   do 2 red. intros f g Hfg h i Hhi.
   apply comp_proper; assumption.
 Defined.
+
+(* Thin Category  *)
+Class Thin (C : SetoidCategory) :=
+  thin_unique : forall {x y} (f g : hom x y), f ≅ g.
