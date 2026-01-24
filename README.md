@@ -1,6 +1,8 @@
 # HyperLogic
 High order logic in the form of Hyper Doctrine
 
+````bash
+
 HyperLogic/                 <-- -R
 ├── _CoqProject             <-- Coq info
 ├── Makefile                <-- make and clean
@@ -18,3 +20,4 @@ HyperLogic/                 <-- -R
     └── Model/              <-- Semantics
         ├── SyntacticCat.v  <-- Lemmas
         └── Hyperdoctrine.v <-- Theorems
+````
