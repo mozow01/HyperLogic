@@ -3,7 +3,6 @@ Import ListNotations.
 Require Import Coq.Setoids.Setoid.
 Require Import Coq.Classes.Morphisms.
 
-(* Biztonságos, teljes útvonalas importok *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.Functor.
 
