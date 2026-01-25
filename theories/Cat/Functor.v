@@ -1,9 +1,9 @@
-Require Import List. 
+Require Import List.  
 Import ListNotations.
 Require Import Coq.Setoids.Setoid.
 Require Import Coq.Classes.Morphisms.
 
-Require Import Core.
+Require Import HyperLogic.Cat.Core.
 
 Class Functor (C D : SetoidCategory) := mk_Functor {
   (* Object: *)

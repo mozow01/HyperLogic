@@ -1,0 +1,598 @@
+DIGEST 05474e9c2f55c6b2d0d0f1fdd6667ec1
+FHyperLogic.Cat.Adjoint
+R15:18 Coq.Lists.List <> <> lib
+R29:41 Coq.Lists.List ListNotations <> mod
+R59:76 Coq.Setoids.Setoid <> <> lib
+R94:114 Coq.Classes.Morphisms <> <> lib
+R180:198 HyperLogic.Cat.Core <> <> lib
+R216:237 HyperLogic.Cat.Functor <> <> lib
+rec 489:502 <> IsRightAdjoint
+proj 570:581 <> left_adj_obj
+proj 657:660 <> unit
+proj 729:740 <> left_adj_mor
+proj 844:862 <> left_adj_mor_proper
+proj 997:1009 <> lambek_1_dual
+proj 1272:1284 <> lambek_2_dual
+R511:524 HyperLogic.Cat.Core <> SetoidCategory class
+binder 505:505 <> C:1
+binder 507:507 <> D:2
+R532:538 HyperLogic.Cat.Functor <> Functor class
+R540:540 HyperLogic.Cat.Adjoint <> C:1 var
+R542:542 HyperLogic.Cat.Adjoint <> D:2 var
+binder 528:528 <> G:3
+R591:594 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R586:588 HyperLogic.Cat.Core <> obj meth
+R590:590 HyperLogic.Cat.Adjoint <> D:2 var
+R596:598 HyperLogic.Cat.Core <> obj meth
+R600:600 HyperLogic.Cat.Adjoint <> C:1 var
+R677:679 HyperLogic.Cat.Core <> obj meth
+R681:681 HyperLogic.Cat.Adjoint <> D:2 var
+binder 672:672 <> Y:6
+R686:688 HyperLogic.Cat.Core <> hom meth
+R690:690 HyperLogic.Cat.Adjoint <> D:2 var
+R692:692 HyperLogic.Cat.Adjoint <> Y:6 var
+R696:699 HyperLogic.Cat.Functor <> fobj meth
+R701:701 HyperLogic.Cat.Adjoint <> C:1 var
+R703:703 HyperLogic.Cat.Adjoint <> D:2 var
+R705:705 HyperLogic.Cat.Adjoint <> G:3 var
+R708:719 HyperLogic.Cat.Adjoint <> left_adj_obj:5 meth
+R721:721 HyperLogic.Cat.Adjoint <> Y:6 var
+R757:759 HyperLogic.Cat.Core <> obj meth
+R761:761 HyperLogic.Cat.Adjoint <> D:2 var
+binder 752:752 <> Y:8
+R770:772 HyperLogic.Cat.Core <> obj meth
+R774:774 HyperLogic.Cat.Adjoint <> C:1 var
+binder 765:765 <> X:9
+R783:785 HyperLogic.Cat.Core <> hom meth
+R787:787 HyperLogic.Cat.Adjoint <> D:2 var
+R789:789 HyperLogic.Cat.Adjoint <> Y:8 var
+R793:796 HyperLogic.Cat.Functor <> fobj meth
+R798:798 HyperLogic.Cat.Adjoint <> C:1 var
+R800:800 HyperLogic.Cat.Adjoint <> D:2 var
+R802:802 HyperLogic.Cat.Adjoint <> G:3 var
+R804:804 HyperLogic.Cat.Adjoint <> X:9 var
+binder 778:778 <> g:10
+R815:817 HyperLogic.Cat.Core <> hom meth
+R819:819 HyperLogic.Cat.Adjoint <> C:1 var
+R822:833 HyperLogic.Cat.Adjoint <> left_adj_obj:5 meth
+R835:835 HyperLogic.Cat.Adjoint <> Y:8 var
+R838:838 HyperLogic.Cat.Adjoint <> X:9 var
+R879:881 HyperLogic.Cat.Core <> obj meth
+R883:883 HyperLogic.Cat.Adjoint <> D:2 var
+binder 874:874 <> Y:12
+R892:894 HyperLogic.Cat.Core <> obj meth
+R896:896 HyperLogic.Cat.Adjoint <> C:1 var
+binder 887:887 <> X:13
+R904:909 Coq.Classes.Morphisms <> Proper class
+R980:991 HyperLogic.Cat.Adjoint <> left_adj_mor:11 meth
+R942:946 Coq.Classes.Morphisms ProperNotations ::signature_scope:x_'==>'_x not
+R913:921 HyperLogic.Cat.Core <> hom_equiv meth
+R923:923 HyperLogic.Cat.Adjoint <> D:2 var
+R925:925 HyperLogic.Cat.Adjoint <> Y:12 var
+R929:932 HyperLogic.Cat.Functor <> fobj meth
+R934:934 HyperLogic.Cat.Adjoint <> C:1 var
+R936:936 HyperLogic.Cat.Adjoint <> D:2 var
+R938:938 HyperLogic.Cat.Adjoint <> G:3 var
+R940:940 HyperLogic.Cat.Adjoint <> X:13 var
+R948:956 HyperLogic.Cat.Core <> hom_equiv meth
+R958:958 HyperLogic.Cat.Adjoint <> C:1 var
+R961:972 HyperLogic.Cat.Adjoint <> left_adj_obj:5 meth
+R974:974 HyperLogic.Cat.Adjoint <> Y:12 var
+R977:977 HyperLogic.Cat.Adjoint <> X:13 var
+R1026:1028 HyperLogic.Cat.Core <> obj meth
+R1030:1030 HyperLogic.Cat.Adjoint <> D:2 var
+binder 1021:1021 <> Y:15
+R1039:1041 HyperLogic.Cat.Core <> obj meth
+R1043:1043 HyperLogic.Cat.Adjoint <> C:1 var
+binder 1034:1034 <> X:16
+R1052:1054 HyperLogic.Cat.Core <> hom meth
+R1056:1056 HyperLogic.Cat.Adjoint <> D:2 var
+R1058:1058 HyperLogic.Cat.Adjoint <> Y:15 var
+R1062:1065 HyperLogic.Cat.Functor <> fobj meth
+R1067:1067 HyperLogic.Cat.Adjoint <> C:1 var
+R1069:1069 HyperLogic.Cat.Adjoint <> D:2 var
+R1071:1071 HyperLogic.Cat.Adjoint <> G:3 var
+R1073:1073 HyperLogic.Cat.Adjoint <> X:16 var
+binder 1047:1047 <> g:17
+R1083:1091 HyperLogic.Cat.Core <> hom_equiv meth
+R1093:1093 HyperLogic.Cat.Adjoint <> D:2 var
+R1095:1095 HyperLogic.Cat.Adjoint <> Y:15 var
+R1099:1102 HyperLogic.Cat.Functor <> fobj meth
+R1104:1104 HyperLogic.Cat.Adjoint <> C:1 var
+R1106:1106 HyperLogic.Cat.Adjoint <> D:2 var
+R1108:1108 HyperLogic.Cat.Adjoint <> G:3 var
+R1110:1110 HyperLogic.Cat.Adjoint <> X:16 var
+R1121:1127 HyperLogic.Cat.Core <> compose meth
+R1129:1129 HyperLogic.Cat.Adjoint <> D:2 var
+R1131:1131 HyperLogic.Cat.Adjoint <> Y:15 var
+R1135:1138 HyperLogic.Cat.Functor <> fobj meth
+R1140:1140 HyperLogic.Cat.Adjoint <> C:1 var
+R1142:1142 HyperLogic.Cat.Adjoint <> D:2 var
+R1144:1144 HyperLogic.Cat.Adjoint <> G:3 var
+R1147:1158 HyperLogic.Cat.Adjoint <> left_adj_obj:5 meth
+R1160:1160 HyperLogic.Cat.Adjoint <> Y:15 var
+R1166:1169 HyperLogic.Cat.Functor <> fobj meth
+R1171:1171 HyperLogic.Cat.Adjoint <> C:1 var
+R1173:1173 HyperLogic.Cat.Adjoint <> D:2 var
+R1175:1175 HyperLogic.Cat.Adjoint <> G:3 var
+R1177:1177 HyperLogic.Cat.Adjoint <> X:16 var
+R1192:1195 HyperLogic.Cat.Functor <> fmap meth
+R1197:1197 HyperLogic.Cat.Adjoint <> C:1 var
+R1199:1199 HyperLogic.Cat.Adjoint <> D:2 var
+R1201:1201 HyperLogic.Cat.Adjoint <> G:3 var
+R1204:1215 HyperLogic.Cat.Adjoint <> left_adj_obj:5 meth
+R1217:1217 HyperLogic.Cat.Adjoint <> Y:15 var
+R1220:1220 HyperLogic.Cat.Adjoint <> X:16 var
+R1223:1234 HyperLogic.Cat.Adjoint <> left_adj_mor:11 meth
+R1236:1236 HyperLogic.Cat.Adjoint <> g:17 var
+R1251:1254 HyperLogic.Cat.Adjoint <> unit:7 meth
+R1256:1256 HyperLogic.Cat.Adjoint <> Y:15 var
+R1266:1266 HyperLogic.Cat.Adjoint <> g:17 var
+R1301:1303 HyperLogic.Cat.Core <> obj meth
+R1305:1305 HyperLogic.Cat.Adjoint <> D:2 var
+binder 1296:1296 <> Y:19
+R1314:1316 HyperLogic.Cat.Core <> obj meth
+R1318:1318 HyperLogic.Cat.Adjoint <> C:1 var
+binder 1309:1309 <> X:20
+R1327:1329 HyperLogic.Cat.Core <> hom meth
+R1331:1331 HyperLogic.Cat.Adjoint <> C:1 var
+R1334:1345 HyperLogic.Cat.Adjoint <> left_adj_obj:5 meth
+R1347:1347 HyperLogic.Cat.Adjoint <> Y:19 var
+R1350:1350 HyperLogic.Cat.Adjoint <> X:20 var
+binder 1322:1322 <> f:21
+R1359:1367 HyperLogic.Cat.Core <> hom_equiv meth
+R1369:1369 HyperLogic.Cat.Adjoint <> C:1 var
+R1372:1383 HyperLogic.Cat.Adjoint <> left_adj_obj:5 meth
+R1385:1385 HyperLogic.Cat.Adjoint <> Y:19 var
+R1388:1388 HyperLogic.Cat.Adjoint <> X:20 var
+R1397:1408 HyperLogic.Cat.Adjoint <> left_adj_mor:11 meth
+R1421:1427 HyperLogic.Cat.Core <> compose meth
+R1429:1429 HyperLogic.Cat.Adjoint <> D:2 var
+R1431:1431 HyperLogic.Cat.Adjoint <> Y:19 var
+R1435:1438 HyperLogic.Cat.Functor <> fobj meth
+R1440:1440 HyperLogic.Cat.Adjoint <> C:1 var
+R1442:1442 HyperLogic.Cat.Adjoint <> D:2 var
+R1444:1444 HyperLogic.Cat.Adjoint <> G:3 var
+R1447:1458 HyperLogic.Cat.Adjoint <> left_adj_obj:5 meth
+R1460:1460 HyperLogic.Cat.Adjoint <> Y:19 var
+R1466:1469 HyperLogic.Cat.Functor <> fobj meth
+R1471:1471 HyperLogic.Cat.Adjoint <> C:1 var
+R1473:1473 HyperLogic.Cat.Adjoint <> D:2 var
+R1475:1475 HyperLogic.Cat.Adjoint <> G:3 var
+R1477:1477 HyperLogic.Cat.Adjoint <> X:20 var
+R1494:1497 HyperLogic.Cat.Functor <> fmap meth
+R1499:1499 HyperLogic.Cat.Adjoint <> C:1 var
+R1501:1501 HyperLogic.Cat.Adjoint <> D:2 var
+R1503:1503 HyperLogic.Cat.Adjoint <> G:3 var
+R1506:1517 HyperLogic.Cat.Adjoint <> left_adj_obj:5 meth
+R1519:1519 HyperLogic.Cat.Adjoint <> Y:19 var
+R1522:1522 HyperLogic.Cat.Adjoint <> X:20 var
+R1524:1524 HyperLogic.Cat.Adjoint <> f:21 var
+R1540:1543 HyperLogic.Cat.Adjoint <> unit:7 meth
+R1545:1545 HyperLogic.Cat.Adjoint <> Y:19 var
+R1556:1556 HyperLogic.Cat.Adjoint <> f:21 var
+R1580:1598 HyperLogic.Cat.Adjoint <> left_adj_mor_proper meth
+rec 1851:1863 <> IsLeftAdjoint
+proj 1930:1942 <> right_adj_obj
+proj 1967:1973 <> epsilon
+proj 2043:2055 <> right_adj_mor
+proj 2160:2179 <> right_adj_mor_proper
+proj 2316:2323 <> lambek_1
+proj 2590:2597 <> lambek_2
+R1872:1885 HyperLogic.Cat.Core <> SetoidCategory class
+binder 1866:1866 <> C:23
+binder 1868:1868 <> D:24
+R1893:1899 HyperLogic.Cat.Functor <> Functor class
+R1901:1901 HyperLogic.Cat.Adjoint <> D:24 var
+R1903:1903 HyperLogic.Cat.Adjoint <> C:23 var
+binder 1889:1889 <> F:25
+R1952:1955 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R1947:1949 HyperLogic.Cat.Core <> obj meth
+R1951:1951 HyperLogic.Cat.Adjoint <> C:23 var
+R1957:1959 HyperLogic.Cat.Core <> obj meth
+R1961:1961 HyperLogic.Cat.Adjoint <> D:24 var
+R1990:1992 HyperLogic.Cat.Core <> obj meth
+R1994:1994 HyperLogic.Cat.Adjoint <> C:23 var
+binder 1985:1985 <> X:28
+R1999:2001 HyperLogic.Cat.Core <> hom meth
+R2003:2003 HyperLogic.Cat.Adjoint <> C:23 var
+R2007:2010 HyperLogic.Cat.Functor <> fobj meth
+R2012:2012 HyperLogic.Cat.Adjoint <> D:24 var
+R2014:2014 HyperLogic.Cat.Adjoint <> C:23 var
+R2016:2016 HyperLogic.Cat.Adjoint <> F:25 var
+R2019:2031 HyperLogic.Cat.Adjoint <> right_adj_obj:27 meth
+R2033:2033 HyperLogic.Cat.Adjoint <> X:28 var
+R2037:2037 HyperLogic.Cat.Adjoint <> X:28 var
+R2072:2074 HyperLogic.Cat.Core <> obj meth
+R2076:2076 HyperLogic.Cat.Adjoint <> D:24 var
+binder 2067:2067 <> Y:30
+R2085:2087 HyperLogic.Cat.Core <> obj meth
+R2089:2089 HyperLogic.Cat.Adjoint <> C:23 var
+binder 2080:2080 <> X:31
+R2098:2100 HyperLogic.Cat.Core <> hom meth
+R2102:2102 HyperLogic.Cat.Adjoint <> C:23 var
+R2106:2109 HyperLogic.Cat.Functor <> fobj meth
+R2111:2111 HyperLogic.Cat.Adjoint <> D:24 var
+R2113:2113 HyperLogic.Cat.Adjoint <> C:23 var
+R2115:2115 HyperLogic.Cat.Adjoint <> F:25 var
+R2117:2117 HyperLogic.Cat.Adjoint <> Y:30 var
+R2120:2120 HyperLogic.Cat.Adjoint <> X:31 var
+binder 2093:2093 <> f:32
+R2130:2132 HyperLogic.Cat.Core <> hom meth
+R2134:2134 HyperLogic.Cat.Adjoint <> D:24 var
+R2136:2136 HyperLogic.Cat.Adjoint <> Y:30 var
+R2139:2151 HyperLogic.Cat.Adjoint <> right_adj_obj:27 meth
+R2153:2153 HyperLogic.Cat.Adjoint <> X:31 var
+R2196:2198 HyperLogic.Cat.Core <> obj meth
+R2200:2200 HyperLogic.Cat.Adjoint <> D:24 var
+binder 2191:2191 <> Y:34
+R2209:2211 HyperLogic.Cat.Core <> obj meth
+R2213:2213 HyperLogic.Cat.Adjoint <> C:23 var
+binder 2204:2204 <> X:35
+R2221:2226 Coq.Classes.Morphisms <> Proper class
+R2298:2310 HyperLogic.Cat.Adjoint <> right_adj_mor:33 meth
+R2259:2263 Coq.Classes.Morphisms ProperNotations ::signature_scope:x_'==>'_x not
+R2230:2238 HyperLogic.Cat.Core <> hom_equiv meth
+R2240:2240 HyperLogic.Cat.Adjoint <> C:23 var
+R2244:2247 HyperLogic.Cat.Functor <> fobj meth
+R2249:2249 HyperLogic.Cat.Adjoint <> D:24 var
+R2251:2251 HyperLogic.Cat.Adjoint <> C:23 var
+R2253:2253 HyperLogic.Cat.Adjoint <> F:25 var
+R2255:2255 HyperLogic.Cat.Adjoint <> Y:34 var
+R2258:2258 HyperLogic.Cat.Adjoint <> X:35 var
+R2265:2273 HyperLogic.Cat.Core <> hom_equiv meth
+R2275:2275 HyperLogic.Cat.Adjoint <> D:24 var
+R2277:2277 HyperLogic.Cat.Adjoint <> Y:34 var
+R2280:2292 HyperLogic.Cat.Adjoint <> right_adj_obj:27 meth
+R2294:2294 HyperLogic.Cat.Adjoint <> X:35 var
+R2340:2342 HyperLogic.Cat.Core <> obj meth
+R2344:2344 HyperLogic.Cat.Adjoint <> D:24 var
+binder 2335:2335 <> Y:37
+R2353:2355 HyperLogic.Cat.Core <> obj meth
+R2357:2357 HyperLogic.Cat.Adjoint <> C:23 var
+binder 2348:2348 <> X:38
+R2366:2368 HyperLogic.Cat.Core <> hom meth
+R2370:2370 HyperLogic.Cat.Adjoint <> C:23 var
+R2374:2377 HyperLogic.Cat.Functor <> fobj meth
+R2379:2379 HyperLogic.Cat.Adjoint <> D:24 var
+R2381:2381 HyperLogic.Cat.Adjoint <> C:23 var
+R2383:2383 HyperLogic.Cat.Adjoint <> F:25 var
+R2385:2385 HyperLogic.Cat.Adjoint <> Y:37 var
+R2388:2388 HyperLogic.Cat.Adjoint <> X:38 var
+binder 2361:2361 <> f:39
+R2397:2405 HyperLogic.Cat.Core <> hom_equiv meth
+R2407:2407 HyperLogic.Cat.Adjoint <> C:23 var
+R2411:2414 HyperLogic.Cat.Functor <> fobj meth
+R2416:2416 HyperLogic.Cat.Adjoint <> D:24 var
+R2418:2418 HyperLogic.Cat.Adjoint <> C:23 var
+R2420:2420 HyperLogic.Cat.Adjoint <> F:25 var
+R2422:2422 HyperLogic.Cat.Adjoint <> Y:37 var
+R2425:2425 HyperLogic.Cat.Adjoint <> X:38 var
+R2435:2441 HyperLogic.Cat.Core <> compose meth
+R2443:2443 HyperLogic.Cat.Adjoint <> C:23 var
+R2447:2450 HyperLogic.Cat.Functor <> fobj meth
+R2452:2452 HyperLogic.Cat.Adjoint <> D:24 var
+R2454:2454 HyperLogic.Cat.Adjoint <> C:23 var
+R2456:2456 HyperLogic.Cat.Adjoint <> F:25 var
+R2458:2458 HyperLogic.Cat.Adjoint <> Y:37 var
+R2463:2466 HyperLogic.Cat.Functor <> fobj meth
+R2468:2468 HyperLogic.Cat.Adjoint <> D:24 var
+R2470:2470 HyperLogic.Cat.Adjoint <> C:23 var
+R2472:2472 HyperLogic.Cat.Adjoint <> F:25 var
+R2475:2487 HyperLogic.Cat.Adjoint <> right_adj_obj:27 meth
+R2489:2489 HyperLogic.Cat.Adjoint <> X:38 var
+R2493:2493 HyperLogic.Cat.Adjoint <> X:38 var
+R2505:2511 HyperLogic.Cat.Adjoint <> epsilon:29 meth
+R2513:2513 HyperLogic.Cat.Adjoint <> X:38 var
+R2527:2530 HyperLogic.Cat.Functor <> fmap meth
+R2532:2532 HyperLogic.Cat.Adjoint <> D:24 var
+R2534:2534 HyperLogic.Cat.Adjoint <> C:23 var
+R2536:2536 HyperLogic.Cat.Adjoint <> F:25 var
+R2538:2538 HyperLogic.Cat.Adjoint <> Y:37 var
+R2541:2553 HyperLogic.Cat.Adjoint <> right_adj_obj:27 meth
+R2555:2555 HyperLogic.Cat.Adjoint <> X:38 var
+R2559:2571 HyperLogic.Cat.Adjoint <> right_adj_mor:33 meth
+R2573:2573 HyperLogic.Cat.Adjoint <> f:39 var
+R2584:2584 HyperLogic.Cat.Adjoint <> f:39 var
+R2614:2616 HyperLogic.Cat.Core <> obj meth
+R2618:2618 HyperLogic.Cat.Adjoint <> D:24 var
+binder 2609:2609 <> Y:41
+R2627:2629 HyperLogic.Cat.Core <> obj meth
+R2631:2631 HyperLogic.Cat.Adjoint <> C:23 var
+binder 2622:2622 <> X:42
+R2640:2642 HyperLogic.Cat.Core <> hom meth
+R2644:2644 HyperLogic.Cat.Adjoint <> D:24 var
+R2646:2646 HyperLogic.Cat.Adjoint <> Y:41 var
+R2649:2661 HyperLogic.Cat.Adjoint <> right_adj_obj:27 meth
+R2663:2663 HyperLogic.Cat.Adjoint <> X:42 var
+binder 2635:2635 <> g:43
+R2673:2681 HyperLogic.Cat.Core <> hom_equiv meth
+R2683:2683 HyperLogic.Cat.Adjoint <> D:24 var
+R2685:2685 HyperLogic.Cat.Adjoint <> Y:41 var
+R2688:2700 HyperLogic.Cat.Adjoint <> right_adj_obj:27 meth
+R2702:2702 HyperLogic.Cat.Adjoint <> X:42 var
+R2712:2724 HyperLogic.Cat.Adjoint <> right_adj_mor:33 meth
+R2736:2742 HyperLogic.Cat.Core <> compose meth
+R2744:2744 HyperLogic.Cat.Adjoint <> C:23 var
+R2748:2751 HyperLogic.Cat.Functor <> fobj meth
+R2753:2753 HyperLogic.Cat.Adjoint <> D:24 var
+R2755:2755 HyperLogic.Cat.Adjoint <> C:23 var
+R2757:2757 HyperLogic.Cat.Adjoint <> F:25 var
+R2759:2759 HyperLogic.Cat.Adjoint <> Y:41 var
+R2764:2767 HyperLogic.Cat.Functor <> fobj meth
+R2769:2769 HyperLogic.Cat.Adjoint <> D:24 var
+R2771:2771 HyperLogic.Cat.Adjoint <> C:23 var
+R2773:2773 HyperLogic.Cat.Adjoint <> F:25 var
+R2776:2788 HyperLogic.Cat.Adjoint <> right_adj_obj:27 meth
+R2790:2790 HyperLogic.Cat.Adjoint <> X:42 var
+R2794:2794 HyperLogic.Cat.Adjoint <> X:42 var
+R2808:2814 HyperLogic.Cat.Adjoint <> epsilon:29 meth
+R2816:2816 HyperLogic.Cat.Adjoint <> X:42 var
+R2832:2835 HyperLogic.Cat.Functor <> fmap meth
+R2837:2837 HyperLogic.Cat.Adjoint <> D:24 var
+R2839:2839 HyperLogic.Cat.Adjoint <> C:23 var
+R2841:2841 HyperLogic.Cat.Adjoint <> F:25 var
+R2843:2843 HyperLogic.Cat.Adjoint <> Y:41 var
+R2846:2858 HyperLogic.Cat.Adjoint <> right_adj_obj:27 meth
+R2860:2860 HyperLogic.Cat.Adjoint <> X:42 var
+R2863:2863 HyperLogic.Cat.Adjoint <> g:43 var
+R2874:2874 HyperLogic.Cat.Adjoint <> g:43 var
+R2898:2917 HyperLogic.Cat.Adjoint <> right_adj_mor_proper meth
+def 3012:3030 <> RightAdjointFunctor
+R3039:3052 HyperLogic.Cat.Core <> SetoidCategory class
+binder 3033:3033 <> C:45
+binder 3035:3035 <> D:46
+R3060:3066 HyperLogic.Cat.Functor <> Functor class
+R3068:3068 HyperLogic.Cat.Adjoint <> D:46 var
+R3070:3070 HyperLogic.Cat.Adjoint <> C:45 var
+binder 3056:3056 <> F:47
+R3079:3091 HyperLogic.Cat.Adjoint <> IsLeftAdjoint class
+R3093:3093 HyperLogic.Cat.Adjoint <> F:47 var
+binder 3074:3075 <> LA:48
+R3101:3107 HyperLogic.Cat.Functor <> Functor class
+R3109:3109 HyperLogic.Cat.Adjoint <> C:45 var
+R3111:3111 HyperLogic.Cat.Adjoint <> D:46 var
+R3131:3140 HyperLogic.Cat.Functor <> mk_Functor constr
+binder 3184:3184 <> x:49
+R3190:3202 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R3213:3213 HyperLogic.Cat.Adjoint <> x:49 var
+binder 3284:3284 <> x:50
+binder 3286:3286 <> y:51
+binder 3288:3288 <> f:52
+R3294:3306 HyperLogic.Cat.Adjoint <> right_adj_mor meth
+R3331:3337 HyperLogic.Cat.Core <> compose meth
+R3354:3357 HyperLogic.Cat.Functor <> fobj meth
+R3367:3379 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R3390:3390 HyperLogic.Cat.Adjoint <> x:50 var
+R3405:3405 HyperLogic.Cat.Adjoint <> x:50 var
+R3458:3458 HyperLogic.Cat.Adjoint <> y:51 var
+R3511:3511 HyperLogic.Cat.Adjoint <> f:52 var
+R3566:3572 HyperLogic.Cat.Adjoint <> epsilon meth
+R3583:3583 HyperLogic.Cat.Adjoint <> x:50 var
+R3131:3140 HyperLogic.Cat.Functor <> mk_Functor constr
+binder 3184:3184 <> x:53
+R3190:3202 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R3213:3213 HyperLogic.Cat.Adjoint <> x:53 var
+binder 3284:3284 <> x:54
+binder 3286:3286 <> y:55
+binder 3288:3288 <> f:56
+R3294:3306 HyperLogic.Cat.Adjoint <> right_adj_mor meth
+R3331:3337 HyperLogic.Cat.Core <> compose meth
+R3354:3357 HyperLogic.Cat.Functor <> fobj meth
+R3367:3379 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R3390:3390 HyperLogic.Cat.Adjoint <> x:54 var
+R3405:3405 HyperLogic.Cat.Adjoint <> x:54 var
+R3458:3458 HyperLogic.Cat.Adjoint <> y:55 var
+R3511:3511 HyperLogic.Cat.Adjoint <> f:56 var
+R3566:3572 HyperLogic.Cat.Adjoint <> epsilon meth
+R3583:3583 HyperLogic.Cat.Adjoint <> x:54 var
+R3652:3671 HyperLogic.Cat.Adjoint <> right_adj_mor_proper meth
+R3652:3671 HyperLogic.Cat.Adjoint <> right_adj_mor_proper meth
+R3694:3704 HyperLogic.Cat.Core <> comp_proper meth
+R3694:3704 HyperLogic.Cat.Core <> comp_proper meth
+R3795:3802 HyperLogic.Cat.Adjoint <> lambek_2 meth
+R3819:3820 HyperLogic.Cat.Core <> id meth
+R3826:3838 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R3795:3802 HyperLogic.Cat.Adjoint <> lambek_2 meth
+R3819:3820 HyperLogic.Cat.Core <> id meth
+R3826:3838 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R3795:3802 HyperLogic.Cat.Adjoint <> lambek_2 meth
+R3819:3820 HyperLogic.Cat.Core <> id meth
+R3826:3838 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R3867:3886 HyperLogic.Cat.Adjoint <> right_adj_mor_proper meth
+R3867:3886 HyperLogic.Cat.Adjoint <> right_adj_mor_proper meth
+R3912:3918 HyperLogic.Cat.Core <> id_left meth
+R3912:3918 HyperLogic.Cat.Core <> id_left meth
+R3912:3918 HyperLogic.Cat.Core <> id_left meth
+R3936:3942 HyperLogic.Cat.Functor <> fmap_id meth
+R3936:3942 HyperLogic.Cat.Functor <> fmap_id meth
+R3936:3942 HyperLogic.Cat.Functor <> fmap_id meth
+R3965:3972 HyperLogic.Cat.Core <> id_right meth
+R3965:3972 HyperLogic.Cat.Core <> id_right meth
+R3965:3972 HyperLogic.Cat.Core <> id_right meth
+R4093:4100 HyperLogic.Cat.Adjoint <> lambek_2 meth
+R4125:4131 HyperLogic.Cat.Core <> compose meth
+R4137:4149 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R4165:4177 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R4193:4205 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R4231:4243 HyperLogic.Cat.Adjoint <> right_adj_mor meth
+R4260:4266 HyperLogic.Cat.Core <> compose meth
+R4280:4286 HyperLogic.Cat.Adjoint <> epsilon meth
+R4314:4326 HyperLogic.Cat.Adjoint <> right_adj_mor meth
+R4343:4349 HyperLogic.Cat.Core <> compose meth
+R4363:4369 HyperLogic.Cat.Adjoint <> epsilon meth
+R4093:4100 HyperLogic.Cat.Adjoint <> lambek_2 meth
+R4125:4131 HyperLogic.Cat.Core <> compose meth
+R4137:4149 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R4165:4177 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R4193:4205 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R4231:4243 HyperLogic.Cat.Adjoint <> right_adj_mor meth
+R4260:4266 HyperLogic.Cat.Core <> compose meth
+R4280:4286 HyperLogic.Cat.Adjoint <> epsilon meth
+R4314:4326 HyperLogic.Cat.Adjoint <> right_adj_mor meth
+R4343:4349 HyperLogic.Cat.Core <> compose meth
+R4363:4369 HyperLogic.Cat.Adjoint <> epsilon meth
+R4093:4100 HyperLogic.Cat.Adjoint <> lambek_2 meth
+R4125:4131 HyperLogic.Cat.Core <> compose meth
+R4137:4149 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R4165:4177 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R4193:4205 HyperLogic.Cat.Adjoint <> right_adj_obj meth
+R4231:4243 HyperLogic.Cat.Adjoint <> right_adj_mor meth
+R4260:4266 HyperLogic.Cat.Core <> compose meth
+R4280:4286 HyperLogic.Cat.Adjoint <> epsilon meth
+R4314:4326 HyperLogic.Cat.Adjoint <> right_adj_mor meth
+R4343:4349 HyperLogic.Cat.Core <> compose meth
+R4363:4369 HyperLogic.Cat.Adjoint <> epsilon meth
+R4401:4420 HyperLogic.Cat.Adjoint <> right_adj_mor_proper meth
+R4401:4420 HyperLogic.Cat.Adjoint <> right_adj_mor_proper meth
+R4492:4500 HyperLogic.Cat.Functor <> fmap_comp meth
+R4492:4500 HyperLogic.Cat.Functor <> fmap_comp meth
+R4492:4500 HyperLogic.Cat.Functor <> fmap_comp meth
+R4588:4597 HyperLogic.Cat.Core <> comp_assoc meth
+R4588:4597 HyperLogic.Cat.Core <> comp_assoc meth
+R4588:4597 HyperLogic.Cat.Core <> comp_assoc meth
+R4674:4681 HyperLogic.Cat.Adjoint <> lambek_1 meth
+R4698:4704 HyperLogic.Cat.Core <> compose meth
+R4718:4724 HyperLogic.Cat.Adjoint <> epsilon meth
+R4674:4681 HyperLogic.Cat.Adjoint <> lambek_1 meth
+R4698:4704 HyperLogic.Cat.Core <> compose meth
+R4718:4724 HyperLogic.Cat.Adjoint <> epsilon meth
+R4674:4681 HyperLogic.Cat.Adjoint <> lambek_1 meth
+R4698:4704 HyperLogic.Cat.Core <> compose meth
+R4718:4724 HyperLogic.Cat.Adjoint <> epsilon meth
+R4803:4812 HyperLogic.Cat.Core <> comp_assoc meth
+R4803:4812 HyperLogic.Cat.Core <> comp_assoc meth
+R4803:4812 HyperLogic.Cat.Core <> comp_assoc meth
+R4895:4904 HyperLogic.Cat.Core <> comp_assoc meth
+R4895:4904 HyperLogic.Cat.Core <> comp_assoc meth
+R4895:4904 HyperLogic.Cat.Core <> comp_assoc meth
+R4947:4957 HyperLogic.Cat.Core <> comp_proper meth
+R4947:4957 HyperLogic.Cat.Core <> comp_proper meth
+R5082:5089 HyperLogic.Cat.Adjoint <> lambek_1 meth
+R5082:5089 HyperLogic.Cat.Adjoint <> lambek_1 meth
+def 5227:5244 <> LeftAdjointFunctor
+R5253:5266 HyperLogic.Cat.Core <> SetoidCategory class
+binder 5247:5247 <> C:57
+binder 5249:5249 <> D:58
+R5274:5280 HyperLogic.Cat.Functor <> Functor class
+R5282:5282 HyperLogic.Cat.Adjoint <> C:57 var
+R5284:5284 HyperLogic.Cat.Adjoint <> D:58 var
+binder 5270:5270 <> G:59
+R5293:5306 HyperLogic.Cat.Adjoint <> IsRightAdjoint class
+R5308:5308 HyperLogic.Cat.Adjoint <> G:59 var
+binder 5288:5289 <> RA:60
+R5315:5321 HyperLogic.Cat.Functor <> Functor class
+R5323:5323 HyperLogic.Cat.Adjoint <> D:58 var
+R5325:5325 HyperLogic.Cat.Adjoint <> C:57 var
+R5345:5354 HyperLogic.Cat.Functor <> mk_Functor constr
+binder 5398:5398 <> x:61
+R5404:5415 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R5426:5426 HyperLogic.Cat.Adjoint <> x:61 var
+binder 5493:5493 <> x:62
+binder 5495:5495 <> y:63
+binder 5497:5497 <> f:64
+R5503:5514 HyperLogic.Cat.Adjoint <> left_adj_mor meth
+R5538:5544 HyperLogic.Cat.Core <> compose meth
+R5548:5548 HyperLogic.Cat.Adjoint <> x:62 var
+R5550:5550 HyperLogic.Cat.Adjoint <> y:63 var
+R5554:5557 HyperLogic.Cat.Functor <> fobj meth
+R5567:5578 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R5589:5589 HyperLogic.Cat.Adjoint <> y:63 var
+R5605:5608 HyperLogic.Cat.Adjoint <> unit meth
+R5619:5619 HyperLogic.Cat.Adjoint <> y:63 var
+R5632:5632 HyperLogic.Cat.Adjoint <> f:64 var
+R5345:5354 HyperLogic.Cat.Functor <> mk_Functor constr
+binder 5398:5398 <> x:65
+R5404:5415 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R5426:5426 HyperLogic.Cat.Adjoint <> x:65 var
+binder 5493:5493 <> x:66
+binder 5495:5495 <> y:67
+binder 5497:5497 <> f:68
+R5503:5514 HyperLogic.Cat.Adjoint <> left_adj_mor meth
+R5538:5544 HyperLogic.Cat.Core <> compose meth
+R5548:5548 HyperLogic.Cat.Adjoint <> x:66 var
+R5550:5550 HyperLogic.Cat.Adjoint <> y:67 var
+R5554:5557 HyperLogic.Cat.Functor <> fobj meth
+R5567:5578 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R5589:5589 HyperLogic.Cat.Adjoint <> y:67 var
+R5605:5608 HyperLogic.Cat.Adjoint <> unit meth
+R5619:5619 HyperLogic.Cat.Adjoint <> y:67 var
+R5632:5632 HyperLogic.Cat.Adjoint <> f:68 var
+R5700:5718 HyperLogic.Cat.Adjoint <> left_adj_mor_proper meth
+R5700:5718 HyperLogic.Cat.Adjoint <> left_adj_mor_proper meth
+R5741:5751 HyperLogic.Cat.Core <> comp_proper meth
+R5741:5751 HyperLogic.Cat.Core <> comp_proper meth
+R5838:5845 HyperLogic.Cat.Core <> id_right meth
+R5838:5845 HyperLogic.Cat.Core <> id_right meth
+R5838:5845 HyperLogic.Cat.Core <> id_right meth
+R5867:5879 HyperLogic.Cat.Adjoint <> lambek_2_dual meth
+R5896:5897 HyperLogic.Cat.Core <> id meth
+R5903:5914 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R5867:5879 HyperLogic.Cat.Adjoint <> lambek_2_dual meth
+R5896:5897 HyperLogic.Cat.Core <> id meth
+R5903:5914 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R5867:5879 HyperLogic.Cat.Adjoint <> lambek_2_dual meth
+R5896:5897 HyperLogic.Cat.Core <> id meth
+R5903:5914 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R5943:5961 HyperLogic.Cat.Adjoint <> left_adj_mor_proper meth
+R5943:5961 HyperLogic.Cat.Adjoint <> left_adj_mor_proper meth
+R5988:5994 HyperLogic.Cat.Functor <> fmap_id meth
+R5988:5994 HyperLogic.Cat.Functor <> fmap_id meth
+R5988:5994 HyperLogic.Cat.Functor <> fmap_id meth
+R6017:6023 HyperLogic.Cat.Core <> id_left meth
+R6017:6023 HyperLogic.Cat.Core <> id_left meth
+R6017:6023 HyperLogic.Cat.Core <> id_left meth
+R6140:6152 HyperLogic.Cat.Adjoint <> lambek_2_dual meth
+R6176:6182 HyperLogic.Cat.Core <> compose meth
+R6188:6199 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R6215:6226 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R6242:6253 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R6279:6290 HyperLogic.Cat.Adjoint <> left_adj_mor meth
+R6307:6313 HyperLogic.Cat.Core <> compose meth
+R6325:6328 HyperLogic.Cat.Adjoint <> unit meth
+R6358:6369 HyperLogic.Cat.Adjoint <> left_adj_mor meth
+R6386:6392 HyperLogic.Cat.Core <> compose meth
+R6404:6407 HyperLogic.Cat.Adjoint <> unit meth
+R6140:6152 HyperLogic.Cat.Adjoint <> lambek_2_dual meth
+R6176:6182 HyperLogic.Cat.Core <> compose meth
+R6188:6199 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R6215:6226 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R6242:6253 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R6279:6290 HyperLogic.Cat.Adjoint <> left_adj_mor meth
+R6307:6313 HyperLogic.Cat.Core <> compose meth
+R6325:6328 HyperLogic.Cat.Adjoint <> unit meth
+R6358:6369 HyperLogic.Cat.Adjoint <> left_adj_mor meth
+R6386:6392 HyperLogic.Cat.Core <> compose meth
+R6404:6407 HyperLogic.Cat.Adjoint <> unit meth
+R6140:6152 HyperLogic.Cat.Adjoint <> lambek_2_dual meth
+R6176:6182 HyperLogic.Cat.Core <> compose meth
+R6188:6199 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R6215:6226 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R6242:6253 HyperLogic.Cat.Adjoint <> left_adj_obj meth
+R6279:6290 HyperLogic.Cat.Adjoint <> left_adj_mor meth
+R6307:6313 HyperLogic.Cat.Core <> compose meth
+R6325:6328 HyperLogic.Cat.Adjoint <> unit meth
+R6358:6369 HyperLogic.Cat.Adjoint <> left_adj_mor meth
+R6386:6392 HyperLogic.Cat.Core <> compose meth
+R6404:6407 HyperLogic.Cat.Adjoint <> unit meth
+R6441:6459 HyperLogic.Cat.Adjoint <> left_adj_mor_proper meth
+R6441:6459 HyperLogic.Cat.Adjoint <> left_adj_mor_proper meth
+R6513:6521 HyperLogic.Cat.Functor <> fmap_comp meth
+R6513:6521 HyperLogic.Cat.Functor <> fmap_comp meth
+R6513:6521 HyperLogic.Cat.Functor <> fmap_comp meth
+R6588:6597 HyperLogic.Cat.Core <> comp_assoc meth
+R6588:6597 HyperLogic.Cat.Core <> comp_assoc meth
+R6588:6597 HyperLogic.Cat.Core <> comp_assoc meth
+R6670:6682 HyperLogic.Cat.Adjoint <> lambek_1_dual meth
+R6670:6682 HyperLogic.Cat.Adjoint <> lambek_1_dual meth
+R6670:6682 HyperLogic.Cat.Adjoint <> lambek_1_dual meth
+R6751:6760 HyperLogic.Cat.Core <> comp_assoc meth
+R6751:6760 HyperLogic.Cat.Core <> comp_assoc meth
+R6751:6760 HyperLogic.Cat.Core <> comp_assoc meth
+R6815:6824 HyperLogic.Cat.Core <> comp_assoc meth
+R6815:6824 HyperLogic.Cat.Core <> comp_assoc meth
+R6815:6824 HyperLogic.Cat.Core <> comp_assoc meth
+R6864:6874 HyperLogic.Cat.Core <> comp_proper meth
+R6864:6874 HyperLogic.Cat.Core <> comp_proper meth
+R6952:6964 HyperLogic.Cat.Adjoint <> lambek_1_dual meth
+R6952:6964 HyperLogic.Cat.Adjoint <> lambek_1_dual meth
