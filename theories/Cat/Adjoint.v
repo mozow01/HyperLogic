@@ -7,14 +7,9 @@ Require Import Coq.Classes.Morphisms.
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.Functor.
 
-(* ========================================================================= *)
-(* IS RIGHT ADJOINT (G : C -> D jobb adjungált)                              *)
-(* ========================================================================= *)
-
 Class IsRightAdjoint {C D : SetoidCategory} (G : Functor C D) := mk_IsRightAdjoint {
   left_adj_obj : @obj D -> @obj C;
 
-  (* Explicit @fobj hívások a definíciókban *)
   unit : forall (Y : @obj D), @hom D Y (@fobj C D G (left_adj_obj Y));
 
   left_adj_mor : forall {Y : @obj D} {X : @obj C} (g : @hom D Y (@fobj C D G X)), 
@@ -40,11 +35,6 @@ Class IsRightAdjoint {C D : SetoidCategory} (G : Functor C D) := mk_IsRightAdjoi
 }.
 
 Existing Instance left_adj_mor_proper.
-
-
-(* ========================================================================= *)
-(* IS LEFT ADJOINT (F : D -> C bal adjungált)                                *)
-(* ========================================================================= *)
 
 Class IsLeftAdjoint {C D : SetoidCategory} (F : Functor D C) := mk_IsLeftAdjoint {
   right_adj_obj : @obj C -> @obj D;
