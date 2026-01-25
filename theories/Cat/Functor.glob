@@ -1,0 +1,203 @@
+DIGEST 08ef0fe248f2386e0af9f1cdb52bf025
+FHyperLogic.Cat.Functor
+R15:18 Coq.Lists.List <> <> lib
+R29:41 Coq.Lists.List ListNotations <> mod
+R59:76 Coq.Setoids.Setoid <> <> lib
+R94:114 Coq.Classes.Morphisms <> <> lib
+R133:136 HyperLogic.Cat.Core <> <> lib
+rec 146:152 <> Functor
+proj 211:214 <> fobj
+proj 282:285 <> fmap
+proj 374:384 <> fmap_proper
+proj 522:528 <> fmap_id
+proj 675:683 <> fmap_comp
+R161:174 HyperLogic.Cat.Core <> SetoidCategory class
+binder 155:155 <> C:1
+binder 157:157 <> D:2
+R224:227 Coq.Init.Logic <> ::type_scope:x_'->'_x not
+R219:221 HyperLogic.Cat.Core <> obj meth
+R223:223 HyperLogic.Cat.Functor <> C:1 var
+R229:231 HyperLogic.Cat.Core <> obj meth
+R233:233 HyperLogic.Cat.Functor <> D:2 var
+R304:306 HyperLogic.Cat.Core <> obj meth
+R308:308 HyperLogic.Cat.Functor <> C:1 var
+binder 297:297 <> x:5
+binder 299:299 <> y:6
+R317:319 HyperLogic.Cat.Core <> hom meth
+R321:321 HyperLogic.Cat.Functor <> C:1 var
+R323:323 HyperLogic.Cat.Functor <> x:5 var
+R325:325 HyperLogic.Cat.Functor <> y:6 var
+binder 312:312 <> f:7
+R330:332 HyperLogic.Cat.Core <> hom meth
+R334:334 HyperLogic.Cat.Functor <> D:2 var
+R337:340 HyperLogic.Cat.Functor <> fobj:4 meth
+R342:342 HyperLogic.Cat.Functor <> x:5 var
+R346:349 HyperLogic.Cat.Functor <> fobj:4 meth
+R351:351 HyperLogic.Cat.Functor <> y:6 var
+R403:405 HyperLogic.Cat.Core <> obj meth
+R407:407 HyperLogic.Cat.Functor <> C:1 var
+binder 396:396 <> x:9
+binder 398:398 <> y:10
+R416:421 Coq.Classes.Morphisms <> Proper class
+R479:482 HyperLogic.Cat.Functor <> fmap:8 meth
+R484:484 HyperLogic.Cat.Functor <> x:9 var
+R486:486 HyperLogic.Cat.Functor <> y:10 var
+R440:444 Coq.Classes.Morphisms ProperNotations ::signature_scope:x_'==>'_x not
+R425:433 HyperLogic.Cat.Core <> hom_equiv meth
+R435:435 HyperLogic.Cat.Functor <> C:1 var
+R437:437 HyperLogic.Cat.Functor <> x:9 var
+R439:439 HyperLogic.Cat.Functor <> y:10 var
+R446:454 HyperLogic.Cat.Core <> hom_equiv meth
+R456:456 HyperLogic.Cat.Functor <> D:2 var
+R459:462 HyperLogic.Cat.Functor <> fobj:4 meth
+R464:464 HyperLogic.Cat.Functor <> x:9 var
+R468:471 HyperLogic.Cat.Functor <> fobj:4 meth
+R473:473 HyperLogic.Cat.Functor <> y:10 var
+R545:547 HyperLogic.Cat.Core <> obj meth
+R549:549 HyperLogic.Cat.Functor <> C:1 var
+binder 540:540 <> x:12
+R559:567 HyperLogic.Cat.Core <> hom_equiv meth
+R569:569 HyperLogic.Cat.Functor <> D:2 var
+R572:575 HyperLogic.Cat.Functor <> fobj:4 meth
+R577:577 HyperLogic.Cat.Functor <> x:12 var
+R581:584 HyperLogic.Cat.Functor <> fobj:4 meth
+R586:586 HyperLogic.Cat.Functor <> x:12 var
+R590:593 HyperLogic.Cat.Functor <> fmap:8 meth
+R597:598 HyperLogic.Cat.Core <> id meth
+R600:600 HyperLogic.Cat.Functor <> C:1 var
+R602:602 HyperLogic.Cat.Functor <> x:12 var
+R608:609 HyperLogic.Cat.Core <> id meth
+R611:611 HyperLogic.Cat.Functor <> D:2 var
+R614:617 HyperLogic.Cat.Functor <> fobj:4 meth
+R619:619 HyperLogic.Cat.Functor <> x:12 var
+R704:706 HyperLogic.Cat.Core <> obj meth
+R708:708 HyperLogic.Cat.Functor <> C:1 var
+binder 695:695 <> x:14
+binder 697:697 <> y:15
+binder 699:699 <> z:16
+R717:719 HyperLogic.Cat.Core <> hom meth
+R721:721 HyperLogic.Cat.Functor <> C:1 var
+R723:723 HyperLogic.Cat.Functor <> x:14 var
+R725:725 HyperLogic.Cat.Functor <> y:15 var
+binder 712:712 <> f:17
+R734:736 HyperLogic.Cat.Core <> hom meth
+R738:738 HyperLogic.Cat.Functor <> C:1 var
+R740:740 HyperLogic.Cat.Functor <> y:15 var
+R742:742 HyperLogic.Cat.Functor <> z:16 var
+binder 729:729 <> g:18
+R751:759 HyperLogic.Cat.Core <> hom_equiv meth
+R761:761 HyperLogic.Cat.Functor <> D:2 var
+R764:767 HyperLogic.Cat.Functor <> fobj:4 meth
+R769:769 HyperLogic.Cat.Functor <> x:14 var
+R773:776 HyperLogic.Cat.Functor <> fobj:4 meth
+R778:778 HyperLogic.Cat.Functor <> z:16 var
+R789:792 HyperLogic.Cat.Functor <> fmap:8 meth
+R796:802 HyperLogic.Cat.Core <> compose meth
+R804:804 HyperLogic.Cat.Functor <> C:1 var
+R806:806 HyperLogic.Cat.Functor <> x:14 var
+R808:808 HyperLogic.Cat.Functor <> y:15 var
+R810:810 HyperLogic.Cat.Functor <> z:16 var
+R812:812 HyperLogic.Cat.Functor <> g:18 var
+R814:814 HyperLogic.Cat.Functor <> f:17 var
+R827:833 HyperLogic.Cat.Core <> compose meth
+R835:835 HyperLogic.Cat.Functor <> D:2 var
+R838:841 HyperLogic.Cat.Functor <> fobj:4 meth
+R843:843 HyperLogic.Cat.Functor <> x:14 var
+R847:850 HyperLogic.Cat.Functor <> fobj:4 meth
+R852:852 HyperLogic.Cat.Functor <> y:15 var
+R856:859 HyperLogic.Cat.Functor <> fobj:4 meth
+R861:861 HyperLogic.Cat.Functor <> z:16 var
+R865:868 HyperLogic.Cat.Functor <> fmap:8 meth
+R870:870 HyperLogic.Cat.Functor <> g:18 var
+R874:877 HyperLogic.Cat.Functor <> fmap:8 meth
+R879:879 HyperLogic.Cat.Functor <> f:17 var
+R946:956 HyperLogic.Cat.Functor <> fmap_proper meth
+def 971:985 <> ComposeFunctors
+R996:1009 HyperLogic.Cat.Core <> SetoidCategory class
+binder 988:988 <> C:20
+binder 990:990 <> D:21
+binder 992:992 <> E:22
+R1017:1023 HyperLogic.Cat.Functor <> Functor class
+R1025:1025 HyperLogic.Cat.Functor <> D:21 var
+R1027:1027 HyperLogic.Cat.Functor <> E:22 var
+binder 1013:1013 <> G:23
+R1035:1041 HyperLogic.Cat.Functor <> Functor class
+R1043:1043 HyperLogic.Cat.Functor <> C:20 var
+R1045:1045 HyperLogic.Cat.Functor <> D:21 var
+binder 1031:1031 <> F:24
+R1050:1056 HyperLogic.Cat.Functor <> Functor class
+R1058:1058 HyperLogic.Cat.Functor <> C:20 var
+R1060:1060 HyperLogic.Cat.Functor <> E:22 var
+R1080:1089 HyperLogic.Cat.Functor <> mk_Functor constr
+binder 1136:1136 <> x:25
+R1142:1145 HyperLogic.Cat.Functor <> fobj meth
+R1155:1158 HyperLogic.Cat.Functor <> fobj meth
+R1166:1166 HyperLogic.Cat.Functor <> x:25 var
+binder 1218:1218 <> x:26
+binder 1220:1220 <> y:27
+binder 1222:1222 <> f:28
+R1228:1231 HyperLogic.Cat.Functor <> fmap meth
+R1245:1248 HyperLogic.Cat.Functor <> fmap meth
+R1256:1256 HyperLogic.Cat.Functor <> x:26 var
+R1258:1258 HyperLogic.Cat.Functor <> y:27 var
+R1260:1260 HyperLogic.Cat.Functor <> f:28 var
+R1080:1089 HyperLogic.Cat.Functor <> mk_Functor constr
+binder 1136:1136 <> x:29
+R1142:1145 HyperLogic.Cat.Functor <> fobj meth
+R1155:1158 HyperLogic.Cat.Functor <> fobj meth
+R1166:1166 HyperLogic.Cat.Functor <> x:29 var
+binder 1218:1218 <> x:30
+binder 1220:1220 <> y:31
+binder 1222:1222 <> f:32
+R1228:1231 HyperLogic.Cat.Functor <> fmap meth
+R1245:1248 HyperLogic.Cat.Functor <> fmap meth
+R1256:1256 HyperLogic.Cat.Functor <> x:30 var
+R1258:1258 HyperLogic.Cat.Functor <> y:31 var
+R1260:1260 HyperLogic.Cat.Functor <> f:32 var
+R1356:1366 HyperLogic.Cat.Functor <> fmap_proper meth
+R1356:1366 HyperLogic.Cat.Functor <> fmap_proper meth
+R1403:1413 HyperLogic.Cat.Functor <> fmap_proper meth
+R1403:1413 HyperLogic.Cat.Functor <> fmap_proper meth
+R1541:1547 HyperLogic.Cat.Functor <> fmap_id meth
+R1541:1547 HyperLogic.Cat.Functor <> fmap_id meth
+R1541:1547 HyperLogic.Cat.Functor <> fmap_id meth
+R1598:1604 HyperLogic.Cat.Functor <> fmap_id meth
+R1614:1617 HyperLogic.Cat.Functor <> fobj meth
+R1598:1604 HyperLogic.Cat.Functor <> fmap_id meth
+R1614:1617 HyperLogic.Cat.Functor <> fobj meth
+R1598:1604 HyperLogic.Cat.Functor <> fmap_id meth
+R1614:1617 HyperLogic.Cat.Functor <> fobj meth
+R1773:1781 HyperLogic.Cat.Functor <> fmap_comp meth
+R1773:1781 HyperLogic.Cat.Functor <> fmap_comp meth
+R1773:1781 HyperLogic.Cat.Functor <> fmap_comp meth
+R1859:1867 HyperLogic.Cat.Functor <> fmap_comp meth
+R1883:1886 HyperLogic.Cat.Functor <> fmap meth
+R1903:1906 HyperLogic.Cat.Functor <> fmap meth
+R1859:1867 HyperLogic.Cat.Functor <> fmap_comp meth
+R1883:1886 HyperLogic.Cat.Functor <> fmap meth
+R1903:1906 HyperLogic.Cat.Functor <> fmap meth
+R1859:1867 HyperLogic.Cat.Functor <> fmap_comp meth
+R1883:1886 HyperLogic.Cat.Functor <> fmap meth
+R1903:1906 HyperLogic.Cat.Functor <> fmap meth
+R1973:1987 HyperLogic.Cat.Functor <> ComposeFunctors def
+not 1959:1959 <> :::x_'O'_x
+def 2041:2049 <> IdFunctor
+R2056:2069 HyperLogic.Cat.Core <> SetoidCategory class
+binder 2052:2052 <> C:33
+R2074:2080 HyperLogic.Cat.Functor <> Functor class
+R2082:2082 HyperLogic.Cat.Functor <> C:33 var
+R2084:2084 HyperLogic.Cat.Functor <> C:33 var
+R2104:2113 HyperLogic.Cat.Functor <> mk_Functor constr
+binder 2129:2129 <> x:34
+R2134:2134 HyperLogic.Cat.Functor <> x:34 var
+binder 2147:2147 <> x:35
+binder 2149:2149 <> y:36
+binder 2151:2151 <> f:37
+R2156:2156 HyperLogic.Cat.Functor <> f:37 var
+R2104:2113 HyperLogic.Cat.Functor <> mk_Functor constr
+binder 2129:2129 <> x:38
+R2134:2134 HyperLogic.Cat.Functor <> x:38 var
+binder 2147:2147 <> x:39
+binder 2149:2149 <> y:40
+binder 2151:2151 <> f:41
+R2156:2156 HyperLogic.Cat.Functor <> f:41 var
