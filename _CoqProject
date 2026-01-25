@@ -1,1 +1,5 @@
 -R theories HyperLogic
+
+theories/Cat/Core.v
+theories/Cat/CCC.v
+theories/Cat/Functor.v
