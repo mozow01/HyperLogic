@@ -6,21 +6,21 @@ Require Import Coq.Classes.Morphisms.
 Require Import Core.
 
 Class Functor (C D : SetoidCategory) := mk_Functor {
-  (* Objektum leképezés: C objektum -> D objektum *)
+  (* Object: *)
   fobj : @obj C -> @obj D;
 
-  (* Morfizmus leképezés: (x -> y) -> (F x -> F y) *)
+  (* Morphism: (x -> y) -> (F x -> F y) *)
   fmap : forall {x y : @obj C} (f : @hom C x y), @hom D (fobj x) (fobj y);
 
-  (* Az ekvivalencia megőrzése (Proper) *)
+  (* Proper: *)
   fmap_proper : forall {x y : @obj C}, 
     Proper (@hom_equiv C x y ==> @hom_equiv D (fobj x) (fobj y)) (@fmap x y);
 
-  (* Identitás megőrzése: F(id) ~ id *)
+  (* Identity: F(id) ~ id *)
   fmap_id : forall (x : @obj C), 
     @hom_equiv D (fobj x) (fobj x) (fmap (@id C x)) (@id D (fobj x));
 
-  (* Kompozíció megőrzése: F(g ∘ f) ~ F(g) ∘ F(f) *)
+  (* Composition: F(g ∘ f) ~ F(g) ∘ F(f) *)
   fmap_comp : forall {x y z : @obj C} (f : @hom C x y) (g : @hom C y z),
     @hom_equiv D (fobj x) (fobj z) 
       (fmap (@compose C x y z g f)) 
