@@ -4,3 +4,4 @@ theories/Cat/Core.v
 theories/Cat/CCC.v
 theories/Cat/Functor.v
 theories/Cat/Adjoint.v
+theories/Cat/Fibration.v
