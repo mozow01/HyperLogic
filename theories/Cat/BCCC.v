@@ -4,129 +4,99 @@ Require Import CCC.
 
 Class BiCartesianClosedCategory {C : SetoidCategory} (CC : CartesianClosedCategory C) := mk_BiCartesianClosedCategory {
 
-  (* 1. Initial Object *)
+  (* ========================== *)
+  (* 1. INITIAL OBJECT          *)
+  (* ========================== *)
   initial : @obj C;
-  
-  (* Initiality: unique map from initial to any x *)
   initial_map : forall {x}, hom initial x;
-  initial_map_unique : forall {x} (f : hom initial x), f ≅ initial_map;
 
-  (* 2. Coproduct (Sum) *)
+  (* Eta rule for Initial Object *)
+  initial_map_unique : forall {x} (f : hom initial x), 
+        f ≅ initial_map;
+
+  (* ========================== *)
+  (* 2. COPRODUCT               *)
+  (* ========================== *)
   coprod : @obj C -> @obj C -> @obj C;
 
-  (* The universal map *)
-  coprod_map : forall {x y z} (f : hom x z) (g : hom y z), hom (coprod x y) z;
-  
-  (* Injections *)
+  (* Constructors (Injections) *)
   coprod_inl : forall {x y}, hom x (coprod x y);
   coprod_inr : forall {x y}, hom y (coprod x y);
 
-  (* --- The Single Axiom (Lambek Style) --- *)
-  (* h ≅ [f, g] <-> h o inl ≅ f /\ h o inr ≅ g *)
-  coprod_def : forall {x y z} (f : hom x z) (g : hom y z) (h : hom (coprod x y) z),
-        h ≅ coprod_map f g <-> (compose h coprod_inl ≅ f) /\ (compose h coprod_inr ≅ g)
+  (* Destructor (Case Analysis / Co-Pairing): [f, g] *)
+  coprod_map : forall {x y z} (f : hom x z) (g : hom y z), hom (coprod x y) z;
+
+  (* Equations *)
+
+  (* Beta rule: [f, g] o inl = f *)
+  coprod_map_inl : forall {x y z} (f : hom x z) (g : hom y z), 
+        compose (coprod_map f g) coprod_inl ≅ f;
+
+  (* Beta rule: [f, g] o inr = g *)
+  coprod_map_inr : forall {x y z} (f : hom x z) (g : hom y z), 
+        compose (coprod_map f g) coprod_inr ≅ g;
+
+  (* Eta rule: [h o inl, h o inr] = h *)
+  coprod_eta : forall {x y z} (h : hom (coprod x y) z), 
+        coprod_map (compose h coprod_inl) (compose h coprod_inr) ≅ h;
+
+  (* Proper instance required for rewriting *)
+  coprod_map_proper_ax : forall {x y z},
+        Proper (hom_equiv ==> hom_equiv ==> hom_equiv) (@coprod_map x y z)
 }.
+
+(* Register the Proper instance for usage in setoid_rewrite *)
+Existing Instance coprod_map_proper_ax.
 
 (* --- Notations --- *)
 
 Notation "⊥" := (initial) (at level 0, no associativity) : type_scope.
+Notation "x '+' y" := (coprod x y) (at level 50, left associativity) : type_scope.
 
-(* f ∐ g : Case Analysis (Unicode \amalg) *)
-(* x -> z, y -> z ===> x + y -> z *)
+(* Case analysis notation [f, g] *)
 Notation "f '∐' g" := (coprod_map f g) (at level 30, no associativity) : type_scope.
 
-(* f ⊔ g : Functorial Coproduct (Unicode \sqcup) *)
-(* x -> y , z -> w ===> x + z -> y + w *)
+(* Functorial map f + g (Torii dual) *)
 Notation "f '⊔' g" := (coprod_map (compose coprod_inl f) (compose coprod_inr g)) 
                       (at level 30, no associativity) : type_scope.
 
-(* x + y *)
-Notation "x # y" := (coprod x y) (at level 50, left associativity) : type_scope.
+(* --- Theorems --- *)
 
-
-(* --- Derived Laws from the Lambek Axiom --- *)
-
-Theorem coprod_map_inl {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
-  forall {x y z} (f : hom x z) (g : hom y z), 
-    compose (coprod_map f g) coprod_inl ≅ f.
-Proof.
-  intros.
-  (* Instantiate the axiom with h = [f,g] *)
-  pose proof (coprod_def f g (coprod_map f g)) as H.
-  assert (Refl : coprod_map f g ≅ coprod_map f g) by reflexivity.
-  apply H in Refl.
-  destruct Refl as [Goal _].
-  exact Goal.
-Qed.
-
-Theorem coprod_map_inr {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
-  forall {x y z} (f : hom x z) (g : hom y z), 
-    compose (coprod_map f g) coprod_inr ≅ g.
-Proof.
-  intros.
-  pose proof (coprod_def f g (coprod_map f g)) as H.
-  assert (Refl : coprod_map f g ≅ coprod_map f g) by reflexivity.
-  apply H in Refl.
-  destruct Refl as [_ Goal].
-  exact Goal.
-Qed.
-
+(* Uniqueness derived from Eta (mirroring prod_unique) *)
 Theorem coprod_unique {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
   forall {x y z} (f : hom x z) (g : hom y z) (h : hom (coprod x y) z), 
     (compose h coprod_inl ≅ f) /\ (compose h coprod_inr ≅ g) -> h ≅ (coprod_map f g).
 Proof.
-  intros x y z f g h H.
-  (* Direction <- of the axiom *)
-  apply coprod_def.
-  exact H.
+  intros x y z f g h [Hinl Hinr].
+  rewrite <- coprod_eta. (* Replace h with [h o inl, h o inr] *)
+  apply coprod_map_proper_ax.
+  - exact Hinl.
+  - exact Hinr.
 Qed.
 
-(* --- Instances & Theorems --- *)
+(* --- Thin BiCCC Constructor --- *)
 
-Instance coprod_map_proper {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} {x y z : @obj C} :
-  Proper (hom_equiv ==> hom_equiv ==> hom_equiv) (@coprod_map C CC BCC x y z).
+Definition Build_Thin_BiCCC 
+  (C : SetoidCategory) 
+  (CC : CartesianClosedCategory C)
+  (HThin : Thin C) 
+  (initial_item : @obj C)
+  (initial_map_item : forall {x}, hom initial_item x)
+  (coprod_item : @obj C -> @obj C -> @obj C)
+  (coprod_inl_item : forall {x y}, hom x (coprod_item x y))
+  (coprod_inr_item : forall {x y}, hom y (coprod_item x y))
+  (coprod_map_item : forall {x y z} (f : hom x z) (g : hom y z), hom (coprod_item x y) z)
+  : BiCartesianClosedCategory CC.
 Proof.
-  intros f f' Hf g g' Hg.
-  apply coprod_unique.
-  split.
-  - rewrite coprod_map_inl. assumption.
-  - rewrite coprod_map_inr. assumption.
-Qed.
-
-Theorem compos_coprod {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
-  forall (x y z w : @obj C) (f : x → y) (g : z → y) (h : y → w),
- (h ∘ (f ∐ g)) ≅ ((h ∘ f) ∐ (h ∘ g)).
-Proof.
-  intros x y z w f g h.
-  apply coprod_unique.
-  split.
-  (* LHS: ([h ∘ f, h ∘ g] ∘ inl) *)
-  - rewrite <- comp_assoc.      
-    rewrite coprod_map_inl.   
-    reflexivity.             
-  (* RHS: ([h ∘ f, h ∘ g] ∘ inr) *)
-  - rewrite <- comp_assoc.      
-    rewrite coprod_map_inr.   
-    reflexivity.             
-Qed.
-
-Theorem coprod_eta {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
-  forall {x y z : @obj C} (h : x # y → z),
-    (h ∘ coprod_inl) ∐ (h ∘ coprod_inr) ≅ h.
-Proof.
-  intros x y z h.
-  symmetry.
-  apply coprod_unique. 
-  split.
-  all: reflexivity.
-Qed.
-
-Lemma in_and_id {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
-  forall (A B : @obj C), id (A # B) ≅ coprod_inl ∐ coprod_inr.
-Proof.
-  intros A B.
-  apply coprod_unique.
-  split.
-  - rewrite id_left. reflexivity.
-  - rewrite id_left. reflexivity.
-Qed.
+  apply mk_BiCartesianClosedCategory with
+    (initial := initial_item)
+    (initial_map := @initial_map_item)
+    (coprod := coprod_item)
+    (coprod_inl := @coprod_inl_item)
+    (coprod_inr := @coprod_inr_item)
+    (coprod_map := @coprod_map_item).
+  
+  all: intros.
+  all: try (unfold Proper, respectful; intros).
+  all: apply thin_unique.
+Defined.
