@@ -131,9 +131,6 @@ Proof.
   
   all: intros.
 
-  (* Kicsomagoljuk a Proper axiómákat (prod_map_proper és exp_map_proper) *)
-  all: try (unfold Proper, respectful; intros).
-
-  (* A Thin tulajdonság megoldja az egyenlőségeket *)
-  all: apply thin_unique.
+   all: try (unfold Proper, respectful; intros).
+   all: apply thin_unique.
 Defined.
