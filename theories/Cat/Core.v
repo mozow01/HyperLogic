@@ -44,3 +44,15 @@ Defined.
 (* Thin Category  *)
 Class Thin (C : SetoidCategory) :=
   thin_unique : forall {x y} (f g : hom x y), f ≅ g.
+
+(* Isomorphisms *)
+Class Iso {C : SetoidCategory} (A B : @obj C) := {
+  iso_to : A → B;
+  iso_from : B → A;
+  
+  iso_to_from : iso_to ∘ iso_from ≅ id B;
+  
+  iso_from_to : iso_from ∘ iso_to ≅ id A
+}.
+
+Notation "A ≅O B" := (Iso A B) (at level 40, no associativity) : type_scope.
