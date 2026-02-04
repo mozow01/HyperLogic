@@ -51,7 +51,7 @@ Existing Instance coprod_map_proper_ax.
 (* --- Notations --- *)
 
 Notation "⊥" := (initial) (at level 0, no associativity) : type_scope.
-Notation "x '+' y" := (coprod x y) (at level 50, left associativity) : type_scope.
+Notation "x '⊕' y" := (coprod x y) (at level 50, left associativity) : type_scope.
 
 (* Case analysis notation [f, g] *)
 Notation "f '∐' g" := (coprod_map f g) (at level 30, no associativity) : type_scope.
