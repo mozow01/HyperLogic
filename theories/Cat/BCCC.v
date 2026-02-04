@@ -100,3 +100,98 @@ Proof.
   all: try (unfold Proper, respectful; intros).
   all: apply thin_unique.
 Defined.
+
+
+
+(** * Derived Theorems *)
+
+(* Directional version of coprod_unique *)
+Theorem unique_coprod {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
+  forall (x y z : @obj C) (f1 : x → z) (f2 : y → z) (g : x ⊕ y → z), 
+    ((g ∘ coprod_inl) ≅ f1) /\ ((g ∘ coprod_inr) ≅ f2) -> f1 ∐ f2 ≅ g.
+Proof.
+  intros x y z f1 f2 g H.
+  symmetry.
+  apply coprod_unique. 
+  destruct H as [H1 H2].
+  split.
+  - rewrite H1. reflexivity.
+  - rewrite H2. reflexivity.
+Qed.
+
+(* Pre-composition distributes over coproduct map *)
+(* Dual to compos_prod *)
+Theorem compos_coprod {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
+  forall (x y z w : @obj C) (f : x → y) (g : z → y) (h : y → w),
+ (h ∘ f) ∐ (h ∘ g) ≅ (h ∘ (f ∐ g)).
+Proof.
+  intros x y z w f g h.
+  apply unique_coprod.
+  split.
+  (* Check 1st component (inl) *)
+  - rewrite <- comp_assoc.
+    rewrite coprod_map_inl.
+    reflexivity.
+  (* Check 2nd component (inr) *)
+  - rewrite <- comp_assoc.
+    rewrite coprod_map_inr.
+    reflexivity.
+Qed.
+
+(* Identity expanded as a coproduct of injections *)
+(* Dual to pr_and_id *)
+Lemma in_and_id {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
+  forall (A B : @obj C), id (A ⊕ B) ≅ coprod_inl ∐ coprod_inr.
+Proof.
+  intros A B.
+  symmetry.
+  apply unique_coprod.
+  split.
+  - rewrite id_left. reflexivity.
+  - rewrite id_left. reflexivity.
+Qed.
+
+(* Functoriality of Coproduct (Composition of Parallel Maps) *)
+(* Dual to prod_id *)
+(* (g ⊔ id) ∘ (f ⊔ id) ≅ (g ∘ f) ⊔ id *)
+Lemma coprod_id {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} 
+  (X Y Z A : @obj C) : 
+  forall (f : X → Y) (g : Y → Z),
+    (g ⊔ (id A)) ∘ (f ⊔ (id A)) ≅ (g ∘ f) ⊔ (id A).
+Proof.
+  intros f g.
+  symmetry.
+  apply unique_coprod.
+  split.
+
+  (* --- 1. First Component (inl) --- *)
+  - rewrite <- comp_assoc.
+    
+    
+    (* 1. Apply to the first term (Rightmost in composition) *)
+    (* (g ⊔ id) ∘ ( (f ⊔ id) ∘ inl ) *)
+    rewrite  coprod_map_inl. (* (f ⊔ id) ∘ inl -> inl ∘ f *)
+
+    (* 2. Re-associate to expose the second term *)
+    (* ( (g ⊔ id) ∘ inl ) ∘ f *)
+    rewrite comp_assoc. 
+
+    (* 3. Apply to the second term *)
+    rewrite coprod_map_inl. (* (g ⊔ id) ∘ inl -> inl ∘ g *)
+    
+    (* 4. Restore association and finish *)
+    rewrite comp_assoc. (* inl ∘ (g ∘ f) *)
+    reflexivity.
+
+  (* --- 2. Second Component (inr) --- *)
+  - rewrite <- comp_assoc.
+    
+    (* Strategy: The second component handles the Identity part *)
+    
+    rewrite coprod_map_inr.
+    repeat rewrite id_right.
+    rewrite coprod_map_inr.
+    reflexivity.
+Qed.
+
+
