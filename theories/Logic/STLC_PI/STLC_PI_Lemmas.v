@@ -78,3 +78,4 @@ Proof.
   change (B :: Gamma) with (insert_at 0 B Gamma).
   apply weakening_general. assumption.
 Qed.
+
