@@ -171,7 +171,7 @@ Definition interprets_to {C : SetoidCategory} {CC : CartesianClosedCategory C}
                          (f : hom (interp_ctx C CC M Gamma) (interp_ty C CC M A)) : Prop :=
   exists (d : derivation Gamma t A), interp_derivation d ≅ f.
 
-(* Theorem: Soundness for Equivalent Terms (No explicit derivations)
+(* Theorem: Equivational Soundness (No explicit derivations)
    ---------------------------------------------------------
    If (t1 -> f) AND (t2 -> g) AND (t1 == t2)
    THEN (f ≅ g) *)
