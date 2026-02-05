@@ -5,3 +5,6 @@ theories/Cat/CCC.v
 theories/Cat/Functor.v
 theories/Cat/Adjoint.v
 theories/Cat/Fibration.v
+theories/Logic/STLC_PI/STLC_Base_PI.v
+theories/Semantics/STLC_PI_Soundness.v
+theories/Semantics/STLC_PI_Completeness.v
