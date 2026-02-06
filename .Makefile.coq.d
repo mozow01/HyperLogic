@@ -10,9 +10,6 @@ theories/Cat/Functor.vos theories/Cat/Functor.vok theories/Cat/Functor.required_
 theories/Cat/Adjoint.vo theories/Cat/Adjoint.glob theories/Cat/Adjoint.v.beautified theories/Cat/Adjoint.required_vo: theories/Cat/Adjoint.v theories/Cat/Core.vo theories/Cat/Functor.vo
 theories/Cat/Adjoint.vio: theories/Cat/Adjoint.v theories/Cat/Core.vio theories/Cat/Functor.vio
 theories/Cat/Adjoint.vos theories/Cat/Adjoint.vok theories/Cat/Adjoint.required_vos: theories/Cat/Adjoint.v theories/Cat/Core.vos theories/Cat/Functor.vos
-theories/Cat/Fibration.vo theories/Cat/Fibration.glob theories/Cat/Fibration.v.beautified theories/Cat/Fibration.required_vo: theories/Cat/Fibration.v theories/Cat/Core.vo theories/Cat/CCC.vo theories/Cat/Functor.vo theories/Cat/Adjoint.vo
-theories/Cat/Fibration.vio: theories/Cat/Fibration.v theories/Cat/Core.vio theories/Cat/CCC.vio theories/Cat/Functor.vio theories/Cat/Adjoint.vio
-theories/Cat/Fibration.vos theories/Cat/Fibration.vok theories/Cat/Fibration.required_vos: theories/Cat/Fibration.v theories/Cat/Core.vos theories/Cat/CCC.vos theories/Cat/Functor.vos theories/Cat/Adjoint.vos
 theories/Logic/STLC_PI/STLC_PI.vo theories/Logic/STLC_PI/STLC_PI.glob theories/Logic/STLC_PI/STLC_PI.v.beautified theories/Logic/STLC_PI/STLC_PI.required_vo: theories/Logic/STLC_PI/STLC_PI.v 
 theories/Logic/STLC_PI/STLC_PI.vio: theories/Logic/STLC_PI/STLC_PI.v 
 theories/Logic/STLC_PI/STLC_PI.vos theories/Logic/STLC_PI/STLC_PI.vok theories/Logic/STLC_PI/STLC_PI.required_vos: theories/Logic/STLC_PI/STLC_PI.v 
@@ -25,6 +22,9 @@ theories/Semantics/STLC_PI_Soundness.vos theories/Semantics/STLC_PI_Soundness.vo
 theories/Semantics/STLC_PI_Completeness.vo theories/Semantics/STLC_PI_Completeness.glob theories/Semantics/STLC_PI_Completeness.v.beautified theories/Semantics/STLC_PI_Completeness.required_vo: theories/Semantics/STLC_PI_Completeness.v theories/Cat/Core.vo theories/Cat/CCC.vo theories/Logic/STLC_PI/STLC_PI.vo theories/Logic/STLC_PI/STLC_PI_Lemmas.vo theories/Semantics/STLC_PI_Soundness.vo
 theories/Semantics/STLC_PI_Completeness.vio: theories/Semantics/STLC_PI_Completeness.v theories/Cat/Core.vio theories/Cat/CCC.vio theories/Logic/STLC_PI/STLC_PI.vio theories/Logic/STLC_PI/STLC_PI_Lemmas.vio theories/Semantics/STLC_PI_Soundness.vio
 theories/Semantics/STLC_PI_Completeness.vos theories/Semantics/STLC_PI_Completeness.vok theories/Semantics/STLC_PI_Completeness.required_vos: theories/Semantics/STLC_PI_Completeness.v theories/Cat/Core.vos theories/Cat/CCC.vos theories/Logic/STLC_PI/STLC_PI.vos theories/Logic/STLC_PI/STLC_PI_Lemmas.vos theories/Semantics/STLC_PI_Soundness.vos
-theories/Logic/Base/Base_Syntax.vo theories/Logic/Base/Base_Syntax.glob theories/Logic/Base/Base_Syntax.v.beautified theories/Logic/Base/Base_Syntax.required_vo: theories/Logic/Base/Base_Syntax.v 
-theories/Logic/Base/Base_Syntax.vio: theories/Logic/Base/Base_Syntax.v 
-theories/Logic/Base/Base_Syntax.vos theories/Logic/Base/Base_Syntax.vok theories/Logic/Base/Base_Syntax.required_vos: theories/Logic/Base/Base_Syntax.v 
+theories/Logic/Base/Base_Simple.vo theories/Logic/Base/Base_Simple.glob theories/Logic/Base/Base_Simple.v.beautified theories/Logic/Base/Base_Simple.required_vo: theories/Logic/Base/Base_Simple.v 
+theories/Logic/Base/Base_Simple.vio: theories/Logic/Base/Base_Simple.v 
+theories/Logic/Base/Base_Simple.vos theories/Logic/Base/Base_Simple.vok theories/Logic/Base/Base_Simple.required_vos: theories/Logic/Base/Base_Simple.v 
+theories/Logic/Base/Base_Individual.vo theories/Logic/Base/Base_Individual.glob theories/Logic/Base/Base_Individual.v.beautified theories/Logic/Base/Base_Individual.required_vo: theories/Logic/Base/Base_Individual.v 
+theories/Logic/Base/Base_Individual.vio: theories/Logic/Base/Base_Individual.v 
+theories/Logic/Base/Base_Individual.vos theories/Logic/Base/Base_Individual.vok theories/Logic/Base/Base_Individual.required_vos: theories/Logic/Base/Base_Individual.v 
