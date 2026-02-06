@@ -9,3 +9,4 @@ theories/Logic/STLC_PI/STLC_PI.v
 theories/Logic/STLC_PI/STLC_PI_Lemmas.v
 theories/Semantics/STLC_PI_Soundness.v
 theories/Semantics/STLC_PI_Completeness.v
+theories/Logic/Base/Base_Syntax.v
