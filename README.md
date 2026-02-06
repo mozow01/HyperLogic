@@ -7,40 +7,24 @@ Actual
 ├── _CoqProject
 ├── LICENSE
 ├── Makefile
+├── Makefile.coq
+├── Makefile.coq.conf
 ├── README.md
 └── theories
     ├── Cat
     │   ├── Adjoint.v
+    │   ├── BCCC.v
     │   ├── CCC.v
     │   ├── Core.v
     │   ├── Fibration.v
-    │   └── Functor.v
+    │   ├── Functor.v
+    │   └── Monad.v
     ├── Logic
-    └── Model
-
+    │   └── STLC_PI
+    │       ├── STLC_PI_Lemmas.v
+    │       ├── STLC_PI.v
+    └── Semantics
+        ├── STLC_PI_Completeness.v
+        └── STLC_PI_Soundness.v
 ````
 
-
-
-Planed
-
-````bash
-
-HyperLogic/                 <-- -R
-├── _CoqProject             <-- Coq info
-├── Makefile                <-- make and clean
-└── theories/               <-- logic and math 
-    ├── Cat/                <-- Categories
-    │   ├── Core.v          <-- Setoid Category, Morphisms
-    │   ├── Functor.v       <-- Functor definitions
-    │   ├── Adjunction.v    <-- Adjunction, IsLeftAdjoint, IsRightAdjoint
-    │   ├── CCC.v           <-- Cartesian Closed Category
-    │   └── Fibration.v     <-- GoodFibration (Hiper Doctrine Basics)
-    ├── Logic/              <-- Natural Deduction Logic (Syntax)
-    │   ├── Base.v          <-- Canonic Base Cat (S & One), BMor
-    │   ├── Syntax.v        <-- LogTyp, LogTerm 
-    │   └── Typing.v        <-- Context, LogTyty (Judgments)
-    └── Model/              <-- Semantics
-        ├── SyntacticCat.v  <-- Lemmas
-        └── Hyperdoctrine.v <-- Theorems
-````
