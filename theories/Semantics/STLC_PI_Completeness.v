@@ -1,9 +1,7 @@
-Require Import List.
-Import ListNotations. 
-Require Import PeanoNat.
-Require Import Coq.Classes.Morphisms.
+Require Import List PeanoNat Coq.Classes.Morphisms. 
+Import ListNotations.
 
-(* Használjuk a feltöltött fájlokat *)
+(* HyperLogic Modules *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CCC.
 Require Import HyperLogic.Logic.STLC_PI.STLC_PI.
@@ -13,23 +11,25 @@ Require Import HyperLogic.Semantics.STLC_PI_Soundness.
 Open Scope stlc_scope.
 
 (* ================================================================= *)
-(* 1. SEGÉDLEMMÁK (WEAKENING)                                        *)
+(* 1. HELPER LEMMAS                                                  *)
 (* ================================================================= *)
 
-(* Az eredeti 'weakening_weak' adaptálása az STLC_PI definíciókhoz. 
-   Mivel a kontextus végére fűzünk (++), a De Bruijn indexek nem változnak,
-   így nem kell 'lift' függvényt használnunk a zárt termekhez. *)
-
-Lemma weakening_weak : forall Gamma Delta t A, 
+(**
+ * Weakening for context concatenation.
+ * Rule: Gamma |- t : A  =>  (Gamma ++ Delta) |- t : A
+ * Note: Used heavily in category construction where contexts are short lists.
+ * Since we append to the end, De Bruijn indices for 'Gamma' do not change.
+ *)
+Lemma weakening_append : forall Gamma Delta t A,
   Gamma ⊢ t [:] A -> (Gamma ++ Delta) ⊢ t [:] A.
 Proof.
-  (* Segédállítás a lista műveletekhez *)
-  assert (K : forall (T : Type) (l : list T) (a : T), a :: l = [a] ++ l). { simpl; auto. }
-  
+  (* Helper: relating cons (::) to append (++) for rewriting *)
+  assert (H_cons_app : forall (T : Type) (l : list T) (a : T), a :: l = [a] ++ l).
+  { simpl; auto. }
+
   intros Gamma Delta t A H.
-  induction H; try (rewrite K; try rewrite <- app_assoc; try rewrite <- K); auto.
-  
-  (* Az STLC_PI konstruktorai (T_Unit, T_Var0, stb.) *)
+  induction H; try (rewrite H_cons_app; try rewrite <- app_assoc; try rewrite <- H_cons_app); auto.
+  (* Direct mapping to STLC constructors *)
   - apply T_Unit.
   - apply T_Var0.
   - apply T_VarS; auto.
@@ -41,46 +41,55 @@ Proof.
 Defined.
 
 (* ================================================================= *)
-(* 2. KATEGÓRIA KONSTRUKCIÓ (STLC_Category)                          *)
+(* 2. CATEGORY CONSTRUCTION (STLC_Category)                          *)
 (* ================================================================= *)
 
-(* Objektumok: Típusok *)
+(** Objects are Types *)
 Definition obj_stlc_cat := ty.
 
-(* Morfizmusok: Zárt termek (hom_stlc definíciója az STLC_PI-ben van) *)
-(* Definition hom_stlc (x y : ty) := { t : tm | ⊢ t [:] (x ⊃ y)}. *)
-
-(* -- Identity: \x. x -- *)
+(**
+ * Identity Morphism
+ * Term: \x. x
+ * Type: A -> A
+ *)
 Definition id_term (A : ty) : tm := tm_lam A (tm_var 0).
 
 Lemma id_typing (A : ty) : ⊢ (id_term A) [:] (A ⊃ A).
-Proof. 
-  unfold id_term. apply T_Lam. apply T_Var0. 
+Proof.
+  unfold id_term. apply T_Lam. apply T_Var0.
 Defined.
 
-Definition id_stlc (A : ty) : hom_stlc A A := 
+Definition id_stlc (A : ty) : hom_stlc A A :=
   exist _ (id_term A) (id_typing A).
 
-(* -- Composition: \x. g (f x) -- *)
-Definition compose_term {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) := 
+(**
+ * Composition Morphism
+ * Term: \x. g (f x)
+ * Type: A -> C  (where f: A->B, g: B->C)
+ *)
+Definition compose_term {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) :=
   tm_lam x (tm_app (proj1_sig f) (tm_app (proj1_sig g) (tm_var 0))).
 
-Lemma compose_typing {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) : 
+Lemma compose_typing {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) :
   ⊢ (compose_term f g) [:] (x ⊃ z).
 Proof.
   unfold compose_term. apply T_Lam.
   apply T_App with (A:=y).
-  (* Itt használjuk a weakening-et: a zárt f termet [x] kontextusba emeljük *)
-  - apply weakening_weak with (Gamma := nil) (Delta := [x]); exact (proj2_sig f).
+  (* f is closed (nil context), weaken it to [x] *)
+  - apply weakening_append with (Gamma := nil) (Delta := [x]); exact (proj2_sig f).
   - apply T_App with (A:=x).
-    -- apply weakening_weak with (Gamma := nil) (Delta := [x]); exact (proj2_sig g).
+    (* g is closed, weaken to [x] *)
+    -- apply weakening_append with (Gamma := nil) (Delta := [x]); exact (proj2_sig g).
     -- apply T_Var0.
 Defined.
 
-Definition compose_stlc {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) : hom_stlc x z := 
+Definition compose_stlc {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) : hom_stlc x z :=
   exist _ (compose_term f g) (compose_typing f g).
 
-(* -- Kategória Instancia -- *)
+(**
+ * Category Instance
+ * Satisfies Setoid Category laws via Proof Irrelevance (PI).
+ *)
 Instance STLC_Category : SetoidCategory.
 Proof.
   apply mk_SetoidCategory with
@@ -89,276 +98,211 @@ Proof.
     (hom_equiv := @hom_equiv_stlc)
     (id := id_stlc)
     (compose := @compose_stlc).
-  
-  (* 1. Equivalence: Itt bontsd ki expliciten a változókat *)
-  - intros x y.
-    split.
-    (* Reflexive *)
-    + intros f. apply hom_equiv_stlc_refl.
-    (* Symmetric *)
-    + intros f g H. apply hom_equiv_stlc_sym; assumption.
-    (* Transitive *)
-    + intros f g h H1 H2. eapply hom_equiv_stlc_trans; eassumption.
-  
-  (* 2. Assoc *)
+
+  (* 1. Equivalence Relation properties *)
+  - intros x y; split.
+    + intros f; apply hom_equiv_stlc_refl.
+    + intros f g; apply hom_equiv_stlc_sym.
+    + intros f g h; eapply hom_equiv_stlc_trans.
+
+  (* 2. Laws (Assoc, Identity, Congruence) *)
+  (* Trivial due to PI (all terms of same type are equivalent in this logic) *)
   - intros; apply generic_axiom_proof.
-  
-  (* 3. Id Right *)
   - intros; apply generic_axiom_proof.
-  
-  (* 4. Id Left *)
   - intros; apply generic_axiom_proof.
-  
-  (* 5. Composition Proper *)
   - intros; apply generic_axiom_proof.
 Defined.
 
-(* -- Thin Kategória -- *)
-(* Ez kulcsfontosságú a CCC egyszerűsítéséhez *)
+(**
+ * Thin Category Instance
+ * At most one morphism between any two objects (up to equivalence).
+ *)
 Instance STLC_Thin : Thin STLC_Category.
 Proof.
-  intros x y f g.
-  apply generic_axiom_proof.
+  intros x y f g. apply generic_axiom_proof.
 Defined.
- 
+
 (* ================================================================= *)
-(* 3. CCC KONSTRUKCIÓ (STLC_CCC)                                     *)
+(* 3. CCC CONSTRUCTION (STLC_CCC)                                    *)
 (* ================================================================= *)
 
-(* -- Terminal (Unit) -- *)
-(* \x. unit *)
+(* --- Terminal Object (Unit) --- *)
+(** Term: \x. unit *)
 Definition terminal_term (A : ty) := (tm_lam A tm_unit).
 
 Lemma terminal_typing (A : ty) : ⊢ (terminal_term A) [:] (A ⊃ Ty_Unit).
 Proof. intros; apply T_Lam; apply T_Unit. Defined.
 
-Definition terminal_stlc (x : ty) : hom_stlc x Ty_Unit := 
+Definition terminal_stlc (x : ty) : hom_stlc x Ty_Unit :=
   exist _ (terminal_term x) (terminal_typing x).
 
-
-(* -- Product (Pairing) -- *)
-(* <f, g> = \x. (f x, g x) *)
-Definition prod_map_term (x y z : ty) (f : hom_stlc x y) (g : hom_stlc x z) := 
+(* --- Product Object (Pairing) --- *)
+(** Term: <f, g> = \x. (f x, g x) *)
+Definition prod_map_term (x y z : ty) (f : hom_stlc x y) (g : hom_stlc x z) :=
   tm_lam x (tm_pair (tm_app (proj1_sig f) (tm_var 0)) (tm_app (proj1_sig g) (tm_var 0))).
 
-Lemma prod_map_typing (x y z : ty) (f : hom_stlc x y) (g : hom_stlc x z) : 
+Lemma prod_map_typing (x y z : ty) (f : hom_stlc x y) (g : hom_stlc x z) :
   ⊢ prod_map_term x y z f g [:] (x ⊃ (Ty_Prod y z)).
 Proof.
-  unfold prod_map_term; apply T_Lam.
-  apply T_Pair.
+  unfold prod_map_term; apply T_Lam; apply T_Pair.
   - apply T_App with (A:=x).
-    + apply weakening_weak with (Gamma:=nil) (Delta:=[x]); exact (proj2_sig f).
+    + apply weakening_append with (Gamma:=nil) (Delta:=[x]); exact (proj2_sig f).
     + apply T_Var0.
   - apply T_App with (A:=x).
-    + apply weakening_weak with (Gamma:=nil) (Delta:=[x]); exact (proj2_sig g).
+    + apply weakening_append with (Gamma:=nil) (Delta:=[x]); exact (proj2_sig g).
     + apply T_Var0.
 Defined.
 
-Definition prod_map_stlc {x y z : ty} (f : hom_stlc x y) (g : hom_stlc x z) : hom_stlc x (Ty_Prod y z) := 
-  exist _ (prod_map_term x y z f g) (prod_map_typing x y z f g).
+Definition prod_map_stlc {x y z : ty} (f : hom_stlc x y) (g : hom_stlc x z) : hom_stlc x (Ty_Prod y z) :=
+  exist _ _ (prod_map_typing x y z f g).
 
-
-(* -- Projections (First, Second) -- *)
-(* fst = \p. fst p *)
+(* --- Projections --- *)
+(** Term: fst = \p. fst p *)
 Definition fst_term (x y : ty) := (tm_lam (Ty_Prod x y) (tm_fst (tm_var 0))).
 
 Lemma fst_typing (x y : ty) : ⊢ (fst_term x y) [:] ((Ty_Prod x y) ⊃ x).
 Proof. unfold fst_term; apply T_Lam; eapply T_Fst; apply T_Var0. Defined.
 
-Definition fst_stlc {x y : ty} : hom_stlc (Ty_Prod x y) x := 
-  exist _ (fst_term x y) (fst_typing x y).
+Definition fst_stlc {x y : ty} : hom_stlc (Ty_Prod x y) x :=
+  exist _ _ (fst_typing x y).
 
-(* snd = \p. snd p *)
+(** Term: snd = \p. snd p *)
 Definition snd_term (x y : ty) := (tm_lam (Ty_Prod x y) (tm_snd (tm_var 0))).
 
 Lemma snd_typing (x y : ty) : ⊢ (snd_term x y) [:] ((Ty_Prod x y) ⊃ y).
 Proof. unfold snd_term; apply T_Lam; eapply T_Snd; apply T_Var0. Defined.
 
-Definition snd_stlc {x y : ty} : hom_stlc (Ty_Prod x y) y := 
-  exist _ (snd_term x y) (snd_typing x y).
+Definition snd_stlc {x y : ty} : hom_stlc (Ty_Prod x y) y :=
+  exist _ _ (snd_typing x y).
 
-
-(* -- Exponential (Eval, Curry) -- *)
-(* eval = \p. (fst p) (snd p) *)
-(* p : (y^z) * z *)
-Definition eval_term (y z : ty) := 
+(* --- Exponentials --- *)
+(** Term: eval = \p. (fst p) (snd p) *)
+Definition eval_term (y z : ty) :=
   tm_lam (Ty_Prod (Ty_Arrow z y) z) (tm_app (tm_fst (tm_var 0)) (tm_snd (tm_var 0))).
 
 Lemma eval_typing (y z : ty) : ⊢ eval_term y z [:] (Ty_Prod (Ty_Arrow z y) z ⊃ y).
-Proof. 
-  unfold eval_term; apply T_Lam.
-  eapply T_App.
-  - eapply T_Fst; apply T_Var0. 
-  - eapply T_Snd; apply T_Var0. 
+Proof.
+  unfold eval_term; apply T_Lam; eapply T_App.
+  - eapply T_Fst; apply T_Var0.
+  - eapply T_Snd; apply T_Var0.
 Defined.
 
-Definition eval_stlc {y z : ty} : hom_stlc (Ty_Prod (Ty_Arrow z y) z) y := 
-  exist _ (eval_term y z) (eval_typing y z).
+Definition eval_stlc {y z : ty} : hom_stlc (Ty_Prod (Ty_Arrow z y) z) y :=
+  exist _ _ (eval_typing y z).
 
-(* curry = \x. \y. g (x, y) *)
-(* g : (x * y) -> z *)
-(* lambda x. lambda y. g (pair (var 1) (var 0)) *)
-(* Figyelem: A (var 1) az 'x', a (var 0) az 'y' *)
-Definition curry_term (x y z : ty) (g : hom_stlc (Ty_Prod x y) z) := 
+(** Term: curry = \x. \y. g (x, y) *)
+Definition curry_term (x y z : ty) (g : hom_stlc (Ty_Prod x y) z) :=
   (tm_lam x (tm_lam y (tm_app (proj1_sig g) (tm_pair (tm_var 1) (tm_var 0))))).
 
-Lemma curry_typing (x y z : ty) (g : hom_stlc (Ty_Prod x y) z) : 
+Lemma curry_typing (x y z : ty) (g : hom_stlc (Ty_Prod x y) z) :
   ⊢ curry_term x y z g [:] (x ⊃ (Ty_Arrow y z)).
 Proof.
-  unfold curry_term. apply T_Lam. apply T_Lam.
+  unfold curry_term; apply T_Lam; apply T_Lam.
   apply T_App with (A:= (Ty_Prod x y)).
-  (* g-t két szinttel kell gyengíteni: nil -> [x] -> [y, x] *)
-  - apply weakening_weak with (Gamma:=nil) (Delta:=[y; x]); exact (proj2_sig g).
-  - apply T_Pair.
-    + apply T_VarS; apply T_Var0. (* x: var 1 *)
-    + apply T_Var0.               (* y: var 0 *)
+  (* Weaken g from nil -> [x] -> [y, x] *)
+  - apply weakening_append with (Gamma:=nil) (Delta:=[y; x]); exact (proj2_sig g).
+  - apply T_Pair; [apply T_VarS; apply T_Var0 | apply T_Var0].
 Defined.
 
-Definition curry_stlc {x y z : ty} (g : hom_stlc (Ty_Prod x y) z) : hom_stlc x (Ty_Arrow y z) := 
-  exist _ (curry_term x y z g) (curry_typing x y z g).
+Definition curry_stlc {x y z : ty} (g : hom_stlc (Ty_Prod x y) z) : hom_stlc x (Ty_Arrow y z) :=
+  exist _ _ (curry_typing x y z g).
 
-
-(* -- CCC Instancia -- *)
+(**
+ * CCC Instance
+ * Constructed using Build_Thin_CCC to avoid manual axiom proofs.
+ *)
 Instance STLC_CCC : CartesianClosedCategory STLC_Category.
 Proof.
   refine (Build_Thin_CCC _ STLC_Thin
     Ty_Unit
-    (fun x => terminal_stlc x)      (* JAVÍTVA: {x} helyett simán x *)
+    (fun x => terminal_stlc x)
     Ty_Prod
     (@prod_map_stlc)
     (@fst_stlc)
     (@snd_stlc)
-    (fun z y => Ty_Arrow y z)       (* exp z y = y -> z *)
-    (fun y z => @eval_stlc z y)     (* JAVÍTVA: {y z} helyett simán y z *)
+    (fun z y => Ty_Arrow y z)   (* Exp z y = y -> z *)
+    (fun y z => @eval_stlc z y) (* Eval order: Prod (Exp z y) z -> y *)
     (@curry_stlc)
   ).
 Defined.
 
-(* ... (A FÁJL ELEJE: Importok, Kategória definíció, CCC instancia) ... *)
-
 (* ================================================================= *)
-(* 4. COMPLETENESS THEOREM                                           *)
+(* 4. COMPLETENESS INFRASTRUCTURE                                    *)
 (* ================================================================= *)
 
-(* 1. Kontextus reifikálása TÍPUSKÉNT (User: Cnj_Cntxt) 
-   Ahelyett, hogy termet építenénk, a kontextust egyetlen nagy szorzat-típussá alakítjuk. 
-   Ez lesz a "Sigma típus" a kontextushoz. *)
+(**
+ * Context Reification (Type level)
+ * Converts a list of types (Gamma) into a single Product Type.
+ * [A, B] -> (Unit * A) * B
+ *)
 Fixpoint make_ctx_ty (Gamma : context) : ty :=
   match Gamma with
   | nil => Ty_Unit
   | A :: Gamma' => Ty_Prod (make_ctx_ty Gamma') A
-  end. 
+  end.
 
-(* 2. Kanonikus Modell (User: V_STT) 
-   A típusokat önmagukra képezzük le. *)
-Instance STLC_Model : Model STLC_Category := {
-  interp_base := Ty_Atomic
-}.
-
-(* 3. Identitás Lemmák (User: val_1, cntx_1) *)
-
-(* Lemma: A típusok interpretációja a kanonikus modellben önmaga. *)
-Lemma val_identity : forall A, interp_ty STLC_Category STLC_CCC STLC_Model A = A.
-Proof.
-  induction A; simpl; auto; try (rewrite IHA1; rewrite IHA2); auto.
-Defined. 
-
-(* Lemma: A kontextus interpretációja megegyezik a make_ctx_ty eredménnyel. *)
-Lemma ctx_identity : forall Gamma, interp_ctx STLC_Category STLC_CCC STLC_Model Gamma = make_ctx_ty Gamma.
-Proof.
-  induction Gamma; simpl; auto.
-  rewrite IHGamma.
-  rewrite val_identity. (* Fontos: az elem (A) interpretációja is identitás *)
-  auto.
-Defined.
-
-(* 4. Uncurrying Helper (User: imp_cntx_1) 
-   Ha van egy zárt 't' termünk (Ctx -> A), akkor azt alkalmazhatjuk a kontextus változóra. 
-   Lényegében: "Ha van egy funkciód a kontextusból A-ba, akkor a kontextusban megkapod A-t". *)
-Lemma imp_to_app_ctx : forall A B t,
-  (⊢ t [:] (B ⊃ A)) -> [B] ⊢ (tm_app t (tm_var 0)) [:] A.
-Proof.
-  intros A B t H.
-  (* 1. Gyengítjük t-t, hogy bekerüljön a [B] kontextusba. 
-     Mivel t zárt (nil kontextus), a weakening_weak ezt megoldja. *)
-  assert (K : [B] ⊢ t [:] (B ⊃ A)).
-  { apply weakening_weak with (Gamma := nil) (Delta := [B]). exact H. }
-  
-  (* 2. Alkalmazzuk a (var 0)-ra, aminek típusa B a [B] kontextusban. *)
-  eapply T_App.
-  - exact K.
-  - apply T_Var0.
-Defined. 
-
-(* 5. COMPLETENESS THEOREM (User: Completeness) *)
-Theorem Completeness : forall Gamma A,
-  (* Ha szemantikailag igaz az állítás (minden modellben lakott)... *)
-  (forall (C : SetoidCategory) (CC : CartesianClosedCategory C) (M : Model C), 
-     inhabited (hom (interp_ctx C CC M Gamma) (interp_ty C CC M A))) ->
-  (* ... akkor létezik levezetés, ahol a kontextust egyetlen típusként kezeljük. *)
-  (exists t, ([make_ctx_ty Gamma] ⊢ t [:] A)).
-Proof.
-  intros Gamma A H_valid.
-  
-  (* 1. Instanciáljuk a hipotézist a saját Szintaktikus Modellünkre. *)
-  (* Ez ad egy 'inhabited' morfizmust a kategóriában. *)
-  assert (K : inhabited (hom (interp_ctx STLC_Category STLC_CCC STLC_Model Gamma) 
-                             (interp_ty STLC_Category STLC_CCC STLC_Model A))).
-  { apply H_valid. }
-  
-  (* 2. Kivesszük a bizonyítást (a zárt termet) az inhabited-ből. *)
-  destruct K as [[t_closed H_closed]]. (* L a user kódjában *)
-  
-  (* 3. Egyszerűsítjük a típusokat az identitás lemmákkal. *)
-  (* A 'hom' definíciója: {t | nil |- t : Dom -> Cod}. *)
-  simpl in H_closed.
-  rewrite ctx_identity in H_closed.
-  rewrite val_identity in H_closed.
-  
-  (* Most már tudjuk: H_closed : ⊢ t_closed : (make_ctx_ty Gamma ⊃ A) *)
-  
-  (* 4. Alkalmazzuk az uncurrying lemmát (imp_to_app_ctx). 
-     t := (app t_closed (var 0)) *)
-  exists (tm_app t_closed (tm_var 0)).
-  apply imp_to_app_ctx.
-  exact H_closed.
-Defined.
-
-(* Reifikálás: A kontextusból csinálunk egy termet. 
-   Ehhez KELL a lift, mert De Bruijn indexekkel dolgozunk. *)
+(**
+ * Context Reification (Term level)
+ * Converts context variables into a tuple term.
+ * Gamma |- reify : make_ctx_ty Gamma
+ *)
 Fixpoint reify_ctx (Gamma : context) : tm :=
   match Gamma with
   | nil => tm_unit
-  | A :: Gamma' => 
-      (* A korábbi kontextust reprezentáló termet megemeljük, 
-         mert egy új változó (A) került a verem tetejére (0-ás index). *)
+  | A :: Gamma' =>
+      (* reify G' must be lifted because variable A is now at index 0 *)
       tm_pair (lift 1 0 (reify_ctx Gamma')) (tm_var 0)
   end.
 
-(* Lemma: A reify_ctx jól típusozott. 
-   Ehhez kell a weakening lemma az STLC_PI_Lemmas-ból. *)
 Lemma reify_ctx_typing : forall Gamma,
   Gamma ⊢ reify_ctx Gamma [:] (make_ctx_ty Gamma).
 Proof.
   induction Gamma; simpl.
   - apply T_Unit.
   - apply T_Pair.
-    + apply weakening. exact IHGamma.
+    (* Use weakening from Lemmas to handle the lift *)
+    + apply weakening; assumption.
     + apply T_Var0.
 Defined.
 
-(* THEOREM: Equational Completeness
-   Ha két term interpretációja MINDEN modellben izomorf, akkor a termek ekvivalensek. *)
-Theorem Completeness_Equational : 
+(**
+ * Canonical Model
+ * Maps Types to Types (Identity).
+ *)
+Instance STLC_Model : Model STLC_Category := {
+  interp_base := Ty_Atomic
+}.
+
+(* --- Identity Lemmas --- *)
+
+Lemma val_identity : forall A, interp_ty STLC_Category STLC_CCC STLC_Model A = A.
+Proof.
+  induction A; simpl; auto; try (rewrite IHA1; rewrite IHA2); auto.
+Defined.
+
+Lemma ctx_identity : forall Gamma, interp_ctx STLC_Category STLC_CCC STLC_Model Gamma = make_ctx_ty Gamma.
+Proof.
+  induction Gamma; simpl; auto.
+  rewrite IHGamma. rewrite val_identity. auto.
+Defined.
+
+(* ================================================================= *)
+(* 5. COMPLETENESS THEOREMS                                          *)
+(* ================================================================= *)
+
+(**
+ * Equational Completeness (Derivation based)
+ * Statement: Semantically equal derivations => Syntactically equivalent terms.
+ * Proof: Trivial in STLC_PI due to Proof Irrelevance rule.
+ *)
+Theorem Completeness_Equational :
   forall (Gamma : context) (A : ty) (t1 t2 : tm)
          (d1 : derivation Gamma t1 A)
          (d2 : derivation Gamma t2 A),
-  
-  (* Premissza: Szemantikus egyenlőség *)
+
   (forall (C : SetoidCategory) (CC : CartesianClosedCategory C) (M : Model C),
       interp_derivation d1 ≅ interp_derivation d2) ->
-      
-  (* Konklúzió: Szintaktikus ekvivalencia *)
+
   tm_equiv_rel t1 t2.
 Proof.
   intros Gamma A t1 t2 d1 d2 H_valid.
@@ -366,27 +310,69 @@ Proof.
   - apply (forget_derivation d1).
   - apply (forget_derivation d2).
 Defined.
-  
-Theorem completeness_terms_equiv : 
+
+(**
+ * Equational Completeness (Term based)
+ * Statement: Semantically equal terms (via interpretation) => Syntactically equivalent.
+ * Uses 'interprets_to' predicate to bridge terms and morphisms.
+ *)
+Theorem completeness_terms_equiv :
   forall (Gamma : context) (A : ty) (t1 t2 : tm),
-  
-  (* 1. Feltétel: t1 és t2 "értelmesek" (van interpretációjuk a szintaktikus modellben) *)
+
+  (* 1. Terms must be interpretable (well-typed) *)
   (exists f, interprets_to (C:=STLC_Category) (CC:=STLC_CCC) (M:=STLC_Model) Gamma A t1 f) ->
   (exists g, interprets_to (C:=STLC_Category) (CC:=STLC_CCC) (M:=STLC_Model) Gamma A t2 g) ->
-  
-  (* 2. Feltétel: Szemantikus egyenlőség MINDEN modellben *)
-  (* Ha t1 -> f és t2 -> g egy adott modellben, akkor f ~= g. *)
+
+  (* 2. Semantic Equality holds in ALL models *)
   (forall (C : SetoidCategory) (CC : CartesianClosedCategory C) (M : Model C)
           (f g : hom (interp_ctx C CC M Gamma) (interp_ty C CC M A)),
       interprets_to Gamma A t1 f ->
       interprets_to Gamma A t2 g ->
       f ≅ g) ->
-      
-  (* Konklúzió: Szintaktikus ekvivalencia *)
+
   tm_equiv_rel t1 t2.
 Proof.
   intros Gamma A t1 t2 [f_can [d1 _]] [g_can [d2 _]] H_sem_eq.
   apply (PI_rule Gamma A).
   - apply (forget_derivation d1).
   - apply (forget_derivation d2).
+Defined.
+
+(**
+ * Standard Completeness Theorem
+ * Statement: Gamma |= A  =>  Gamma |- t : A
+ * Proof strategy:
+ * 1. Extract closed morphism 'f' from Canonical Model.
+ * 2. Weaken 'f' into 'Gamma' context.
+ * 3. Apply 'f' to the reified context tuple.
+ *)
+Theorem Completeness : forall Gamma A,
+  (forall (C : SetoidCategory) (CC : CartesianClosedCategory C) (M : Model C),
+     inhabited (hom (interp_ctx C CC M Gamma) (interp_ty C CC M A))) ->
+  (exists t, (Gamma ⊢ t [:] A)).
+Proof.
+  intros Gamma A H_valid.
+
+  (* 1. Extract witness from Model *)
+  assert (K : inhabited (hom (interp_ctx STLC_Category STLC_CCC STLC_Model Gamma)
+                             (interp_ty STLC_Category STLC_CCC STLC_Model A))).
+  { apply H_valid. }
+  destruct K as [[t_closed H_closed]].
+
+  (* 2. Simplify types using Identity lemmas *)
+  simpl in H_closed.
+  rewrite ctx_identity in H_closed.
+  rewrite val_identity in H_closed.
+
+  (* 3. Weaken the closed term into Gamma *)
+  (* Uses 'weakening_from_nil' from Lemmas *)
+  assert (H_weak : Gamma ⊢ (lift (length Gamma) 0 t_closed) [:] (make_ctx_ty Gamma ⊃ A)).
+  { apply weakening_from_nil; exact H_closed. }
+
+  (* 4. Construct witness: app f (reify Gamma) *)
+  exists (tm_app (lift (length Gamma) 0 t_closed) (reify_ctx Gamma)).
+
+  eapply T_App.
+  - exact H_weak.
+  - apply reify_ctx_typing.
 Defined.
