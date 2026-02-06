@@ -22,7 +22,7 @@ Actual
     ├── Logic
     │   └── STLC_PI
     │       ├── STLC_PI_Lemmas.v
-    │       ├── STLC_PI.v
+    │       └── STLC_PI.v
     └── Semantics
         ├── STLC_PI_Completeness.v
         └── STLC_PI_Soundness.v
