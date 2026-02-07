@@ -28,3 +28,9 @@ theories/Logic/Base/Base_Simple.vos theories/Logic/Base/Base_Simple.vok theories
 theories/Logic/Base/Base_Individual.vo theories/Logic/Base/Base_Individual.glob theories/Logic/Base/Base_Individual.v.beautified theories/Logic/Base/Base_Individual.required_vo: theories/Logic/Base/Base_Individual.v 
 theories/Logic/Base/Base_Individual.vio: theories/Logic/Base/Base_Individual.v 
 theories/Logic/Base/Base_Individual.vos theories/Logic/Base/Base_Individual.vok theories/Logic/Base/Base_Individual.required_vos: theories/Logic/Base/Base_Individual.v 
+theories/Logic/Epsilon_Syntax.vo theories/Logic/Epsilon_Syntax.glob theories/Logic/Epsilon_Syntax.v.beautified theories/Logic/Epsilon_Syntax.required_vo: theories/Logic/Epsilon_Syntax.v 
+theories/Logic/Epsilon_Syntax.vio: theories/Logic/Epsilon_Syntax.v 
+theories/Logic/Epsilon_Syntax.vos theories/Logic/Epsilon_Syntax.vok theories/Logic/Epsilon_Syntax.required_vos: theories/Logic/Epsilon_Syntax.v 
+theories/Logic/Base_Setoid_Epsilon.vo theories/Logic/Base_Setoid_Epsilon.glob theories/Logic/Base_Setoid_Epsilon.v.beautified theories/Logic/Base_Setoid_Epsilon.required_vo: theories/Logic/Base_Setoid_Epsilon.v theories/Logic/Epsilon_Syntax.vo
+theories/Logic/Base_Setoid_Epsilon.vio: theories/Logic/Base_Setoid_Epsilon.v theories/Logic/Epsilon_Syntax.vio
+theories/Logic/Base_Setoid_Epsilon.vos theories/Logic/Base_Setoid_Epsilon.vok theories/Logic/Base_Setoid_Epsilon.required_vos: theories/Logic/Base_Setoid_Epsilon.v theories/Logic/Epsilon_Syntax.vos

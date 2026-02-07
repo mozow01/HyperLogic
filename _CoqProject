@@ -13,4 +13,6 @@ theories/Semantics/STLC_PI_Completeness.v
 
 theories/Logic/Base/Base_Simple.v
 theories/Logic/Base/Base_Individual.v
+theories/Logic/Epsilon_Syntax.v
+theories/Logic/Base_Setoid_Epsilon.v
 
