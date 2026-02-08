@@ -1,8 +1,7 @@
 Require Import List. 
 Require Import Setoid.
 Require Import Morphisms.
-(* Ügyelj rá, hogy a Syntax fájl neve pontosan egyezzen a te fájlrendszereddel! *)
-Require Import HyperLogic.Logic.Epsilon_Syntax.
+Require Import HyperLogic.Logic.Hyper.Epsilon.Epsilon_Syntax.
 Import ListNotations.
 
 (* ================================================================= *)

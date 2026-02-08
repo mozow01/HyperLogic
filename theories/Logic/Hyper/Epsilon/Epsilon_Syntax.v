@@ -5,11 +5,11 @@ Import ListNotations.
 (* 1. ALAPTÍPUSOK (BASE TYPES)                                       *)
 (* ================================================================= *)
 
-(* A Bázisban csak kétféle "nyers" típus van. 
-   A kontextusok ezek listáiból állnak majd. *)
+(* A Bázisban most már háromféle típus van: Unit, Individuum és Szorzat. *)
 Inductive b_ty : Set := 
-  | b_Unit : b_ty  (* 1 *)
-  | b_S    : b_ty. (* S (Individuum) *)
+  | b_Unit : b_ty                   (* 1 *)
+  | b_S    : b_ty                   (* S (Individuum) *)
+  | b_Prod : b_ty -> b_ty -> b_ty.  (* A x B (Szorzat - EZ AZ ÚJ!) *)
 
 Definition b_context := list b_ty.
 

@@ -2,9 +2,12 @@ Require Import List.
 Import ListNotations.
 Require Import Coq.Classes.Morphisms.
 
+
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CCC.
+
 Require Import HyperLogic.Logic.STLC_PI.STLC_PI.
+Require Import HyperLogic.Logic.STLC_PI.STLC_PI_Lemmas.
 
 Open Scope stlc_scope. 
 
