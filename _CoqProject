@@ -2,10 +2,21 @@
 
 theories/Cat/Core.v
 theories/Cat/CCC.v
+theories/Cat/BCCC.v
 theories/Cat/Functor.v
 theories/Cat/Adjoint.v
 theories/Cat/Fibration.v
-theories/Logic/STLC_PI/STLC_PI.v
+theories/Cat/Monad.v
+
+theories/Logic/Base/Individual/Base_Individual.v
+theories/Logic/Base/Simple/Base_Simple.v
+theories/Logic/Hyper/Epsilon/Epsilon_Syntax.v
+theories/Logic/Base/Epsilon/Base_Epsilon.v
 theories/Logic/STLC_PI/STLC_PI_Lemmas.v
-theories/Semantics/STLC_PI_Soundness.v
-theories/Semantics/STLC_PI_Completeness.v
+theories/Logic/STLC_PI/STLC_PI.v
+
+theories/Semantics/STLC_PI/STLC_PI_Soundness.v
+theories/Semantics/STLC_PI/STLC_PI_Completeness.v
+
+
+
