@@ -184,7 +184,7 @@ Proof.
 Defined.
 
 
-(* Every Adjunction F -| G (where F:D->C is Left Adjoint) induces a Comonad on D.
+(* Every Adjunction F -| G (where F:D->C is Left Adjoint) induces a Comonad on C.
    W = F o G
 *)
 Instance AdjFuncCoMonad (C D : SetoidCategory) (F : Functor D C) (LA : IsLeftAdjoint F): 
