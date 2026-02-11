@@ -6,10 +6,10 @@ Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CCC.
 Require Import HyperLogic.Cat.BCCC.
 
-Require Import HyperLogic.Logic.STLC_PI.STLC_PI_Sum.
-Require Import HyperLogic.Logic.STLC_PI.STLC_PI_Sum_Lemmas.
+Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
+Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum_Lemmas.
 
-Require Import HyperLogic.Semantics.STLC_PI.STLC_PI_Sum_Soundness.
+Require Import HyperLogic.Semantics.STLC_PI_Sum.STLC_PI_Sum_Soundness.
 
 Open Scope stlc_scope_sum.
 

@@ -12,13 +12,21 @@ theories/Logic/Base/Individual/Base_Individual.v
 theories/Logic/Base/Simple/Base_Simple.v
 theories/Logic/Hyper/Epsilon/Epsilon_Syntax.v
 theories/Logic/Base/Epsilon/Base_Epsilon.v
-theories/Logic/STLC_PI/STLC_PI_Lemmas.v
-theories/Logic/STLC_PI/STLC_PI.v
-theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.v
-theories/Logic/STLC_PI/STLC_PI_Sum.v
 
+
+
+# --- STLC Logic (STLC_PI) ---
+theories/Logic/STLC_PI/STLC_PI.v
+theories/Logic/STLC_PI/STLC_PI_Lemmas.v
+
+# --- Sum Logic (STLC_PI_Sum) ---
+theories/Logic/STLC_PI_Sum/STLC_PI_Sum.v
+theories/Logic/STLC_PI_Sum/STLC_PI_Sum_Lemmas.v
+
+# --- STLC Semantics ---
 theories/Semantics/STLC_PI/STLC_PI_Soundness.v
 theories/Semantics/STLC_PI/STLC_PI_Completeness.v
 
-
-
+# --- Sum Semantics ---
+theories/Semantics/STLC_PI_Sum/STLC_PI_Sum_Soundness.v
+theories/Semantics/STLC_PI_Sum/STLC_PI_Sum_Completeness.v
