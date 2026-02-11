@@ -1,66 +1,32 @@
 Require Import List PeanoNat Coq.Classes.Morphisms.
 Import ListNotations.
 
-(* HyperLogic Modules *)
+(* --- HyperLogic Modules --- *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CCC.
-Require Import HyperLogic.Cat.BCCC. (* New Requirement *)
+Require Import HyperLogic.Cat.BCCC.
 
 Require Import HyperLogic.Logic.STLC_PI.STLC_PI_Sum.
 Require Import HyperLogic.Logic.STLC_PI.STLC_PI_Sum_Lemmas.
+
 Require Import HyperLogic.Semantics.STLC_PI.STLC_PI_Sum_Soundness.
 
 Open Scope stlc_scope_sum.
 
 (* ================================================================= *)
-(* 1. HELPER LEMMAS                                                *)
+(* 1. CATEGORY CONSTRUCTION (BiSTLC_Category)                        *)
 (* ================================================================= *)
+(* Itt építjük fel a SZINTAKTIKUS kategóriát. Ez a Kanonikus Modell alapja. *)
 
-(**
- * Weakening for context concatenation.
- *)
-Lemma weakening_append : forall Gamma Delta t A,
-  Gamma ⊢ t [:] A -> (Gamma ++ Delta) ⊢ t [:] A.
-Proof.
-  assert (H_cons_app : forall (T : Type) (l : list T) (a : T), a :: l = [a] ++ l).
-  { simpl; auto. }
-  intros Gamma Delta t A H.
-  induction H; try (rewrite H_cons_app; try rewrite <- app_assoc; try rewrite <- H_cons_app); auto.
-  - apply T_Unit.
-  - apply T_Var0.
-  - apply T_VarS; auto.
-  - apply T_Lam; auto.
-  - eapply T_App; eassumption.
-  - apply T_Pair; auto.
-  - eapply T_Fst; eassumption.
-  - eapply T_Snd; eassumption.
-  (* --- BiSTLC Cases --- *)
-  - apply T_Inl; auto.
-  - apply T_Inr; auto.
-  - eapply T_Case; eauto.
-  - apply T_Absurd; auto.
-Defined.
-
-(* ================================================================= *)
-(* 2. CATEGORY CONSTRUCTION (BiSTLC_Category)                      *)
-(* ================================================================= *)
-
-(** Objects are Types *)
 Definition obj_stlc_cat := ty.
 
-(** Identity: \x. x *)
 Definition id_term (A : ty) : tm := tm_lam A (tm_var 0).
-
 Lemma id_typing (A : ty) : ⊢ (id_term A) [:] (A ⊃ A).
 Proof. unfold id_term. apply T_Lam. apply T_Var0. Defined.
+Definition id_stlc (A : ty) : hom_stlc A A := exist _ (id_term A) (id_typing A).
 
-Definition id_stlc (A : ty) : hom_stlc A A :=
-  exist _ (id_term A) (id_typing A).
-
-(** Composition: \x. g (f x) *)
 Definition compose_term {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) :=
   tm_lam x (tm_app (proj1_sig f) (tm_app (proj1_sig g) (tm_var 0))).
-
 Lemma compose_typing {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) :
   ⊢ (compose_term f g) [:] (x ⊃ z).
 Proof.
@@ -71,24 +37,17 @@ Proof.
     -- apply weakening_append with (Gamma := nil) (Delta := [x]); exact (proj2_sig g).
     -- apply T_Var0.
 Defined.
-
 Definition compose_stlc {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) : hom_stlc x z :=
   exist _ (compose_term f g) (compose_typing f g).
 
 Instance STLC_Category : SetoidCategory.
 Proof.
-  apply mk_SetoidCategory with
-    (obj := obj_stlc_cat)
-    (hom := hom_stlc)
-    (hom_equiv := @hom_equiv_stlc)
-    (id := id_stlc)
-    (compose := @compose_stlc).
-  (* Equivalence Props *)
+  apply mk_SetoidCategory with (obj := obj_stlc_cat) (hom := hom_stlc) (hom_equiv := @hom_equiv_stlc)
+    (id := id_stlc) (compose := @compose_stlc).
   - intros x y; split.
     + intros f; apply hom_equiv_stlc_refl.
     + intros f g; apply hom_equiv_stlc_sym.
     + intros f g h; eapply hom_equiv_stlc_trans.
-  (* Category Laws (Trivial via PI) *)
   - intros; apply generic_axiom_proof.
   - intros; apply generic_axiom_proof.
   - intros; apply generic_axiom_proof.
@@ -99,17 +58,14 @@ Instance STLC_Thin : Thin STLC_Category.
 Proof. intros x y f g. apply generic_axiom_proof. Defined.
 
 (* ================================================================= *)
-(* 3. CCC CONSTRUCTION                                             *)
+(* 2. CCC CONSTRUCTION                                               *)
 (* ================================================================= *)
 
-(* --- Terminal --- *)
 Definition terminal_term (A : ty) := (tm_lam A tm_unit).
 Lemma terminal_typing (A : ty) : ⊢ (terminal_term A) [:] (A ⊃ Ty_Unit).
 Proof. intros; apply T_Lam; apply T_Unit. Defined.
-Definition terminal_stlc (x : ty) : hom_stlc x Ty_Unit :=
-  exist _ (terminal_term x) (terminal_typing x).
+Definition terminal_stlc (x : ty) : hom_stlc x Ty_Unit := exist _ (terminal_term x) (terminal_typing x).
 
-(* --- Product --- *)
 Definition prod_map_term (x y z : ty) (f : hom_stlc x y) (g : hom_stlc x z) :=
   tm_lam x (tm_pair (tm_app (proj1_sig f) (tm_var 0)) (tm_app (proj1_sig g) (tm_var 0))).
 Lemma prod_map_typing (x y z : ty) (f : hom_stlc x y) (g : hom_stlc x z) :
@@ -126,7 +82,6 @@ Defined.
 Definition prod_map_stlc {x y z : ty} (f : hom_stlc x y) (g : hom_stlc x z) : hom_stlc x (Ty_Prod y z) :=
   exist _ _ (prod_map_typing x y z f g).
 
-(* --- Projections --- *)
 Definition fst_term (x y : ty) := (tm_lam (Ty_Prod x y) (tm_fst (tm_var 0))).
 Lemma fst_typing (x y : ty) : ⊢ (fst_term x y) [:] ((Ty_Prod x y) ⊃ x).
 Proof. unfold fst_term; apply T_Lam; eapply T_Fst; apply T_Var0. Defined.
@@ -137,7 +92,6 @@ Lemma snd_typing (x y : ty) : ⊢ (snd_term x y) [:] ((Ty_Prod x y) ⊃ y).
 Proof. unfold snd_term; apply T_Lam; eapply T_Snd; apply T_Var0. Defined.
 Definition snd_stlc {x y : ty} : hom_stlc (Ty_Prod x y) y := exist _ _ (snd_typing x y).
 
-(* --- Exponentials --- *)
 Definition eval_term (y z : ty) :=
   tm_lam (Ty_Prod (Ty_Arrow z y) z) (tm_app (tm_fst (tm_var 0)) (tm_snd (tm_var 0))).
 Lemma eval_typing (y z : ty) : ⊢ eval_term y z [:] (Ty_Prod (Ty_Arrow z y) z ⊃ y).
@@ -163,53 +117,28 @@ Proof.
 Defined.
 
 (* ================================================================= *)
-(* 4. BiCCC CONSTRUCTION (NEW)                                     *)
+(* 3. BiCCC CONSTRUCTION (Extensions for Sum Types)                  *)
 (* ================================================================= *)
 
-(* --- Initial Object (Void) --- *)
-(** Term: \x. absurd A x *)
 Definition initial_term (A : ty) := (tm_lam Ty_Void (tm_absurd A (tm_var 0))).
-
 Lemma initial_typing (A : ty) : ⊢ (initial_term A) [:] (Ty_Void ⊃ A).
-Proof.
-  unfold initial_term. apply T_Lam. apply T_Absurd. apply T_Var0.
-Defined.
+Proof. unfold initial_term. apply T_Lam. apply T_Absurd. apply T_Var0. Defined.
+Definition initial_stlc (x : ty) : hom_stlc Ty_Void x := exist _ (initial_term x) (initial_typing x).
 
-Definition initial_stlc (x : ty) : hom_stlc Ty_Void x :=
-  exist _ (initial_term x) (initial_typing x).
-
-(* --- Coproduct (Sum) --- *)
-
-(* Injections *)
-(** Term: inl = \a. inl B a *)
 Definition inl_term (A B : ty) := tm_lam A (tm_inl B (tm_var 0)).
-
 Lemma inl_typing (A B : ty) : ⊢ (inl_term A B) [:] (A ⊃ (Ty_Sum A B)).
 Proof. unfold inl_term; apply T_Lam; apply T_Inl; apply T_Var0. Defined.
+Definition inl_stlc {A B : ty} : hom_stlc A (Ty_Sum A B) := exist _ _ (inl_typing A B).
 
-Definition inl_stlc {A B : ty} : hom_stlc A (Ty_Sum A B) :=
-  exist _ _ (inl_typing A B).
-
-(** Term: inr = \b. inr A b *)
 Definition inr_term (A B : ty) := tm_lam B (tm_inr A (tm_var 0)).
-
 Lemma inr_typing (A B : ty) : ⊢ (inr_term A B) [:] (B ⊃ (Ty_Sum A B)).
 Proof. unfold inr_term; apply T_Lam; apply T_Inr; apply T_Var0. Defined.
+Definition inr_stlc {A B : ty} : hom_stlc B (Ty_Sum A B) := exist _ _ (inr_typing A B).
 
-Definition inr_stlc {A B : ty} : hom_stlc B (Ty_Sum A B) :=
-  exist _ _ (inr_typing A B).
-
-(* Coproduct Map (Case Analysis) *)
-
-(** Term: [f, g] = \w. case w of (x. f x) | (y. g y) *)
-(* FIX: Removed 'lift 1 0'. Since f and g are closed terms, 
-   they are valid in the extended context without index shifting. *)
 Definition coprod_map_term (A B C : ty) (f : hom_stlc A C) (g : hom_stlc B C) :=
   tm_lam (Ty_Sum A B) 
     (tm_case (tm_var 0)
-      (* Left Branch: binds x. compute (f x). *)
       (tm_app (proj1_sig f) (tm_var 0))
-      (* Right Branch: binds y. compute (g y). *)
       (tm_app (proj1_sig g) (tm_var 0))).
 
 Lemma coprod_map_typing (A B C : ty) (f : hom_stlc A C) (g : hom_stlc B C) :
@@ -218,40 +147,25 @@ Proof.
   unfold coprod_map_term. apply T_Lam.
   eapply T_Case.
   - apply T_Var0.
-  - (* Left Branch: A :: [Sum] |- f x : C *)
-    apply T_App with (A:=A).
-    (* Weaken f from nil to [A; Sum]. 
-       Note: weakening_append appends to the 'end' of the context stack,
-       preserving indices for closed terms. *)
+  - apply T_App with (A:=A).
     + apply weakening_append with (Gamma:=nil) (Delta:=[A; Ty_Sum A B]).
       exact (proj2_sig f).
     + apply T_Var0.
-  - (* Right Branch: B :: [Sum] |- g y : C *)
-    apply T_App with (A:=B).
+  - apply T_App with (A:=B).
     + apply weakening_append with (Gamma:=nil) (Delta:=[B; Ty_Sum A B]).
       exact (proj2_sig g).
     + apply T_Var0.
 Defined.
-
 Definition coprod_map_stlc {A B C : ty} (f : hom_stlc A C) (g : hom_stlc B C) : hom_stlc (Ty_Sum A B) C :=
   exist _ _ (coprod_map_typing A B C f g).
 
 Instance STLC_BiCCC : BiCartesianClosedCategory STLC_CCC.
 Proof.
-  refine (Build_Thin_BiCCC _ STLC_CCC STLC_Thin
-    Ty_Void
-    (@initial_stlc)
-    Ty_Sum
-    (* The error happened because these were swapped. Injections come first: *)
-    (@inl_stlc)         
-    (@inr_stlc)
-    (* The map/eliminator comes last: *)
-    (@coprod_map_stlc)
+  apply (Build_Thin_BiCCC _ STLC_CCC STLC_Thin
+    Ty_Void (@initial_stlc)
+    Ty_Sum (@inl_stlc) (@inr_stlc) (@coprod_map_stlc)
   ).
 Defined.
-(* ================================================================= *)
-(* 5. COMPLETENESS INFRASTRUCTURE                                  *)
-(* ================================================================= *)
 
 Fixpoint make_ctx_ty (Gamma : context) : ty :=
   match Gamma with
@@ -262,8 +176,7 @@ Fixpoint make_ctx_ty (Gamma : context) : ty :=
 Fixpoint reify_ctx (Gamma : context) : tm :=
   match Gamma with
   | nil => tm_unit
-  | A :: Gamma' =>
-      tm_pair (lift 1 0 (reify_ctx Gamma')) (tm_var 0)
+  | A :: Gamma' => tm_pair (lift 1 0 (reify_ctx Gamma')) (tm_var 0)
   end.
 
 Lemma reify_ctx_typing : forall Gamma,
@@ -280,23 +193,18 @@ Instance STLC_Model : Model STLC_Category := {
   interp_base := Ty_Atomic
 }.
 
-(* --- Identity Lemmas --- *)
-
+(* Identity Lemmas: Required to align the Generic Interpretation with the Canonical Structure *)
 Lemma val_identity : forall A, interp_ty STLC_Category STLC_CCC STLC_BiCCC STLC_Model A = A.
-Proof.
-  induction A; simpl; auto; try (rewrite IHA1; rewrite IHA2); auto.
-Defined.
+Proof. induction A; simpl; auto; try (rewrite IHA1; rewrite IHA2); auto. Defined.
 
 Lemma ctx_identity : forall Gamma, interp_ctx STLC_Category STLC_CCC STLC_BiCCC STLC_Model Gamma = make_ctx_ty Gamma.
-Proof.
-  induction Gamma; simpl; auto.
-  rewrite IHGamma. rewrite val_identity. auto.
-Defined.
+Proof. induction Gamma; simpl; auto. rewrite IHGamma. rewrite val_identity. auto. Defined.
 
 (* ================================================================= *)
-(* 6. COMPLETENESS THEOREMS                                        *)
+(* 4. COMPLETENESS THEOREMS                                          *)
 (* ================================================================= *)
 
+(* Ez a tétel az IMPORTÁLT interp_derivation-t használja. *)
 Theorem Completeness_Equational :
   forall (Gamma : context) (A : ty) (t1 t2 : tm)
          (d1 : derivation Gamma t1 A)
@@ -306,23 +214,7 @@ Theorem Completeness_Equational :
   tm_equiv_rel t1 t2.
 Proof.
   intros Gamma A t1 t2 d1 d2 H_valid.
-  apply (PI_rule Gamma A).
-  - apply (forget_derivation d1).
-  - apply (forget_derivation d2).
-Defined.
-
-Theorem completeness_terms_equiv :
-  forall (Gamma : context) (A : ty) (t1 t2 : tm),
-  (exists f, interprets_to (C:=STLC_Category) (CC:=STLC_CCC) (BCC:=STLC_BiCCC) (M:=STLC_Model) Gamma A t1 f) ->
-  (exists g, interprets_to (C:=STLC_Category) (CC:=STLC_CCC) (BCC:=STLC_BiCCC) (M:=STLC_Model) Gamma A t2 g) ->
-  (forall (C : SetoidCategory) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C)
-          (f g : hom (interp_ctx C CC BCC M Gamma) (interp_ty C CC BCC M A)),
-      interprets_to Gamma A t1 f ->
-      interprets_to Gamma A t2 g ->
-      f ≅ g) ->
-  tm_equiv_rel t1 t2.
-Proof.
-  intros Gamma A t1 t2 [f_can [d1 _]] [g_can [d2 _]] H_sem_eq.
+  (* Instanciáljuk a kvantort a Kanonikus Modellre *)
   apply (PI_rule Gamma A).
   - apply (forget_derivation d1).
   - apply (forget_derivation d2).
@@ -334,25 +226,19 @@ Theorem Completeness : forall Gamma A,
   (exists t, (Gamma ⊢ t [:] A)).
 Proof.
   intros Gamma A H_valid.
-
-  (* 1. Extract witness from Canonical Model *)
   assert (K : inhabited (hom (interp_ctx STLC_Category STLC_CCC STLC_BiCCC STLC_Model Gamma)
                              (interp_ty STLC_Category STLC_CCC STLC_BiCCC STLC_Model A))).
   { apply H_valid. }
+  
   destruct K as [[t_closed H_closed]].
-
-  (* 2. Simplify types using Identity lemmas *)
   simpl in H_closed.
   rewrite ctx_identity in H_closed.
   rewrite val_identity in H_closed.
 
-  (* 3. Weaken the closed term into Gamma *)
   assert (H_weak : Gamma ⊢ (lift (length Gamma) 0 t_closed) [:] (make_ctx_ty Gamma ⊃ A)).
   { apply weakening_from_nil; exact H_closed. }
 
-  (* 4. Construct witness: app f (reify Gamma) *)
   exists (tm_app (lift (length Gamma) 0 t_closed) (reify_ctx Gamma)).
-
   eapply T_App.
   - exact H_weak.
   - apply reify_ctx_typing.

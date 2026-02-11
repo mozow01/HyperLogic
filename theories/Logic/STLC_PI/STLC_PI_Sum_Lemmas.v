@@ -163,3 +163,24 @@ Proof.
     replace (1 + length Gamma) with (S (length Gamma)) in H by lia.
     exact H.
 Defined.
+
+Lemma weakening_append : forall Gamma Delta t A,
+  Gamma ⊢ t [:] A -> (Gamma ++ Delta) ⊢ t [:] A.
+Proof.
+  assert (H_cons_app : forall (T : Type) (l : list T) (a : T), a :: l = [a] ++ l).
+  { simpl; auto. }
+  intros Gamma Delta t A H.
+  induction H; try (rewrite H_cons_app; try rewrite <- app_assoc; try rewrite <- H_cons_app); auto.
+  - apply T_Unit.
+  - apply T_Var0.
+  - apply T_VarS; auto.
+  - apply T_Lam; auto.
+  - eapply T_App; eassumption.
+  - apply T_Pair; auto.
+  - eapply T_Fst; eassumption.
+  - eapply T_Snd; eassumption.
+  - apply T_Inl; auto.
+  - apply T_Inr; auto.
+  - eapply T_Case; eauto.
+  - apply T_Absurd; auto.
+Defined.

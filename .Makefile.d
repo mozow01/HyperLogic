@@ -37,6 +37,12 @@ theories/Logic/STLC_PI/STLC_PI_Lemmas.vos theories/Logic/STLC_PI/STLC_PI_Lemmas.
 theories/Logic/STLC_PI/STLC_PI.vo theories/Logic/STLC_PI/STLC_PI.glob theories/Logic/STLC_PI/STLC_PI.v.beautified theories/Logic/STLC_PI/STLC_PI.required_vo: theories/Logic/STLC_PI/STLC_PI.v 
 theories/Logic/STLC_PI/STLC_PI.vio: theories/Logic/STLC_PI/STLC_PI.v 
 theories/Logic/STLC_PI/STLC_PI.vos theories/Logic/STLC_PI/STLC_PI.vok theories/Logic/STLC_PI/STLC_PI.required_vos: theories/Logic/STLC_PI/STLC_PI.v 
+theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.vo theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.glob theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.v.beautified theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.required_vo: theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.v theories/Logic/STLC_PI/STLC_PI_Sum.vo
+theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.vio: theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.v theories/Logic/STLC_PI/STLC_PI_Sum.vio
+theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.vos theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.vok theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.required_vos: theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.v theories/Logic/STLC_PI/STLC_PI_Sum.vos
+theories/Logic/STLC_PI/STLC_PI_Sum.vo theories/Logic/STLC_PI/STLC_PI_Sum.glob theories/Logic/STLC_PI/STLC_PI_Sum.v.beautified theories/Logic/STLC_PI/STLC_PI_Sum.required_vo: theories/Logic/STLC_PI/STLC_PI_Sum.v 
+theories/Logic/STLC_PI/STLC_PI_Sum.vio: theories/Logic/STLC_PI/STLC_PI_Sum.v 
+theories/Logic/STLC_PI/STLC_PI_Sum.vos theories/Logic/STLC_PI/STLC_PI_Sum.vok theories/Logic/STLC_PI/STLC_PI_Sum.required_vos: theories/Logic/STLC_PI/STLC_PI_Sum.v 
 theories/Semantics/STLC_PI/STLC_PI_Soundness.vo theories/Semantics/STLC_PI/STLC_PI_Soundness.glob theories/Semantics/STLC_PI/STLC_PI_Soundness.v.beautified theories/Semantics/STLC_PI/STLC_PI_Soundness.required_vo: theories/Semantics/STLC_PI/STLC_PI_Soundness.v theories/Cat/Core.vo theories/Cat/CCC.vo theories/Logic/STLC_PI/STLC_PI.vo theories/Logic/STLC_PI/STLC_PI_Lemmas.vo
 theories/Semantics/STLC_PI/STLC_PI_Soundness.vio: theories/Semantics/STLC_PI/STLC_PI_Soundness.v theories/Cat/Core.vio theories/Cat/CCC.vio theories/Logic/STLC_PI/STLC_PI.vio theories/Logic/STLC_PI/STLC_PI_Lemmas.vio
 theories/Semantics/STLC_PI/STLC_PI_Soundness.vos theories/Semantics/STLC_PI/STLC_PI_Soundness.vok theories/Semantics/STLC_PI/STLC_PI_Soundness.required_vos: theories/Semantics/STLC_PI/STLC_PI_Soundness.v theories/Cat/Core.vos theories/Cat/CCC.vos theories/Logic/STLC_PI/STLC_PI.vos theories/Logic/STLC_PI/STLC_PI_Lemmas.vos
