@@ -14,6 +14,8 @@ theories/Logic/Hyper/Epsilon/Epsilon_Syntax.v
 theories/Logic/Base/Epsilon/Base_Epsilon.v
 theories/Logic/STLC_PI/STLC_PI_Lemmas.v
 theories/Logic/STLC_PI/STLC_PI.v
+theories/Logic/STLC_PI/STLC_PI_Sum_Lemmas.v
+theories/Logic/STLC_PI/STLC_PI_Sum.v
 
 theories/Semantics/STLC_PI/STLC_PI_Soundness.v
 theories/Semantics/STLC_PI/STLC_PI_Completeness.v

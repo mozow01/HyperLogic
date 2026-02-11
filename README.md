@@ -34,7 +34,9 @@ Actual
     │   │   └── Simple
     │   └── STLC_PI
     │       ├── STLC_PI_Lemmas.v
-    │       └── STLC_PI.v
+    │       ├── STLC_PI.v
+    │       ├── STLC_PI_Sum.v
+    │       └── STLC_PI_Sum_Lemmas.v
     └── Semantics
         ├── Epsilon
         ├── Individual
