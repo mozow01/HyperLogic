@@ -1,6 +1,7 @@
 -R theories HyperLogic
 
 theories/Cat/Core.v
+theories/Cat/CC.v
 theories/Cat/CCC.v
 theories/Cat/BCCC.v
 theories/Cat/Functor.v
@@ -9,9 +10,15 @@ theories/Cat/Fibration.v
 theories/Cat/Monad.v
 
 theories/Logic/Base/Individual/Base_Individual.v
-theories/Logic/Base/Simple/Base_Simple.v
 theories/Logic/Hyper/Epsilon/Epsilon_Syntax.v
 theories/Logic/Base/Epsilon/Base_Epsilon.v
+theories/Logic/Base/Simple/Base_Syntax.v
+theories/Logic/Base/Simple/Base_Typing.v
+
+
+theories/Logic/Hyper/Simple/Hyper_Syntax.v
+theories/Logic/Hyper/Simple/Hyper_Typing.v
+
 
 
 

@@ -1,30 +1,39 @@
-Require Import HyperLogic.Cat.Core.
+Require Import HyperLogic.Cat.Core. 
+Require Import HyperLogic.Cat.CC.   
 Require Import HyperLogic.Cat.CCC.
+Require Import HyperLogic.Cat.BCCC. 
 Require Import HyperLogic.Cat.Functor. 
 Require Import HyperLogic.Cat.Adjoint.
 Require Import Coq.Classes.Morphisms.
 
-Class GoodFibration (B : SetoidCategory) := mk_GoodFibration {
+(* ================================================================= *)
+(* GOOD FIBRATION DEFINITION                                         *)
+(* ================================================================= *)
+
+(* A Base kategóriának (B) Cartesian-nak kell lennie {CB}, 
+   hogy tudjuk kezelni a kontextusokat (szorzatokat). *)
+Class GoodFibration (B : SetoidCategory) {CB : CartesianCategory B} := mk_GoodFibration {
   
-  (* 1. Indexelt kategóriák (Fiber) *)
+  (* 1. Indexelt kategóriák (Fiber) - Ez a logika (típusok/formulák) *)
   Fiber : @obj B -> SetoidCategory;
 
-  (* 2. A Fiberek CCC-k *)
-  Fiber_is_CCC : forall (I : @obj B), CartesianClosedCategory (Fiber I);
+  (* 2. A Fiberek BCCC-k (Teljes Logika: ∧, ∨, →, ⊤, ⊥) *)
+  (* Három lépésben építjük fel, hogy a típusosztályok lássák a függőségeket *)
+  Fiber_is_Cartesian : forall (I : @obj B), CartesianCategory (Fiber I);
+  Fiber_is_Closed    : forall (I : @obj B), @CartesianClosedCategory (Fiber I) (Fiber_is_Cartesian I);
+  Fiber_is_BiClosed  : forall (I : @obj B), @BiCartesianClosedCategory (Fiber I) (Fiber_is_Cartesian I) (Fiber_is_Closed I);
 
-  (* 3. Pullback Funktor (Most már a Functor.v definícióját használjuk) *)
-  (* (I -> J) morfizmushoz rendel egy Functor-t visszafelé *)
+  (* 3. Pullback Funktor (Helyettesítés) *)
+  (* (I -> J) morfizmushoz (term) rendel egy Functor-t visszafelé (formulák transzformációja) *)
   Pullback {I J : @obj B} : (hom I J) -> Functor (Fiber J) (Fiber I);
 
-  (* 4. Pullback tulajdonságok *)
+  (* 4. Pullback tulajdonságok (Izomorfizmusok) *)
   
   (* Pullback(id) ≅ Id *)
-  (* F_Obj helyett 'fobj'-ot használunk a Functor.v-ből *)
   pullback_id_iso : forall {I : @obj B} (A : @obj (Fiber I)), 
       (@fobj (Fiber I) (Fiber I) (Pullback (id I)) A) ≅O A;
 
   (* Pullback(g ∘ f) ≅ Pullback(f) ∘ Pullback(g) *)
-  (* A kompozíciót itt objektum szinten fejtjük ki: fobj (P(gf)) A ≅ fobj (P f) (fobj (P g) A) *)
   pullback_comp_iso : forall {I J K : @obj B} (g : hom J K) (f : hom I J) (A : @obj (Fiber K)),
       (@fobj (Fiber K) (Fiber I) (Pullback (compose g f)) A) ≅O 
       (@fobj (Fiber J) (Fiber I) (Pullback f) 
@@ -32,72 +41,86 @@ Class GoodFibration (B : SetoidCategory) := mk_GoodFibration {
 
   (* 5. Adjungáltak (Kvantorok) létezése *)
   
-  (* A Pullback f-nek van bal adjungáltja (Sigma) *)
-  (* Ez azt jelenti, hogy a Pullback f egy jobb adjungált *)
+  (* Sigma (Exists): Bal adjungáltja a Pullback-nek *)
   pullback_has_left_adjoint {I J : @obj B} (f : hom I J) :
       IsRightAdjoint (Pullback f);
-      
-  (* A Pullback f-nek van jobb adjungáltja (Pi) *)
-  (* Ez azt jelenti, hogy a Pullback f egy bal adjungált *)
+
+  (* Pi (Forall): Jobb adjungáltja a Pullback-nek *)
   pullback_has_right_adjoint {I J : @obj B} (f : hom I J) :
       IsLeftAdjoint (Pullback f)
 }.
 
-(* Automatikus láthatóság a CCC instance-hoz *)
-Global Existing Instance Fiber_is_CCC.
+(* --- Instance regisztráció --- *)
+(* Explicit típusmegadás szükséges a {CB}-hez, hogy a Coq felismerje a kapcsolatot *)
+
+Global Instance GF_Fiber_CC 
+  {B : SetoidCategory} 
+  {CB : CartesianCategory B} 
+  {GF : GoodFibration B} 
+  (I : @obj B) 
+  : CartesianCategory (Fiber I) := Fiber_is_Cartesian I.
+
+Global Instance GF_Fiber_CCC 
+  {B : SetoidCategory} 
+  {CB : CartesianCategory B} 
+  {GF : GoodFibration B} 
+  (I : @obj B) 
+  : CartesianClosedCategory (Fiber I) := Fiber_is_Closed I.
+
+Global Instance GF_Fiber_BCCC 
+  {B : SetoidCategory} 
+  {CB : CartesianCategory B} 
+  {GF : GoodFibration B} 
+  (I : @obj B) 
+  : BiCartesianClosedCategory (GF_Fiber_CCC I) := Fiber_is_BiClosed I.
 
 (* ================================================================= *)
 (* KVANTOROK KONSTRUKCIÓJA (Sigma és Pi)                             *)
 (* ================================================================= *)
 
-(* A Sigma funktor (Bal adjungált) kinyerése *)
-Definition Sigma_f {B : SetoidCategory} {GF : GoodFibration B} {I J : @obj B} (f : hom I J)
-  : Functor (Fiber I) (Fiber J). (* CovariantFunctor -> Functor *)
+Definition Sigma_f {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B} {I J : @obj B} (f : hom I J)
+  : Functor (Fiber I) (Fiber J).
 Proof.
-   pose proof (@pullback_has_left_adjoint B GF I J f) as adj_proof.
-   (* LeftAdjFunc most Functor-t ad vissza *)
+   pose proof (@pullback_has_left_adjoint B CB GF I J f) as adj_proof.
    exact (LeftAdjointFunctor (Pullback f) adj_proof).
 Defined.
 
-(* A Pi funktor (Jobb adjungált) kinyerése *)
-Definition Pi_f {B : SetoidCategory} {GF : GoodFibration B} {I J : @obj B} (f : hom I J)
+Definition Pi_f {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B} {I J : @obj B} (f : hom I J)
   : Functor (Fiber I) (Fiber J).
 Proof.
-  pose proof (@pullback_has_right_adjoint B GF I J f) as adj_proof.
+  pose proof (@pullback_has_right_adjoint B CB GF I J f) as adj_proof.
   exact (RightAdjointFunctor (Pullback f) adj_proof).
 Defined.
 
 (* ================================================================= *)
-(* BASE LOGIC (Kétfajtájú Kategória)                                 *)
+(* BASE LOGIC (Individuumok)                                         *)
 (* ================================================================= *)
 
-Class TwoSortCategory (B : SetoidCategory) := mk_TwoSortCategory {
-  One : @obj B;
-  terminal_map_base : forall X, hom X One;
-  terminal_map_base_unique : forall X (f : hom X One), f ≅ terminal_map_base X;
-  
+Class TwoSortCategory (B : SetoidCategory) {CB : CartesianCategory B} := mk_TwoSortCategory {
+  (* A 'One' (terminális) már jön a CB-ből, itt csak az S-t (Individuum típus) definiáljuk *)
   S : @obj B;
-  S_is_not_Terminal : S <> One 
+  S_is_not_Terminal : S <> terminal 
 }.
 
-(* A "bang" morfizmus: S -> 1 *)
-Definition bang (B : SetoidCategory) {TSC : TwoSortCategory B} : hom (@S B TSC) (@One B TSC) :=
-  terminal_map_base S.
+(* A "bang" morfizmus: S -> 1 (terminális leképezés) *)
+(* Most már közvetlenül használhatjuk a CartesianCategory 'terminal_map'-jét *)
+Definition bang (B : SetoidCategory) {CB : CartesianCategory B} {TSC : TwoSortCategory B} : hom (@S B CB TSC) terminal :=
+  terminal_map.
 
 (* ================================================================= *)
 (* LOGIKAI KVANTOROK (Exists / Forall)                               *)
 (* ================================================================= *)
 
-(** Exisztenciális kvantor: Sigma a bang mentén *)
-Definition ExistsQuantifier (B : SetoidCategory) {GF : GoodFibration B} {TSC : TwoSortCategory B}
-  : Functor (Fiber S) (Fiber One).
+(** Exisztenciális kvantor: Sigma a bang mentén (S -> 1) *)
+Definition ExistsQuantifier (B : SetoidCategory) {CB : CartesianCategory B} {GF : GoodFibration B} {TSC : TwoSortCategory B}
+  : Functor (Fiber S) (Fiber terminal).
 Proof.
  exact (Sigma_f (bang B)). 
 Defined.
 
-(** Univerzális kvantor: Pi a bang mentén *)
-Definition ForallQuantifier (B : SetoidCategory) {GF : GoodFibration B} {TSC : TwoSortCategory B}
-  : Functor (Fiber S) (Fiber One).
+(** Univerzális kvantor: Pi a bang mentén (S -> 1) *)
+Definition ForallQuantifier (B : SetoidCategory) {CB : CartesianCategory B} {GF : GoodFibration B} {TSC : TwoSortCategory B}
+  : Functor (Fiber S) (Fiber terminal).
 Proof.
   exact (Pi_f (bang B)).
 Defined.

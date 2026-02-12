@@ -1,8 +1,9 @@
-Require Import List.
+Require Import List. 
 Import ListNotations.
 Require Import Coq.Classes.Morphisms.
 
 Require Import HyperLogic.Cat.Core.
+Require Import HyperLogic.Cat.CC.   (* ÚJ: Alap kategória *)
 Require Import HyperLogic.Cat.CCC.
 Require Import HyperLogic.Cat.BCCC.
 
@@ -20,23 +21,25 @@ Class Model (C : SetoidCategory) := {
 }.
 
 (* Interpretation of Types: [[ A ]] *)
-Fixpoint interp_ty (C : SetoidCategory) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC)
+(* VÁLTOZÁS: Ct, CC, BCC implicitek lettek {} *)
+Fixpoint interp_ty (C : SetoidCategory) {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
                    (M : Model C) (A : ty) : @obj C :=
   match A with
   | Ty_Atomic n  => interp_base n
   | Ty_Unit      => terminal
   | Ty_Void      => initial
-  | Ty_Prod A B  => prod (interp_ty C CC BCC M A) (interp_ty C CC BCC M B)
-  | Ty_Arrow A B => exp (interp_ty C CC BCC M B) (interp_ty C CC BCC M A)
-  | Ty_Sum A B   => coprod (interp_ty C CC BCC M A) (interp_ty C CC BCC M B)
+  (* Itt már nem kell átadni a kategória instance-okat explicit módon *)
+  | Ty_Prod A B  => prod (interp_ty C M A) (interp_ty C M B)
+  | Ty_Arrow A B => exp (interp_ty C M B) (interp_ty C M A)
+  | Ty_Sum A B   => coprod (interp_ty C M A) (interp_ty C M B)
   end.
 
 (* Interpretation of Contexts: [[ Gamma ]] *)
-Fixpoint interp_ctx (C : SetoidCategory) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC)
+Fixpoint interp_ctx (C : SetoidCategory) {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
                     (M : Model C) (Gamma : context) : @obj C :=
   match Gamma with
   | nil       => terminal
-  | A :: Gamma' => prod (interp_ctx C CC BCC M Gamma') (interp_ty C CC BCC M A)
+  | A :: Gamma' => prod (interp_ctx C M Gamma') (interp_ty C M A)
   end.
 
 (* ================================================================= *)
@@ -45,19 +48,20 @@ Fixpoint interp_ctx (C : SetoidCategory) (CC : CartesianClosedCategory C) (BCC :
 
 (* Helper: Swap context for Currying 
    <snd, fst> : Gamma x A -> A x Gamma 
+   Ez most a Ct-ből jön (prod_map)
 *)
-Definition swap_map {C : SetoidCategory} {CC : CartesianClosedCategory C} 
+Definition swap_map {C : SetoidCategory} {Ct : CartesianCategory C} 
   {x y : @obj C} : hom (prod x y) (prod y x) :=
   prod_map prod_snd prod_fst.
 
-Fixpoint interp_derivation {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
+Fixpoint interp_derivation {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
                            {M : Model C} 
                            {Gamma : context} {t : tm} {A : ty} 
                            (D : derivation Gamma t A) 
-                           : hom (interp_ctx C CC BCC M Gamma) (interp_ty C CC BCC M A) :=
-  match D in (derivation G t0 A0) return (hom (interp_ctx C CC BCC M G) (interp_ty C CC BCC M A0)) with
+                           : hom (interp_ctx C M Gamma) (interp_ty C M A) :=
+  match D in (derivation G t0 A0) return (hom (interp_ctx C M G) (interp_ty C M A0)) with
   
-  (* --- Standard STLC --- *)
+  (* --- Standard STLC (Uses Ct & CC) --- *)
   | D_Unit _               => terminal_map
   | D_Var0 _ _             => prod_snd
   | D_VarS _ _ _ _ D_prev  => compose (interp_derivation D_prev) prod_fst
@@ -67,7 +71,7 @@ Fixpoint interp_derivation {C : SetoidCategory} {CC : CartesianClosedCategory C}
   | D_Fst _ _ _ _ D_pair   => compose prod_fst (interp_derivation D_pair)
   | D_Snd _ _ _ _ D_pair   => compose prod_snd (interp_derivation D_pair)
 
-  (* --- BiSTLC Extensions --- *)
+  (* --- BiSTLC Extensions (Uses BCC) --- *)
   
   (* [[ inl t ]] = inl o [[ t ]] *)
   | D_Inl _ _ _ _ D_t => 
@@ -79,19 +83,6 @@ Fixpoint interp_derivation {C : SetoidCategory} {CC : CartesianClosedCategory C}
 
   (* [[ case t of x.t1 | y.t2 ]] *)
   | D_Case Gamma0 _ _ _ A0 B t3 D_t D_l D_r => 
-      (* Logic:
-         1. Curry both branches:
-            Left:  (Gamma x A -> C) ==> (A -> C^Gamma)
-            Right: (Gamma x B -> C) ==> (B -> C^Gamma)
-            We use 'swap_map' because the context is on the left in the lambda calculus rule,
-            but 'exp_map' expects the argument on the right in the product.
-         2. Combine them with coprod_map: 
-            (A + B) -> C^Gamma
-         3. Compose with the subject term 't' (which yields A+B):
-            Gamma -> A+B -> C^Gamma
-         4. Evaluate to get back C:
-            eval o <(Gamma -> C^Gamma), id>
-      *)
       compose eval 
         (prod_map 
            (compose 
@@ -107,29 +98,29 @@ Fixpoint interp_derivation {C : SetoidCategory} {CC : CartesianClosedCategory C}
 
   end.
 
-Definition interp_term_ver {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
+Definition interp_term_ver {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
                            {M : Model C} (t : tm) {Gamma : context} {A : ty} (d : derivation Gamma t A) 
-                           : hom (interp_ctx C CC BCC M Gamma) (interp_ty C CC BCC M A) :=
+                           : hom (interp_ctx C M Gamma) (interp_ty C M A) :=
   interp_derivation d.
 
 (* ================================================================= *)
 (* 3. THEOREMS                                                       *)
 (* ================================================================= *)
 
-Theorem Soundness_explicit : forall (C : SetoidCategory) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC)
+Theorem Soundness_explicit : forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC)
                                     (M : Model C) (Gamma : context) (A : ty) (t : tm)
                                     (D : derivation Gamma t A),
-  hom (interp_ctx C CC BCC M Gamma) (interp_ty C CC BCC M A).
+  hom (interp_ctx C M Gamma) (interp_ty C M A).
 Proof.
   intros. exact (interp_derivation D).
 Defined.
 
 Theorem Soundness : forall (Gamma : context) (A : ty),
   (exists (t : tm) (d : derivation Gamma t A), True) -> 
-  (forall (C : SetoidCategory) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C),
-      inhabited (hom (interp_ctx C CC BCC M Gamma) (interp_ty C CC BCC M A))).
+  (forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C),
+      inhabited (hom (interp_ctx C M Gamma) (interp_ty C M A))).
 Proof.
-  intros Gamma A [t [d _]] C CC BCC M.
+  intros Gamma A [t [d _]] C Ct CC BCC M.
   apply inhabits.
   apply (interp_derivation d).
 Defined.
@@ -138,11 +129,7 @@ Defined.
 (* KIEGÉSZÍTÉS: Soundness Equivalence & Interpretation Relations     *)
 (* ================================================================= *)
 
-(** * Theorem: Soundness Equivalence (a.k.a. Coherence)
- * Since the category is Thin (Setoid with Proof Irrelevance), 
- * any two derivations of the same term are semantically equal.
- *)
-Theorem soundness_equiv {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
+Theorem soundness_equiv {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
                         {M : Model C} {HThin : Thin C}
                         {Gamma : context} {A : ty} {t1 t2 : tm}
                         (d1 : derivation Gamma t1 A)
@@ -153,25 +140,17 @@ Proof.
   apply thin_unique.
 Defined.
 
-(** * Predicate: interprets_to
- * Hides the [derivation] tree from the user API.
- * Defines when a semantic morphism 'f' is a valid interpretation of term 't'.
- *)
-Definition interprets_to {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
+Definition interprets_to {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
                          {M : Model C} 
                          (Gamma : context) (A : ty) (t : tm) 
-                         (f : hom (interp_ctx C CC BCC M Gamma) (interp_ty C CC BCC M A)) : Prop :=
+                         (f : hom (interp_ctx C M Gamma) (interp_ty C M A)) : Prop :=
   exists (d : derivation Gamma t A), interp_derivation d ≅ f.
 
-(** * Theorem: Equivational Soundness (Terms)
- * Proves that if two terms are syntactically equivalent, 
- * their semantic interpretations are isomorphic.
- *)
-Theorem soundness_terms_equiv {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
+Theorem soundness_terms_equiv {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
                               {M : Model C} {HThin : Thin C}
                               (Gamma : context) (A : ty) 
                               (t1 t2 : tm) 
-                              (f g : hom (interp_ctx C CC BCC M Gamma) (interp_ty C CC BCC M A)) :
+                              (f g : hom (interp_ctx C M Gamma) (interp_ty C M A)) :
   interprets_to Gamma A t1 f ->
   interprets_to Gamma A t2 g ->
   tm_equiv_rel t1 t2 ->
@@ -180,8 +159,7 @@ Proof.
   intros [d1 Hf] [d2 Hg] Heq.
   rewrite <- Hf.
   rewrite <- Hg.
-  (* Itt használjuk a fenti soundness_equiv tételt *)
-  apply (soundness_equiv d1 d2). 
+  apply (soundness_equiv d1 d2).
   exact Heq.
 Defined.
 
@@ -189,9 +167,9 @@ Defined.
 (* 4. IMPLICIT SEMANTICS                                             *)
 (* ================================================================= *)
 
-Lemma Soundness_implicit_aux (C : SetoidCategory) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C) :
+Lemma Soundness_implicit_aux (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C) :
   forall (Gamma : context) (t : tm) (A : ty),
-    (Gamma ⊢ t [:] A) -> inhabited (hom (interp_ctx C CC BCC M Gamma) (interp_ty C CC BCC M A)).
+    (Gamma ⊢ t [:] A) -> inhabited (hom (interp_ctx C M Gamma) (interp_ty C M A)).
 Proof.
   intros Gamma t A H.
   induction H.
@@ -209,70 +187,40 @@ Proof.
   - destruct IHtypeability as [Hpair]. apply inhabits; simpl. exact (compose prod_snd Hpair).
 
   (* --- BiSTLC Cases --- *)
-
   (* T_Inl *)
-  - destruct IHtypeability as [IH].
-    apply inhabits; simpl.
-    exact (compose coprod_inl IH).
-
+  - destruct IHtypeability as [IH]. apply inhabits; simpl. exact (compose coprod_inl IH).
   (* T_Inr *)
-  - destruct IHtypeability as [IH].
-    apply inhabits; simpl.
-    exact (compose coprod_inr IH).
-
+  - destruct IHtypeability as [IH]. apply inhabits; simpl. exact (compose coprod_inr IH).
+  
   (* T_Case *)
   - destruct IHtypeability1 as [Hsum].
     destruct IHtypeability2 as [Hleft].
     destruct IHtypeability3 as [Hright].
     apply inhabits; simpl.
-
     (* Construct the Curried Left Branch *)
-    assert (CurriedLeft : hom (interp_ty C CC BCC M A) 
-                              (exp (interp_ty C CC BCC M C0) (interp_ctx C CC BCC M Gamma))).
-    {
-       (* We define the swapped map first: Gamma x A -> A x Gamma *)
-       (* Then compose with the branch logic: A x Gamma -> C *)
-       (* Then curry: A -> C^Gamma *)
-       apply exp_map.
-       apply (compose Hleft).
-       apply swap_map.
-    }
-
+    assert (CurriedLeft : hom (interp_ty C M A) (exp (interp_ty C M C0) (interp_ctx C M Gamma))).
+    { apply exp_map. apply (compose Hleft). apply swap_map. }
     (* Construct the Curried Right Branch *)
-    assert (CurriedRight : hom (interp_ty C CC BCC M B) 
-                               (exp (interp_ty C CC BCC M C0) (interp_ctx C CC BCC M Gamma))).
-    {
-       apply exp_map.
-       apply (compose Hright).
-       apply swap_map.
-    }
+    assert (CurriedRight : hom (interp_ty C M B) (exp (interp_ty C M C0) (interp_ctx C M Gamma))).
+    { apply exp_map. apply (compose Hright). apply swap_map. }
 
-    (* Combine using Coproduct Map: A + B -> C^Gamma *)
-    assert (CaseMap : hom (interp_ty C CC BCC M (Ty_Sum A B)) 
-                          (exp (interp_ty C CC BCC M C0) (interp_ctx C CC BCC M Gamma))).
-    {
-      apply coprod_map.
-      - exact CurriedLeft.
-      - exact CurriedRight.
-    }
+    (* Combine using Coproduct Map *)
+    assert (CaseMap : hom (interp_ty C M (Ty_Sum A B)) (exp (interp_ty C M C0) (interp_ctx C M Gamma))).
+    { apply coprod_map; assumption. }
 
-    (* Final composition: eval < (CaseMap o Hsum), id > *)
-    (* This maps Gamma -> C *)
+    (* Final composition *)
     exact (compose eval (prod_map (compose CaseMap Hsum) (id _))).
 
   (* T_Absurd *)
-  - destruct IHtypeability as [Hvoid].
-    apply inhabits; simpl.
-    exact (compose initial_map Hvoid).
+  - destruct IHtypeability as [Hvoid]. apply inhabits; simpl. exact (compose initial_map Hvoid).
 Defined.
 
 Theorem Soundness_implicit : forall (Gamma : context) (A : ty),
   (exists t, (Gamma ⊢ t [:] A)) ->
-  (forall (C : SetoidCategory) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C),
-     inhabited (hom (interp_ctx C CC BCC M Gamma) (interp_ty C CC BCC M A))).
+  (forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C),
+     inhabited (hom (interp_ctx C M Gamma) (interp_ty C M A))).
 Proof.
-  intros Gamma A [t H_type] C CC BCC M.
-  (* Direct application of the auxiliary lemma *)
+  intros Gamma A [t H_type] C Ct CC BCC M.
   apply Soundness_implicit_aux with (t := t).
   exact H_type.
 Defined.

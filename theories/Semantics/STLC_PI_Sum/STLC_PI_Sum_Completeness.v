@@ -3,6 +3,7 @@ Import ListNotations.
 
 (* --- HyperLogic Modules --- *)
 Require Import HyperLogic.Cat.Core.
+Require Import HyperLogic.Cat.CC.   
 Require Import HyperLogic.Cat.CCC.
 Require Import HyperLogic.Cat.BCCC.
 
@@ -16,7 +17,6 @@ Open Scope stlc_scope_sum.
 (* ================================================================= *)
 (* 1. CATEGORY CONSTRUCTION (BiSTLC_Category)                        *)
 (* ================================================================= *)
-(* Itt építjük fel a SZINTAKTIKUS kategóriát. Ez a Kanonikus Modell alapja. *)
 
 Definition obj_stlc_cat := ty.
 
@@ -58,7 +58,7 @@ Instance STLC_Thin : Thin STLC_Category.
 Proof. intros x y f g. apply generic_axiom_proof. Defined.
 
 (* ================================================================= *)
-(* 2. CCC CONSTRUCTION                                               *)
+(* 2. CC & CCC CONSTRUCTION                                          *)
 (* ================================================================= *)
 
 Definition terminal_term (A : ty) := (tm_lam A tm_unit).
@@ -92,6 +92,15 @@ Lemma snd_typing (x y : ty) : ⊢ (snd_term x y) [:] ((Ty_Prod x y) ⊃ y).
 Proof. unfold snd_term; apply T_Lam; eapply T_Snd; apply T_Var0. Defined.
 Definition snd_stlc {x y : ty} : hom_stlc (Ty_Prod x y) y := exist _ _ (snd_typing x y).
 
+(* ÚJ: STLC_CC Instance *)
+Instance STLC_CC : CartesianCategory STLC_Category.
+Proof.
+  apply (Build_Thin_CC _ STLC_Thin 
+    Ty_Unit (fun x => terminal_stlc x) 
+    Ty_Prod (@prod_map_stlc) (@fst_stlc) (@snd_stlc)).
+Defined.
+
+(* Exponentials *)
 Definition eval_term (y z : ty) :=
   tm_lam (Ty_Prod (Ty_Arrow z y) z) (tm_app (tm_fst (tm_var 0)) (tm_snd (tm_var 0))).
 Lemma eval_typing (y z : ty) : ⊢ eval_term y z [:] (Ty_Prod (Ty_Arrow z y) z ⊃ y).
@@ -111,9 +120,14 @@ Defined.
 Definition curry_stlc {x y z : ty} (g : hom_stlc (Ty_Prod x y) z) : hom_stlc x (Ty_Arrow y z) :=
   exist _ _ (curry_typing x y z g).
 
+(* ÚJ: STLC_CCC Instance (refine-nal) *)
 Instance STLC_CCC : CartesianClosedCategory STLC_Category.
 Proof.
-  refine (Build_Thin_CCC _ STLC_Thin Ty_Unit (fun x => terminal_stlc x) Ty_Prod (@prod_map_stlc) (@fst_stlc) (@snd_stlc) (fun z y => Ty_Arrow y z) (fun y z => @eval_stlc z y) (@curry_stlc)).
+  refine (Build_Thin_CCC _ STLC_Thin
+    (fun z y => Ty_Arrow y z)
+    (fun y z => @eval_stlc z y)
+    (@curry_stlc)
+  ).
 Defined.
 
 (* ================================================================= *)
@@ -140,7 +154,6 @@ Definition coprod_map_term (A B C : ty) (f : hom_stlc A C) (g : hom_stlc B C) :=
     (tm_case (tm_var 0)
       (tm_app (proj1_sig f) (tm_var 0))
       (tm_app (proj1_sig g) (tm_var 0))).
-
 Lemma coprod_map_typing (A B C : ty) (f : hom_stlc A C) (g : hom_stlc B C) :
   ⊢ coprod_map_term A B C f g [:] (Ty_Sum A B ⊃ C).
 Proof.
@@ -148,12 +161,10 @@ Proof.
   eapply T_Case.
   - apply T_Var0.
   - apply T_App with (A:=A).
-    + apply weakening_append with (Gamma:=nil) (Delta:=[A; Ty_Sum A B]).
-      exact (proj2_sig f).
+    + apply weakening_append with (Gamma:=nil) (Delta:=[A; Ty_Sum A B]). exact (proj2_sig f).
     + apply T_Var0.
   - apply T_App with (A:=B).
-    + apply weakening_append with (Gamma:=nil) (Delta:=[B; Ty_Sum A B]).
-      exact (proj2_sig g).
+    + apply weakening_append with (Gamma:=nil) (Delta:=[B; Ty_Sum A B]). exact (proj2_sig g).
     + apply T_Var0.
 Defined.
 Definition coprod_map_stlc {A B C : ty} (f : hom_stlc A C) (g : hom_stlc B C) : hom_stlc (Ty_Sum A B) C :=
@@ -166,6 +177,10 @@ Proof.
     Ty_Sum (@inl_stlc) (@inr_stlc) (@coprod_map_stlc)
   ).
 Defined.
+
+(* ================================================================= *)
+(* 4. CANONICAL MODEL INSTANCE                                       *)
+(* ================================================================= *)
 
 Fixpoint make_ctx_ty (Gamma : context) : ty :=
   match Gamma with
@@ -193,41 +208,42 @@ Instance STLC_Model : Model STLC_Category := {
   interp_base := Ty_Atomic
 }.
 
-(* Identity Lemmas: Required to align the Generic Interpretation with the Canonical Structure *)
-Lemma val_identity : forall A, interp_ty STLC_Category STLC_CCC STLC_BiCCC STLC_Model A = A.
+(* Identity Lemmas *)
+(* Itt már nem kell átadni az explicit CC, CCC, BCC-t *)
+Lemma val_identity : forall A, interp_ty STLC_Category STLC_Model A = A.
 Proof. induction A; simpl; auto; try (rewrite IHA1; rewrite IHA2); auto. Defined.
 
-Lemma ctx_identity : forall Gamma, interp_ctx STLC_Category STLC_CCC STLC_BiCCC STLC_Model Gamma = make_ctx_ty Gamma.
+Lemma ctx_identity : forall Gamma, interp_ctx STLC_Category STLC_Model Gamma = make_ctx_ty Gamma.
 Proof. induction Gamma; simpl; auto. rewrite IHGamma. rewrite val_identity. auto. Defined.
 
 (* ================================================================= *)
-(* 4. COMPLETENESS THEOREMS                                          *)
+(* 5. COMPLETENESS THEOREMS                                          *)
 (* ================================================================= *)
 
-(* Ez a tétel az IMPORTÁLT interp_derivation-t használja. *)
 Theorem Completeness_Equational :
   forall (Gamma : context) (A : ty) (t1 t2 : tm)
          (d1 : derivation Gamma t1 A)
          (d2 : derivation Gamma t2 A),
-  (forall (C : SetoidCategory) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C),
+  (* Hozzáadva: Ct *)
+  (forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C),
       interp_derivation d1 ≅ interp_derivation d2) ->
   tm_equiv_rel t1 t2.
 Proof.
   intros Gamma A t1 t2 d1 d2 H_valid.
-  (* Instanciáljuk a kvantort a Kanonikus Modellre *)
   apply (PI_rule Gamma A).
   - apply (forget_derivation d1).
   - apply (forget_derivation d2).
 Defined.
 
 Theorem Completeness : forall Gamma A,
-  (forall (C : SetoidCategory) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C),
-      inhabited (hom (interp_ctx C CC BCC M Gamma) (interp_ty C CC BCC M A))) ->
+  (* Hozzáadva: Ct, és implicitek törlése a hívásból *)
+  (forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C),
+      inhabited (hom (interp_ctx C M Gamma) (interp_ty C M A))) ->
   (exists t, (Gamma ⊢ t [:] A)).
 Proof.
   intros Gamma A H_valid.
-  assert (K : inhabited (hom (interp_ctx STLC_Category STLC_CCC STLC_BiCCC STLC_Model Gamma)
-                             (interp_ty STLC_Category STLC_CCC STLC_BiCCC STLC_Model A))).
+  assert (K : inhabited (hom (interp_ctx STLC_Category STLC_Model Gamma)
+                             (interp_ty STLC_Category STLC_Model A))).
   { apply H_valid. }
   
   destruct K as [[t_closed H_closed]].

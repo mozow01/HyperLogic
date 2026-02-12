@@ -1,8 +1,10 @@
-Require Import Core.
+Require Import HyperLogic.Cat.Core.
+Require Import HyperLogic.Cat.CC.  
+Require Import HyperLogic.Cat.CCC.
 Require Import Coq.Classes.Morphisms.
-Require Import CCC.
 
-Class BiCartesianClosedCategory {C : SetoidCategory} (CC : CartesianClosedCategory C) := mk_BiCartesianClosedCategory {
+(* Itt a változás: {Ct : CartesianCategory C} hozzáadása *)
+Class BiCartesianClosedCategory {C : SetoidCategory} {Ct : CartesianCategory C} (CC : CartesianClosedCategory C) := mk_BiCartesianClosedCategory {
 
   (* ========================== *)
   (* 1. INITIAL OBJECT          *)
@@ -18,28 +20,22 @@ Class BiCartesianClosedCategory {C : SetoidCategory} (CC : CartesianClosedCatego
   (* 2. COPRODUCT               *)
   (* ========================== *)
   coprod : @obj C -> @obj C -> @obj C;
-
   (* Constructors (Injections) *)
   coprod_inl : forall {x y}, hom x (coprod x y);
   coprod_inr : forall {x y}, hom y (coprod x y);
-
   (* Destructor (Case Analysis / Co-Pairing): [f, g] *)
   coprod_map : forall {x y z} (f : hom x z) (g : hom y z), hom (coprod x y) z;
-
   (* Equations *)
 
   (* Beta rule: [f, g] o inl = f *)
   coprod_map_inl : forall {x y z} (f : hom x z) (g : hom y z), 
         compose (coprod_map f g) coprod_inl ≅ f;
-
   (* Beta rule: [f, g] o inr = g *)
   coprod_map_inr : forall {x y z} (f : hom x z) (g : hom y z), 
         compose (coprod_map f g) coprod_inr ≅ g;
-
   (* Eta rule: [h o inl, h o inr] = h *)
   coprod_eta : forall {x y z} (h : hom (coprod x y) z), 
         coprod_map (compose h coprod_inl) (compose h coprod_inr) ≅ h;
-
   (* Proper instance required for rewriting *)
   coprod_map_proper_ax : forall {x y z},
         Proper (hom_equiv ==> hom_equiv ==> hom_equiv) (@coprod_map x y z)
@@ -52,10 +48,8 @@ Existing Instance coprod_map_proper_ax.
 
 Notation "⊥" := (initial) (at level 0, no associativity) : type_scope.
 Notation "x '⊕' y" := (coprod x y) (at level 50, left associativity) : type_scope.
-
 (* Case analysis notation [f, g] *)
 Notation "f '∐' g" := (coprod_map f g) (at level 30, no associativity) : type_scope.
-
 (* Functorial map f + g (Torii dual) *)
 Notation "f '⊔' g" := (coprod_map (compose coprod_inl f) (compose coprod_inr g)) 
                       (at level 30, no associativity) : type_scope.
@@ -63,12 +57,13 @@ Notation "f '⊔' g" := (coprod_map (compose coprod_inl f) (compose coprod_inr g
 (* --- Theorems --- *)
 
 (* Uniqueness derived from Eta (mirroring prod_unique) *)
-Theorem coprod_unique {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
+Theorem coprod_unique {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
   forall {x y z} (f : hom x z) (g : hom y z) (h : hom (coprod x y) z), 
     (compose h coprod_inl ≅ f) /\ (compose h coprod_inr ≅ g) -> h ≅ (coprod_map f g).
 Proof.
   intros x y z f g h [Hinl Hinr].
-  rewrite <- coprod_eta. (* Replace h with [h o inl, h o inr] *)
+  rewrite <- coprod_eta.
+  (* Replace h with [h o inl, h o inr] *)
   apply coprod_map_proper_ax.
   - exact Hinl.
   - exact Hinr.
@@ -78,6 +73,7 @@ Qed.
 
 Definition Build_Thin_BiCCC 
   (C : SetoidCategory) 
+  {Ct : CartesianCategory C} (* Explicitly require Base CC *)
   (CC : CartesianClosedCategory C)
   (HThin : Thin C) 
   (initial_item : @obj C)
@@ -95,18 +91,15 @@ Proof.
     (coprod_inl := @coprod_inl_item)
     (coprod_inr := @coprod_inr_item)
     (coprod_map := @coprod_map_item).
-  
   all: intros.
   all: try (unfold Proper, respectful; intros).
   all: apply thin_unique.
 Defined.
 
-
-
 (** * Derived Theorems *)
 
 (* Directional version of coprod_unique *)
-Theorem unique_coprod {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
+Theorem unique_coprod {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
   forall (x y z : @obj C) (f1 : x → z) (f2 : y → z) (g : x ⊕ y → z), 
     ((g ∘ coprod_inl) ≅ f1) /\ ((g ∘ coprod_inr) ≅ f2) -> f1 ∐ f2 ≅ g.
 Proof.
@@ -121,7 +114,7 @@ Qed.
 
 (* Pre-composition distributes over coproduct map *)
 (* Dual to compos_prod *)
-Theorem compos_coprod {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
+Theorem compos_coprod {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
   forall (x y z w : @obj C) (f : x → y) (g : z → y) (h : y → w),
  (h ∘ f) ∐ (h ∘ g) ≅ (h ∘ (f ∐ g)).
 Proof.
@@ -140,7 +133,7 @@ Qed.
 
 (* Identity expanded as a coproduct of injections *)
 (* Dual to pr_and_id *)
-Lemma in_and_id {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
+Lemma in_and_id {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} : 
   forall (A B : @obj C), id (A ⊕ B) ≅ coprod_inl ∐ coprod_inr.
 Proof.
   intros A B.
@@ -154,7 +147,7 @@ Qed.
 (* Functoriality of Coproduct (Composition of Parallel Maps) *)
 (* Dual to prod_id *)
 (* (g ⊔ id) ∘ (f ⊔ id) ≅ (g ∘ f) ⊔ id *)
-Lemma coprod_id {C : SetoidCategory} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} 
+Lemma coprod_id {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} 
   (X Y Z A : @obj C) : 
   forall (f : X → Y) (g : Y → Z),
     (g ⊔ (id A)) ∘ (f ⊔ (id A)) ≅ (g ∘ f) ⊔ (id A).
@@ -166,26 +159,25 @@ Proof.
 
   (* --- 1. First Component (inl) --- *)
   - rewrite <- comp_assoc.
-    
-    
     (* 1. Apply to the first term (Rightmost in composition) *)
     (* (g ⊔ id) ∘ ( (f ⊔ id) ∘ inl ) *)
-    rewrite  coprod_map_inl. (* (f ⊔ id) ∘ inl -> inl ∘ f *)
+    rewrite  coprod_map_inl.
+    (* (f ⊔ id) ∘ inl -> inl ∘ f *)
 
     (* 2. Re-associate to expose the second term *)
     (* ( (g ⊔ id) ∘ inl ) ∘ f *)
-    rewrite comp_assoc. 
-
+    rewrite comp_assoc.
     (* 3. Apply to the second term *)
-    rewrite coprod_map_inl. (* (g ⊔ id) ∘ inl -> inl ∘ g *)
+    rewrite coprod_map_inl.
+    (* (g ⊔ id) ∘ inl -> inl ∘ g *)
     
     (* 4. Restore association and finish *)
-    rewrite comp_assoc. (* inl ∘ (g ∘ f) *)
+    rewrite comp_assoc.
+    (* inl ∘ (g ∘ f) *)
     reflexivity.
 
   (* --- 2. Second Component (inr) --- *)
   - rewrite <- comp_assoc.
-    
     (* Strategy: The second component handles the Identity part *)
     
     rewrite coprod_map_inr.
@@ -193,5 +185,3 @@ Proof.
     rewrite coprod_map_inr.
     reflexivity.
 Qed.
-
-
