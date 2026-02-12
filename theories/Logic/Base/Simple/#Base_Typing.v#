@@ -1,0 +1,31 @@
+Require Import List. 
+Require Import HyperLogic.Logic.Base.Simple.Base_Syntax.
+
+(* Segédfüggvény a kontextushoz *)
+Fixpoint get_type (n : nat) (G : b_context) : option b_ty :=
+  match G, n with
+  | nil, _ => None
+  | A :: _, 0 => Some A
+  | _ :: G', S n' => get_type n' G'
+  end.
+
+Inductive base_typing : b_context -> b_tm -> b_ty -> Set := 
+  | BT_Var : forall G n A,
+      get_type n G = Some A ->
+      base_typing G (b_var n) A
+
+  | BT_Unit : forall G,
+      base_typing G b_unit b_Unit
+
+  | BT_Pair : forall G t1 t2 A B,
+      base_typing G t1 A ->
+      base_typing G t2 B ->
+      base_typing G (b_pair t1 t2) (b_Prod A B)
+      
+  | BT_Fst : forall G t A B,
+      base_typing G t (b_Prod A B) ->
+      base_typing G (b_fst t) A
+      
+  | BT_Snd : forall G t A B,
+      base_typing G t (b_Prod A B) ->
+      base_typing G (b_snd t) B.

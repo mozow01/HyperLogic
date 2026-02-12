@@ -9,7 +9,7 @@ Fixpoint get_type (n : nat) (G : b_context) : option b_ty :=
   | _ :: G', S n' => get_type n' G'
   end.
 
-Inductive base_typing : b_context -> b_tm -> b_ty -> Prop :=
+Inductive base_typing : b_context -> b_tm -> b_ty -> Set := 
   | BT_Var : forall G n A,
       get_type n G = Some A ->
       base_typing G (b_var n) A
