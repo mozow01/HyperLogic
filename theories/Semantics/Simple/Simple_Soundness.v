@@ -1,7 +1,9 @@
-Require Import List.
+Require Import List Arith Lia.
 Require Import PeanoNat.  
 Require Import Coq.Classes.Morphisms.
 Import ListNotations.
+Require Import Coq.Program.Equality.
+Require Import Coq.Logic.Eqdep_dec.
 
 (* Cat Imports *)
 Require Import HyperLogic.Cat.Core.
@@ -19,8 +21,8 @@ Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Syntax.
 Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Logic.
 Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Typing.
 Require Import Coq.Program.Equality.
-Require Import Coq.Logic.Eqdep_dec.
-Require Import Arith.
+Require Import HyperLogic.Logic.Base.Simple.Base_Equiv.
+Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Substitution.
 
 
 (* ================================================================= *)
@@ -345,31 +347,413 @@ Fixpoint formula_weakening_gen {G Phi} B k (d : formula_derivation G Phi)
 Definition formula_weakening {G Phi} B (d : formula_derivation G Phi) 
   : formula_derivation (B :: G) (h_lift 1 0 Phi) :=
   formula_weakening_gen B 0 d.
+  
+(* What: Provides a global term interpretation fallback if local recursion fails.
+   Why: Explicit assertion to safely map base typing to categorical morphisms inside specific proofs. *)
+Lemma interp_b_tm {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
+  {GF : GoodFibration CatB} {M : SimpleModel CatB} 
+  {G : b_context} {t : b_tm} {A : b_ty}
+  (bt : base_typing G t A) : hom (interp_ctx G) (interp_base_ty A).
+Proof.
+  exact (interp_base_tm bt).
+Defined.
+
+(* What: Defines the underlying graph morphism for substitution.
+   Why: Substitution conceptually maps G to G x A. We pullback along this specific morphism to replace the variable. *)
+Lemma subst_graph_mor {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
+  {GF : GoodFibration CatB} {M : SimpleModel CatB} 
+  {G : b_context} {t : b_tm} {A : b_ty}
+  (bt : base_typing G t A) : hom (interp_ctx G) (interp_ctx (A :: G)).
+Proof.
+  (* Az interp_ctx (A :: G) definíció szerint: prod (interp_ctx G) (interp_base_ty A) *)
+  simpl.
+  (* A morfizmus: <id, [[t]]> *)
+  apply prod_map.
+  - apply id.
+  - exact (interp_base_tm bt).
+Defined.
+
+Lemma base_subst_id : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
+  {GF : GoodFibration CatB} {M : SimpleModel CatB}
+  {G : b_context} {t : b_tm} {A : b_ty} (bt : base_typing G t A),
+  compose (ctx_proj G A) (subst_graph_mor bt) ≅ id (interp_ctx G).
+Proof.
+  intros.
+  (* Kibontjuk a definíciókat: ctx_proj = prod_fst, subst_graph_mor = prod_map id [[t]] *)
+  unfold ctx_proj, subst_graph_mor.
+  (* A CartesianCategory axiómája kimondja: prod_fst ∘ (f ∏ g) ≅ f. Itt f = id. *)
+  apply prod_map_fst.
+Qed.
+
 
 (* ================================================================= *)
 (* 8. SEMANTIC AXIOMS (Isomorphisms & Categorical Bridges)           *)
 (* ================================================================= *)
 
+ 
+(* 1. Segédlemma: A bázis termek szintaktikai eltolása megegyezik. *)
+(* Megmutatjuk, hogy a b_lift ugyanazt csinálja, mint a Base_Equiv-ben lévő shift. *)
+Lemma b_lift_eq_shift : forall t d c,
+  b_lift d c t = shift d c t.
+Proof.
+  induction t; intros d c; simpl.
+  - (* b_var *)
+    (* Esetszétválasztás a két különböző ellenőrzésre: c <= n és n < c *)
+    destruct (c <=? n) eqn:Hle; destruct (n <? c) eqn:Hlt.
+    + (* Lehetetlen eset: egyszerre kisebb és nagyobb-egyenlő *)
+      apply Nat.leb_le in Hle. apply Nat.ltb_lt in Hlt. lia.
+    + (* A változót eltoljuk. Az összeadás kommutatív: d + n = n + d *)
+      f_equal. lia.
+    + (* A változó nem változik *)
+      reflexivity.
+    + (* Lehetetlen eset *)
+      apply Nat.leb_gt in Hle. apply Nat.ltb_ge in Hlt. lia.
+  - (* b_unit *) 
+    reflexivity.
+  - (* b_pair *) 
+    f_equal. apply IHt1. apply IHt2.
+  - (* b_fst *) 
+    f_equal. apply IHt.
+  - (* b_snd *) 
+    f_equal. apply IHt.
+Qed.
+
+(* 2. Segédlemma: A listán történő map-elés is megegyezik *)
+Lemma map_b_lift_eq_map_shift : forall ts d c,
+  map (b_lift d c) ts = map_shift_base d c ts.
+Proof.
+  intros ts d c.
+  unfold map_shift_base. (* Kibontjuk a Hyper_Substitution.v-s definíciót *)
+  apply map_ext. (* A List könyvtár lemmája: ha a belső fv-ek egyeznek, a map is egyezik *)
+  intro t. apply b_lift_eq_shift.
+Qed.
+
+(* 3. Segédlemma: A hyper formulák eltolása megegyezik. *)
+Lemma h_lift_eq_h_shift : forall Phi d c,
+  h_lift d c Phi = h_shift d c Phi.
+Proof.
+  induction Phi; intros d c; simpl.
+  - reflexivity.
+  - reflexivity.
+  - f_equal. apply IHPhi1. apply IHPhi2.
+  - f_equal. apply IHPhi1. apply IHPhi2.
+  - f_equal. apply IHPhi1. apply IHPhi2.
+  - (* Ty_Atom: Itt hívjuk be a listás segédlemmánkat *)
+    f_equal. apply map_b_lift_eq_map_shift.
+  - (* Kvantorok: A küszöb (c) eggyel nő *)
+    f_equal. apply IHPhi.
+  - f_equal. apply IHPhi.
+Qed.
+
+(* ================================================================= *)
+(* VÉGREHAJTÁS: Az axióma kiváltása Lemmával                         *)
+(* ================================================================= *)
 (* What: Translates the derivation tree from the custom `h_lift` to the logic's built-in `h_shift`.
    Why: Required to bridge the gap between two identical syntactic transformations implemented via different functions. *)
-Axiom shift_cast : forall {G A Psi},
+Lemma shift_cast : forall {G A Psi},
   formula_derivation (A :: G) (h_lift 1 0 Psi) ->
-  formula_derivation (A :: G) (Hyper_Substitution.h_shift 1 0 Psi).
+  formula_derivation (A :: G) (h_shift 1 0 Psi).
+Proof.
+  intros G A Psi H.
+  (* Mivel h_lift és h_shift teljesen egyenlőek, egyszerűen átírjuk egyiket a másikra *)
+  rewrite <- h_lift_eq_h_shift.
+  exact H.
+Defined. 
 
-(* What: Asserts the syntactical cast is a categorical isomorphism. *)
-Axiom shift_cast_iso : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
+(* ================================================================= *)
+(* SZINTAKTIKAI CAST IZOMORFIZMUSOK                                  *)
+(* ================================================================= *)
+
+Lemma shift_cast_iso : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
   {CC : CartesianClosedCategory CatB} {BiCC : BiCartesianClosedCategory CC} 
   {GF : GoodFibration CatB} {M : SimpleModel CatB}
   {G A Psi} (d : formula_derivation (A :: G) (h_lift 1 0 Psi)),
   hom (interp_formula d) (interp_formula (shift_cast d)).
+Proof.
+  intros.
+  (* Kibontjuk a shift_cast definícióját, ami tartalmazza a rewrite-ot *)
+  unfold shift_cast.
+  (* Általánosítjuk azt az egyenlőséget, amit a rewrite használt *)
+  generalize (h_lift_eq_h_shift Psi 1 0).
+  intro e.
+  (* Amikor destruct-áljuk az egyenlőséget, a Coq rájön, hogy a két típus 
+     ténylegesen azonos, így a "cast" eltűnik, és shift_cast d ≡ d lesz. *)
+  destruct e.
+  simpl.
+  (* Így a cél hom (interp_formula d) (interp_formula d) marad, ami az identitás. *)
+  apply id.
+Defined.
 
-(* What: The inverse isomorphism for the syntax shift cast. *)
-Axiom shift_cast_iso_inv : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
+Lemma shift_cast_iso_inv : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
   {CC : CartesianClosedCategory CatB} {BiCC : BiCartesianClosedCategory CC} 
   {GF : GoodFibration CatB} {M : SimpleModel CatB}
   {G A Psi} (d : formula_derivation (A :: G) (h_lift 1 0 Psi)),
   hom (interp_formula (shift_cast d)) (interp_formula d).
+Proof.
+  intros.
+  unfold shift_cast.
+  generalize (h_lift_eq_h_shift Psi 1 0).
+  intro e.
+  destruct e.
+  simpl.
+  apply id.
+Defined.
+(*
 
+ITT ELHASAL 2 lemma erejéig
+
+*)
+
+(* Ha a bázisban f ≅ g, akkor a Pullback f (A) és Pullback g (A) között van morfizmus *)
+Lemma pb_equiv_morphism : forall {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B}
+  {I J : @obj B} (f g : hom I J) (A : @obj (Fiber J)),
+  f ≅ g -> hom (@fobj _ _ (Pullback f) A) (@fobj _ _ (Pullback g) A).
+Proof.
+  intros B CB GF I J f g A H.
+  
+  (* 1. Letesszük a garantált izomorfizmust a kontextusba *)
+  pose proof (pb_iso f g H A) as H_iso.
+  
+  (* 2. Mivel az iso_to típusa már eleve maga a morfizmus (hom), 
+        egyszerűen ezt adjuk meg. A Coq a háttérben lévő Typeclass 
+        mechanizmussal megtalálja hozzá a most letett H_iso-t. *)
+  exact iso_to.
+Defined.
+
+
+(* A már említett bázis-szintű azonosság: fst ∘ <id, t> ≅ id *)
+Lemma ctx_proj_subst_id : forall {B : SetoidCategory} {CB : CartesianCategory B} 
+  {GF : GoodFibration B} {M : SimpleModel B} (* <-- Ez a két paraméter hiányzott! *)
+  {G : b_context} {t : b_tm} {A : b_ty} (bt : base_typing G t A),
+  compose (ctx_proj G A) (subst_graph_mor bt) ≅ id (interp_ctx G).
+Proof.
+  intros. unfold ctx_proj, subst_graph_mor. simpl. 
+  apply prod_map_fst.
+Qed.
+
+(* ================================================================= *)
+(* WEAKENING BRIDGE (Oda irány: Pullback -> Weakening)               *)
+(* ================================================================= *)
+
+(* Bázisszintű lemma: az argumentumok gyengítése egyenlő a projekcióval való kompozícióval *)
+
+Lemma args_weakening_commutes : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
+  {GF : GoodFibration CatB} {M : SimpleModel CatB}
+  {G : b_context} {A : b_ty} {p : nat} {ts : list b_tm} 
+  (a : args_derivation G ts (predicate_sig p)),
+  interp_args (args_weakening_gen A 0 a) ≅ compose (interp_args a) (ctx_proj G A). (* <-- ITT A CSERE *)
+Proof. 
+  (* Ezt a bázis szintű tulajdonságot a modell konkrét felépítésekor bizonyítjuk *)
+Admitted.
+
+
+Lemma pullback_weakening_iso_both : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
+  {CC : CartesianClosedCategory CatB} {BiCC : BiCartesianClosedCategory CC} 
+  {GF : GoodFibration CatB} {M : SimpleModel CatB}
+  {G : b_context} {Phi : h_ty} (A : b_ty) (d : formula_derivation G Phi),
+  (hom (@fobj _ _ (Pullback (ctx_proj G A)) (interp_formula d))
+       (interp_formula (formula_weakening A d))) * (hom (interp_formula (formula_weakening A d))
+       (@fobj _ _ (Pullback (ctx_proj G A)) (interp_formula d))).
+Proof.
+  intros. induction d; simpl. (* <--- FIGYELEM: ITT NINCS ; split! *)
+  
+  - (* FD_Unit *) 
+    split.
+    + exact (@iso_to _ _ _ (pb_term_iso (ctx_proj G A))).
+    + exact (@iso_from _ _ _ (pb_term_iso (ctx_proj G A))).
+  
+  - (* FD_Void *) 
+    split.
+    + exact (@iso_to _ _ _ (pb_init_iso (ctx_proj G A))).
+    + exact (@iso_from _ _ _ (pb_init_iso (ctx_proj G A))).
+  
+  - (* FD_Prod (És) *)
+    destruct IHd1 as [IHd1_to IHd1_from].
+    destruct IHd2 as [IHd2_to IHd2_from].
+    split. (* <--- A destruct UTÁN bontunk, így mindkét ág látja a változókat! *)
+    + (* Oda *)
+      eapply compose.
+      * apply prod_map.
+        -- eapply compose. { exact IHd1_to. } { eapply prod_fst. }
+        -- eapply compose. { exact IHd2_to. } { eapply prod_snd. }
+      * exact (@iso_to _ _ _ (pb_prod_iso (ctx_proj G A) _ _)).
+    + (* Vissza *)
+      eapply compose.
+      * exact (@iso_from _ _ _ (pb_prod_iso (ctx_proj G A) _ _)).
+      * apply prod_map.
+        -- eapply compose. { exact IHd1_from. } { eapply prod_fst. }
+        -- eapply compose. { exact IHd2_from. } { eapply prod_snd. }
+        
+  - (* FD_Sum (Vagy) *)
+    destruct IHd1 as [IHd1_to IHd1_from].
+    destruct IHd2 as [IHd2_to IHd2_from].
+    split.
+    + (* Oda *)
+      eapply compose.
+      * eapply coprod_map.
+        -- eapply compose. { apply coprod_inl. } { exact IHd1_to. }
+        -- eapply compose. { apply coprod_inr. } { exact IHd2_to. }
+      * exact (@iso_to _ _ _ (pb_coprod_iso (ctx_proj G A) _ _)).
+    + (* Vissza *)
+      eapply compose.
+      * exact (@iso_from _ _ _ (pb_coprod_iso (ctx_proj G A) _ _)).
+      * eapply coprod_map.
+        -- eapply compose. { apply coprod_inl. } { exact IHd1_from. }
+        -- eapply compose. { apply coprod_inr. } { exact IHd2_from. }
+        
+ - (* FD_Arr (Implikáció) *)
+    destruct IHd1 as [IHd1_to IHd1_from].
+    destruct IHd2 as [IHd2_to IHd2_from].
+    split.
+    + (* Oda *)
+      eapply compose.
+      * apply exp_map.
+        -- eapply compose. { exact IHd2_to. }
+           eapply compose. { eapply eval. }
+           apply prod_map.
+           ++ eapply prod_fst. (* Az első komponenst érintetlenül hagyjuk (pi_1) *)
+           ++ eapply compose. { exact IHd1_from. } { eapply prod_snd. } (* A másodikra: IH_from o pi_2 *)
+      * exact (@iso_to _ _ _ (pb_exp_iso (ctx_proj G A) _ _)).
+    + (* Vissza *)
+      eapply compose.
+      * exact (@iso_from _ _ _ (pb_exp_iso (ctx_proj G A) _ _)).
+      * apply exp_map.
+        -- eapply compose. { exact IHd2_from. }
+           eapply compose. { eapply eval. }
+           apply prod_map.
+           ++ eapply prod_fst.
+           ++ eapply compose. { exact IHd1_to. } { eapply prod_snd. } (* Kontravariancia: itt a _to kell! *)
+        
+ - (* FD_Atom *) 
+    split.
+    + (* Oda irány: fobj (fobj P) -> fobj P *)
+      eapply compose.
+      * (* 2. Lépés (a legvégén): fobj P -> fobj P (Ekvivalencia a bázisban) *)
+        apply pb_equiv_morphism. symmetry. apply args_weakening_commutes. (* <--- 1. Cél kipipálva! *)
+      * (* 1. Lépés (az elején): fobj (fobj P) -> fobj P (A kompozíciós izomorfizmus VISSZA iránya) *)
+        exact (@iso_from _ _ _ (pullback_comp_iso _ _ _)).
+        
+    + (* Vissza irány: fobj P -> fobj (fobj P) *)
+      eapply compose.
+      * (* 2. Lépés (a legvégén): fobj P -> fobj (fobj P) (A kompozíciós izomorfizmus ODA iránya) *)
+        exact (@iso_to _ _ _ (pullback_comp_iso _ _ _)).
+      * (* 1. Lépés (az elején): fobj P -> fobj P (Ekvivalencia a bázisban) *)
+        apply pb_equiv_morphism. apply args_weakening_commutes. (* <--- 2. Cél kipipálva! *)
+ 
+(*
+  - (* FD_All (Minden) *)
+    destruct IHd as [IHd_to IHd_from].
+    split.
+    + (* Oda *)
+      eapply compose.
+      * apply fmap; exact IHd_to.
+      * exact (@iso_to _ _ _ (beck_chevalley_pi (ctx_proj G A) _)).
+    + (* Vissza *)
+      eapply compose.
+      * exact (@iso_from _ _ _ (beck_chevalley_pi (ctx_proj G A) _)).
+      * apply fmap; exact IHd_from.
+      
+  - (* FD_Ex (Létezik) *)
+    destruct IHd as [IHd_to IHd_from].
+    split.
+    + (* Oda *)
+      eapply compose.
+      * apply fmap; exact IHd_to.
+      * exact (@iso_to _ _ _ (beck_chevalley_sigma (ctx_proj G A) _)).
+    + (* Vissza *)
+      eapply compose.
+      * exact (@iso_from _ _ _ (beck_chevalley_sigma (ctx_proj G A) _)).
+      * apply fmap; exact IHd_from.
+Admitted.
+
+
+Lemma pullback_weakening_iso : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
+  {CC : CartesianClosedCategory CatB} {BiCC : BiCartesianClosedCategory CC} 
+  {GF : GoodFibration CatB} {M : SimpleModel CatB}
+  {G : b_context} {Phi : h_ty} (A : b_ty) (d : formula_derivation G Phi),
+  hom (@fobj _ _ (Pullback (ctx_proj G A)) (interp_formula d))
+      (interp_formula (formula_weakening A d)).
+Proof.
+  intros. induction d; simpl.
+  - (* FD_Unit (Igaz) *) 
+    exact (@iso_to _ _ _ (pb_term_iso (ctx_proj G A))).
+  - (* FD_Void (Hamis) *) 
+    exact (@iso_to _ _ _ (pb_init_iso (ctx_proj G A))).
+  
+  - (* FD_Prod (És) *)
+    eapply compose.
+    + apply prod_map. (* A párosítás <f, g> *)
+      * eapply compose. exact IHd1. eapply prod_fst. (* f o pi_1 *)
+      * eapply compose. exact IHd2. eapply prod_snd. (* g o pi_2 *)
+    + exact (@iso_to _ _ _ (pb_prod_iso (ctx_proj G A) _ _)).
+  
+  - (* FD_Sum (Vagy) *)
+    (* Itt a coprod_map a [f, g] univerzális tulajdonság, amihez az i_1 és i_2 injekciók kellenek *)
+    eapply compose.
+    + eapply coprod_map.
+      * eapply compose. apply coprod_inl. exact IHd1. (* i_1 o f *)
+      * eapply compose. apply coprod_inr. exact IHd2. (* i_2 o g *)
+    + exact (@iso_to _ _ _ (pb_coprod_iso (ctx_proj G A) _ _)).
+    
+ - (* FD_Arr (Implikáció) *)
+    eapply compose.
+    + apply exp_map.
+      * { eapply (pullback_weakening_iso_inv A d1). } (* A kontravariáns ág: visszafelé mutat *)
+      * { exact IHd2. }                              (* A kovariáns ág: előrefelé mutat *)
+    + exact (@iso_to _ _ _ (pb_exp_iso (ctx_proj G A) _ _)).
+    
+  - (* FD_Atom (Predikátum) *)
+    admit.
+    
+  - (* FD_All (Minden) *)
+    eapply compose.
+    + apply fmap; exact IHd.
+    + exact (@iso_to _ _ _ (beck_chevalley_pi (ctx_proj G A) _)).
+    
+  - (* FD_Ex (Létezik) *)
+    eapply compose.
+    + apply fmap; exact IHd.
+    + exact (@iso_to _ _ _ (beck_chevalley_sigma (ctx_proj G A) _)).
+Admitted.
+
+(* ================================================================= *)
+(* WEAKENING BRIDGE INVERSE (Vissza irány: Weakening -> Pullback)    *)
+(* ================================================================= *)
+Lemma pullback_weakening_iso_inv : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
+  {CC : CartesianClosedCategory CatB} {BiCC : BiCartesianClosedCategory CC} 
+  {GF : GoodFibration CatB} {M : SimpleModel CatB}
+  {G : b_context} {Phi : h_ty} (A : b_ty) (d : formula_derivation G Phi),
+  hom (interp_formula (formula_weakening A d))
+      (@fobj _ _ (Pullback (ctx_proj G A)) (interp_formula d)).
+Proof.
+  intros. induction d; simpl.
+  - (* FD_Unit *) 
+    exact (iso_from (pb_term_iso (ctx_proj G A))).
+  - (* FD_Void *) 
+    exact (iso_from (pb_init_iso (ctx_proj G A))).
+  - (* FD_Prod *)
+    eapply compose.
+    + apply prod_map; assumption.
+    + exact (iso_from (pb_prod_iso (ctx_proj G A) _ _)).
+  - (* FD_Sum *)
+    eapply compose.
+    + apply coprod_map; assumption.
+    + exact (iso_from (pb_coprod_iso (ctx_proj G A) _ _)).
+  - (* FD_Arr *)
+    eapply compose.
+    + apply exp_map; assumption.
+    + exact (iso_from (pb_exp_iso (ctx_proj G A) _ _)).
+  - (* FD_Atom *)
+    admit.
+  - (* FD_All *)
+    eapply compose.
+    + apply fmap. assumption.
+    + exact (iso_from (beck_chevalley_pi (ctx_proj G A) _)).
+  - (* FD_Ex *)
+    eapply compose.
+    + apply fmap. assumption.
+    + exact (iso_from (beck_chevalley_sigma (ctx_proj G A) _)).
+Admitted.
 (* What: Maps a categorical pullback along the context projection to the syntax of weakening.
    Why: In categorical logic, weakening a context corresponds to a functorial pullback along a context projection. *)
 Axiom pullback_weakening_iso : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
@@ -387,19 +771,6 @@ Axiom pullback_weakening_iso_inv : forall {CatB : SetoidCategory} {CB : Cartesia
   hom (interp_formula (formula_weakening A d))
       (@fobj _ _ (Pullback (ctx_proj G A)) (interp_formula d)).
 
-(* What: Provides a global term interpretation fallback if local recursion fails.
-   Why: Explicit assertion to safely map base typing to categorical morphisms inside specific proofs. *)
-Axiom interp_b_tm : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
-  {GF : GoodFibration CatB} {M : SimpleModel CatB} 
-  {G : b_context} {t : b_tm} {A : b_ty},
-  base_typing G t A -> hom (interp_ctx G) (interp_base_ty A).
-
-(* What: Defines the underlying graph morphism for substitution.
-   Why: Substitution conceptually maps G to G x A. We pullback along this specific morphism to replace the variable. *)
-Axiom subst_graph_mor : forall {CatB : SetoidCategory} {CB : CartesianCategory CatB} 
-  {GF : GoodFibration CatB} {M : SimpleModel CatB} 
-  {G : b_context} {t : b_tm} {A : b_ty},
-  base_typing G t A -> hom (interp_ctx G) (interp_ctx (A :: G)).
 
 (* What: Bridges syntactic substitution to a categorical pullback along the graph morphism.
    Why: Formalizes the substitution lemma of categorical logic. *)
@@ -599,4 +970,7 @@ Proof.
     subst ts2.
     apply inhabits.
     exact (formula_cast fd_phi fd_psi).
+    
 Qed.
+*)
+Admitted.

@@ -56,3 +56,12 @@ Class Iso {C : SetoidCategory} (A B : @obj C) := {
 }.
 
 Notation "A ≅O B" := (Iso A B) (at level 40, no associativity) : type_scope.
+
+Lemma thin_iso {C : SetoidCategory} {D : Thin C} (A B : @obj C) 
+               (f : A → B) (g : B → A) : A ≅O B.
+Proof.
+  exists f g.
+  - apply thin_unique.
+  - apply thin_unique.
+Defined.
+
