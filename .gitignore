@@ -3,5 +3,11 @@
 *.vok
 *.glob
 .*.aux
+
+skeleton/
+generate_skeleton.py
+
 Makefile.coq
 Makefile.coq.conf
+
+docs/
