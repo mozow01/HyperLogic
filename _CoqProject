@@ -13,18 +13,6 @@ theories/Logic/Base/Individual/Base_Individual.v
 theories/Logic/Hyper/Epsilon/Epsilon_Syntax.v
 theories/Logic/Base/Epsilon/Base_Epsilon.v
 theories/Logic/Base/Simple/Base_Syntax.v
-theories/Logic/Base/Simple/Base_Typing.v
-theories/Logic/Base/Simple/Base_Equiv.v
-
-theories/Logic/Hyper/Simple/Hyper_Substitution.v
-theories/Logic/Hyper/Simple/Hyper_Logic.v
-
-
-theories/Semantics/Simple/Simple_Soundness.v
-
-theories/Logic/Hyper/Simple/Hyper_Syntax.v
-theories/Logic/Hyper/Simple/Hyper_Typing.v
-
 
 
 
@@ -40,7 +28,12 @@ theories/Logic/STLC_PI_Sum/STLC_PI_Sum_Lemmas.v
 theories/Semantics/STLC_PI/STLC_PI_Soundness.v
 theories/Semantics/STLC_PI/STLC_PI_Completeness.v
 
+
 # --- Sum Semantics ---
 theories/Semantics/STLC_PI_Sum/STLC_PI_Sum_Soundness.v
 theories/Semantics/STLC_PI_Sum/STLC_PI_Sum_Completeness.v
+
+# --- Simple Semantics ---
+theories/Semantics/Simple/Base_Simple_Soundness.v
+theories/Semantics/Simple/Simple_Soundness.v
 
