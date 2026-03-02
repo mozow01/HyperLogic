@@ -12,15 +12,13 @@ Require Import HyperLogic.Logic.Base.Simple.Base_Syntax.
 (* 1. TÍPUSOK (OBJEKTUMOK) INTERPRETÁCIÓJA                           *)
 (* ================================================================= *)
 
-(* Az S_sem paraméter eltűnt! Helyette a TSC szolgáltatja az S objektumot. *)
 Fixpoint interp_ty {C : SetoidCategory} {CC : CartesianCategory C} 
   {TSC : TwoSortCategory C} (A : b_ty) : @obj C :=
   match A with
   | b_Unit => terminal
-  | b_S => S  (* Ezt az S-t most már a TwoSortCategory adja! *)
+  | b_S => S TSC  (* FIGYELD: Itt adjuk át a TSC példányt az S függvénynek! *)
   | b_Prod A1 A2 => prod (interp_ty A1) (interp_ty A2)
   end.
-
 (* ================================================================= *)
 (* 2. MORFIZMUSOK (DERIVÁCIÓK) INTERPRETÁCIÓJA                       *)
 (* ================================================================= *)
@@ -60,5 +58,5 @@ Proof.
   - (* BE_BetaFst *) apply prod_map_fst.
   - (* BE_BetaSnd *) apply prod_map_snd.
   - (* BE_EtaPair *) apply prod_eta.
-  - (* BE_EtaUnit *) apply terminal_map_unique. 
-Defined.
+  - (* BE_EtaUnit *) apply terminal_map_unique.  
+Defined. 

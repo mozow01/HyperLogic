@@ -264,8 +264,9 @@ Class TwoSortCategory (B : SetoidCategory) {CB : CartesianCategory B} := mk_TwoS
   S : @obj B;
   S_is_not_Terminal : S <> terminal 
 }.
-(** Prevent typeclass resolution from guessing S arbitrarily *)
-Arguments S {_ _} _.
+(* Itt a változtatás: a kapcsos zárójelbe tett utolsó argumentum 
+   mondja meg a Coq-nak, hogy keresse meg a példányt a környezetben. *)
+Arguments S {B CB}.
 
 (** The 'bang' morphism mapping the individual sort to the terminal object. *)
 Definition bang (B : SetoidCategory) {CB : CartesianCategory B} {TSC : TwoSortCategory B} : hom (@S B CB TSC) terminal :=

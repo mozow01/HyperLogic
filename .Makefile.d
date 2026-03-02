@@ -34,6 +34,12 @@ theories/Logic/Base/Epsilon/Base_Epsilon.vos theories/Logic/Base/Epsilon/Base_Ep
 theories/Logic/Base/Simple/Base_Syntax.vo theories/Logic/Base/Simple/Base_Syntax.glob theories/Logic/Base/Simple/Base_Syntax.v.beautified theories/Logic/Base/Simple/Base_Syntax.required_vo: theories/Logic/Base/Simple/Base_Syntax.v 
 theories/Logic/Base/Simple/Base_Syntax.vio: theories/Logic/Base/Simple/Base_Syntax.v 
 theories/Logic/Base/Simple/Base_Syntax.vos theories/Logic/Base/Simple/Base_Syntax.vok theories/Logic/Base/Simple/Base_Syntax.required_vos: theories/Logic/Base/Simple/Base_Syntax.v 
+theories/Logic/Hyper/Simple/Hyper_Syntax.vo theories/Logic/Hyper/Simple/Hyper_Syntax.glob theories/Logic/Hyper/Simple/Hyper_Syntax.v.beautified theories/Logic/Hyper/Simple/Hyper_Syntax.required_vo: theories/Logic/Hyper/Simple/Hyper_Syntax.v theories/Logic/Base/Simple/Base_Syntax.vo theories/Logic/STLC_PI_Sum/STLC_PI_Sum.vo
+theories/Logic/Hyper/Simple/Hyper_Syntax.vio: theories/Logic/Hyper/Simple/Hyper_Syntax.v theories/Logic/Base/Simple/Base_Syntax.vio theories/Logic/STLC_PI_Sum/STLC_PI_Sum.vio
+theories/Logic/Hyper/Simple/Hyper_Syntax.vos theories/Logic/Hyper/Simple/Hyper_Syntax.vok theories/Logic/Hyper/Simple/Hyper_Syntax.required_vos: theories/Logic/Hyper/Simple/Hyper_Syntax.v theories/Logic/Base/Simple/Base_Syntax.vos theories/Logic/STLC_PI_Sum/STLC_PI_Sum.vos
+theories/Logic/Hyper/Simple/Hyper_Lemmas.vo theories/Logic/Hyper/Simple/Hyper_Lemmas.glob theories/Logic/Hyper/Simple/Hyper_Lemmas.v.beautified theories/Logic/Hyper/Simple/Hyper_Lemmas.required_vo: theories/Logic/Hyper/Simple/Hyper_Lemmas.v theories/Logic/Base/Simple/Base_Syntax.vo theories/Logic/Hyper/Simple/Hyper_Syntax.vo
+theories/Logic/Hyper/Simple/Hyper_Lemmas.vio: theories/Logic/Hyper/Simple/Hyper_Lemmas.v theories/Logic/Base/Simple/Base_Syntax.vio theories/Logic/Hyper/Simple/Hyper_Syntax.vio
+theories/Logic/Hyper/Simple/Hyper_Lemmas.vos theories/Logic/Hyper/Simple/Hyper_Lemmas.vok theories/Logic/Hyper/Simple/Hyper_Lemmas.required_vos: theories/Logic/Hyper/Simple/Hyper_Lemmas.v theories/Logic/Base/Simple/Base_Syntax.vos theories/Logic/Hyper/Simple/Hyper_Syntax.vos
 theories/Logic/STLC_PI/STLC_PI.vo theories/Logic/STLC_PI/STLC_PI.glob theories/Logic/STLC_PI/STLC_PI.v.beautified theories/Logic/STLC_PI/STLC_PI.required_vo: theories/Logic/STLC_PI/STLC_PI.v 
 theories/Logic/STLC_PI/STLC_PI.vio: theories/Logic/STLC_PI/STLC_PI.v 
 theories/Logic/STLC_PI/STLC_PI.vos theories/Logic/STLC_PI/STLC_PI.vok theories/Logic/STLC_PI/STLC_PI.required_vos: theories/Logic/STLC_PI/STLC_PI.v 

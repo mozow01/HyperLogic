@@ -14,7 +14,7 @@ theories/Logic/Hyper/Epsilon/Epsilon_Syntax.v
 theories/Logic/Base/Epsilon/Base_Epsilon.v
 theories/Logic/Base/Simple/Base_Syntax.v
 theories/Logic/Hyper/Simple/Hyper_Syntax.v
-theories/Semantics/Simple/Base/Base_Simple_Soundness.v
+theories/Logic/Hyper/Simple/Hyper_Lemmas.v
 
 
 # --- STLC Logic (STLC_PI) ---
