@@ -218,20 +218,53 @@ Proof.
     (* A terminal_map minden kontextusból működik. *)
     simpl. 
     exact terminal_map.
+   
   
-  
-  - (* HD_Lam  *) destruct (get_cwf D_body); exact (exp_map (interp_h_tm D_body)).
-  - (* HD_App  *) destruct (get_wf D_f); exact (compose eval (prod_map (interp_h_tm D_f) (interp_h_tm D_x))).
-  
-  - (* HD_Pair *) exact (prod_map (interp_h_tm D_l) (interp_h_tm D_r)).
-  - (* HD_Fst  *) destruct (get_wf D_pair); exact (compose prod_fst (interp_h_tm D_pair)).
-  - (* HD_Snd  *) destruct (get_wf D_pair); exact (compose prod_snd (interp_h_tm D_pair)).
+ - (* 4. HD_Lam *) 
+    (* 1. Kimentjük a rekurzív hívást egy 'rec' változóba, hogy a típusát manipulálhassuk *)
+    pose (rec := interp_h_tm _ _ _ _ _ _ _ _ _ _ D_body).
+    
+    (* ITTT           !!!!!!!!!!!!!!! *)
+    remember (get_cwf D_body) as cwf_body eqn:Heq in *.
+    
+    (* 3. Szétbontjuk. Mivel a Lam kontextusa (h0 :: l), ez garantáltan CWF_Cons lesz. *)
+    dependent destruction cwf_body. 
+    
+    (* 4. A cbn kiszámolja a szorzatot, és a 'rec' típusa varázsütésre X * Y -> Z lesz! *)
+    cbn in *. 
+    
+    (* 5. Most már a te eredeti, tökéletes kódod csont nélkül illeszkedik! *)
+    exact (exp_map rec).
+  - (* 5. HD_App *) 
+    (* Kinyitjuk a D_f típusát, hogy látszódjon az exponenciális (Arrow) objektum *)
+    remember (get_wf D_f) as wf_f. dependent destruction wf_f. cbn.
+    exact (compose eval (prod_map (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_f) (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_x))).
+
+  - (* 6. HD_Pair *) 
+    cbn. exact (prod_map (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_l) (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_r)).
+
+  - (* 7. HD_Fst *) 
+    remember (get_wf D_pair) as wf_pair. dependent destruction wf_pair. cbn.
+    exact (compose prod_fst (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_pair)).
+
+  - (* 8. HD_Snd *) 
+    remember (get_wf D_pair) as wf_pair. dependent destruction wf_pair. cbn.
+    exact (compose prod_snd (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_pair)).
 
   (* --- BiSTLC Extensions --- *)
-  - (* HD_Inl  *) exact (compose coprod_inl (interp_h_tm D_p)).
-  - (* HD_Inr  *) exact (compose coprod_inr (interp_h_tm D_p)).
-  - (* HD_Case *) destruct (get_wf D_t); exact (compose eval (prod_map (compose (coprod_map (exp_map (compose (interp_h_tm D_l) swap_map_fiber)) (exp_map (compose (interp_h_tm D_r) swap_map_fiber))) (interp_h_tm D_t)) (id _))).
-  - (* HD_Absurd *) destruct (get_wf D_t); exact (compose initial_map (interp_h_tm D_t)).
+  - (* 9. HD_Inl *) 
+    cbn. exact (compose coprod_inl (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_p)).
+    
+  - (* 10. HD_Inr *) 
+    cbn. exact (compose coprod_inr (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_p)).
+
+  - (* 11. HD_Case *) 
+    remember (get_wf D_t) as wf_t. dependent destruction wf_t. cbn.
+    exact (compose eval (prod_map (compose (coprod_map (exp_map (compose (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_l) swap_map_fiber)) (exp_map (compose (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_r) swap_map_fiber))) (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_t)) (id _))).
+
+  - (* 12. HD_Absurd *) 
+    remember (get_wf D_t) as wf_t. dependent destruction wf_t. cbn.
+    exact (compose initial_map (interp_h_tm _ _ _ _ _ _ _ _ _ _ D_t)).
 
   (* --- Kvantorok --- *)
   - admit. (* HD_All_Intro *)
