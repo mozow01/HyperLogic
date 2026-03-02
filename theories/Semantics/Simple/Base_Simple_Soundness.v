@@ -60,5 +60,5 @@ Proof.
   - (* BE_BetaFst *) apply prod_map_fst.
   - (* BE_BetaSnd *) apply prod_map_snd.
   - (* BE_EtaPair *) apply prod_eta.
-  - (* BE_EtaUnit *) apply terminal_map_unique.
-Qed.
+  - (* BE_EtaUnit *) apply terminal_map_unique. 
+Defined.
