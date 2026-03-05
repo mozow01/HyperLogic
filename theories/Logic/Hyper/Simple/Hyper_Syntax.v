@@ -178,6 +178,74 @@ Inductive h_typing (I : b_ty) : h_context -> h_tm -> h_ty -> Prop :=
       h_typing I G p (Ty_Ex A Phi) ->
       h_typing (b_Prod I A) (Phi :: ctx_pullback b_fst G) p2 (form_pullback b_fst Chi) ->
       h_typing I G (tm_ex_elim p p2) Chi.
+      
+(* ================================================================= *)
+(* 4.5 DERIVATION TREES (DATA LAYER - Set)                           *)
+(* ================================================================= *)
+
+Inductive h_derivation (I : b_ty) : h_context -> h_tm -> h_ty -> Set :=
+
+  (* --- Strukturális Szabályok --- *)
+  | HD_Var0 : forall G Phi,
+      h_derivation I (Phi :: G) (tm_var 0) Phi
+  | HD_VarS : forall G Phi Psi i,
+      h_derivation I G (tm_var i) Phi ->
+      h_derivation I (Psi :: G) (tm_var (S i)) Phi
+
+  (* --- Propozicionális Modul --- *)
+  | HD_Unit : forall G, h_derivation I G tm_unit Ty_Unit
+  | HD_Lam : forall G p Phi Psi,
+      h_derivation I (Phi :: G) p Psi ->
+      h_derivation I G (tm_lam Phi p) (Ty_Arrow Phi Psi)
+  | HD_App : forall G p1 p2 Phi Psi,
+      h_derivation I G p1 (Ty_Arrow Phi Psi) ->
+      h_derivation I G p2 Phi ->
+      h_derivation I G (tm_app p1 p2) Psi
+  | HD_Pair : forall G p1 p2 Phi Psi,
+      h_derivation I G p1 Phi ->
+      h_derivation I G p2 Psi ->
+      h_derivation I G (tm_pair p1 p2) (Ty_Prod Phi Psi)
+  | HD_Fst : forall G p Phi Psi,
+      h_derivation I G p (Ty_Prod Phi Psi) ->
+      h_derivation I G (tm_fst p) Phi
+  | HD_Snd : forall G p Phi Psi,
+      h_derivation I G p (Ty_Prod Phi Psi) ->
+      h_derivation I G (tm_snd p) Psi
+  | HD_Inl : forall G p Phi Psi,
+      h_derivation I G p Phi ->
+      h_derivation I G (tm_inl Psi p) (Ty_Sum Phi Psi)
+  | HD_Inr : forall G p Phi Psi,
+      h_derivation I G p Psi ->
+      h_derivation I G (tm_inr Phi p) (Ty_Sum Phi Psi)
+  | HD_Case : forall G p p1 p2 Phi Psi Chi,
+      h_derivation I G p (Ty_Sum Phi Psi) ->
+      h_derivation I (Phi :: G) p1 Chi ->
+      h_derivation I (Psi :: G) p2 Chi ->
+      h_derivation I G (tm_case p p1 p2) Chi
+  | HD_Absurd : forall G p Phi,
+      h_derivation I G p Ty_Void ->
+      h_derivation I G (tm_absurd Phi p) Phi
+
+  (* --- Hyper Modul --- *)
+  | HD_All_Intro : forall G p A Phi,
+      h_derivation (b_Prod I A) (ctx_pullback b_fst G) p Phi ->
+      h_derivation I G (tm_all_intro p) (Ty_All A Phi)
+  | HD_All_Elim : forall G p A Phi f,
+      h_derivation I G p (Ty_All A Phi) ->
+      base_typing I f A ->
+      h_derivation I G (tm_all_elim p f) (form_pullback (b_pair b_id f) Phi)
+  | HD_Ex_Intro : forall G p A Phi f,
+      base_typing I f A ->
+      h_derivation I G p (form_pullback (b_pair b_id f) Phi) ->
+      h_derivation I G (tm_ex_intro f p) (Ty_Ex A Phi)
+  | HD_Ex_Elim : forall G p p2 A Phi Chi,
+      h_derivation I G p (Ty_Ex A Phi) ->
+      h_derivation (b_Prod I A) (Phi :: ctx_pullback b_fst G) p2 (form_pullback b_fst Chi) ->
+      h_derivation I G (tm_ex_elim p p2) Chi.
+
+(* Bridge a Set és Prop között 
+Fixpoint forget_h_derivation {I G p Phi} (D : h_derivation I G p Phi) : h_typing I G p Phi.
+Proof. Admitted. *)
 
 (* ================================================================= *)
 (* 5. PROOF IRRELEVANCE EKVIVALENCIA                                 *)
