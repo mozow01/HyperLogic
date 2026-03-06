@@ -41,6 +41,20 @@ Class BiCartesianClosedCategory {C : SetoidCategory} {Ct : CartesianCategory C} 
         Proper (hom_equiv ==> hom_equiv ==> hom_equiv) (@coprod_map x y z)
 }.
 
+Arguments initial {C} {Ct} {CC} {_}.
+Arguments initial_map {C} {Ct} {CC} {_} {x}.
+Arguments initial_map_unique {C} {Ct} {CC} {_} {x} _.
+
+Arguments coprod {C} {Ct} {CC} {_} _ _.
+Arguments coprod_inl {C} {Ct} {CC} {_} {x y}.
+Arguments coprod_inr {C} {Ct} {CC} {_} {x y}.
+Arguments coprod_map {C} {Ct} {CC} {_} {x y z} _ _.
+
+Arguments coprod_map_inl {C} {Ct} {CC} {_} {x y z} _ _.
+Arguments coprod_map_inr {C} {Ct} {CC} {_} {x y z} _ _.
+Arguments coprod_eta {C} {Ct} {CC} {_} {x y z} _.
+Arguments coprod_map_proper_ax {C} {Ct} {CC} {_} {x y z}.
+
 (* Register the Proper instance for usage in setoid_rewrite *)
 Existing Instance coprod_map_proper_ax.
 
@@ -184,4 +198,58 @@ Proof.
     repeat rewrite id_right.
     rewrite coprod_map_inr.
     reflexivity.
+Qed.
+
+Lemma coprod_iso_cong {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC} {A B A' B' : @obj C} :
+  A ≅O A' -> B ≅O B' -> coprod A B ≅O coprod A' B'.
+Proof.
+  intros HA HB.
+  destruct HA as [toA fromA toA_fromA fromA_toA].
+  destruct HB as [toB fromB toB_fromB fromB_toB].
+
+  refine {|
+    iso_to := (coprod_inl ∘ toA) ∐ (coprod_inr ∘ toB);
+    iso_from := (coprod_inl ∘ fromA) ∐ (coprod_inr ∘ fromB)
+  |}.
+  - etransitivity.
+    + symmetry.
+      apply unique_coprod.
+      split.
+      * rewrite <- comp_assoc.
+        rewrite coprod_map_inl.
+        rewrite comp_assoc.
+        rewrite coprod_map_inl.
+        rewrite <- comp_assoc.
+        rewrite toA_fromA.
+        apply id_right.
+      * rewrite <- comp_assoc.
+        rewrite coprod_map_inr.
+        rewrite comp_assoc.
+        rewrite coprod_map_inr.
+        rewrite <- comp_assoc.
+        rewrite toB_fromB.
+        apply id_right.
+    + symmetry.
+      apply in_and_id.
+
+  - etransitivity.
+    + symmetry.
+      apply unique_coprod.
+      split.
+      * rewrite <- comp_assoc.
+        rewrite coprod_map_inl.
+        rewrite comp_assoc.
+        rewrite coprod_map_inl.
+        rewrite <- comp_assoc.
+        rewrite fromA_toA.
+        apply id_right.
+      * rewrite <- comp_assoc.
+        rewrite coprod_map_inr.
+        rewrite comp_assoc.
+        rewrite coprod_map_inr.
+        rewrite <- comp_assoc.
+        rewrite fromB_toB.
+        apply id_right.
+    + symmetry.
+      apply in_and_id.
 Qed.

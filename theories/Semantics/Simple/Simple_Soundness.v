@@ -25,7 +25,11 @@ Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Lemmas.
 Class HyperModel {C : SetoidCategory} {CC : CartesianCategory C} 
                  {TSC : TwoSortCategory C} {GF : GoodFibration C} 
                  (SGF : StrictGoodFibration C GF) := {
-  i_atom : forall (p : nat) (t : b_tm) (I : b_ty), @obj (Fiber (interp_ty I)) 
+  
+  i_atom : forall (p : nat) (t : b_tm) (I : b_ty), @obj (Fiber (interp_ty I)) ;
+
+  i_atom_pb : forall (p : nat) (t : b_tm) (I A : b_ty) (f : b_tm) (df : base_typing I f A),
+    @fobj _ _ (Pullback (interp_tm df)) (i_atom p t A) ≅O i_atom p (b_comp t f) I
 }.
 
 Fixpoint interp_h_ty {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
@@ -221,72 +225,4 @@ Proof.
     { apply (prod_map (id _) IHD1). }
 Defined.
 
-(* ================================================================= *)
-(*              PRENEX NORMÁLFORMA (FROBENIUS / EXISTS)              *)
-(* ================================================================= *)
-
-Section Prenex_Coq_Proof.
-  (* 1. Behozzuk a környezetet pontosan úgy, ahogy a Soundness.v-ben van *)
-  Context {C : SetoidCategory} {CC : CartesianCategory C}
-          {BCCC : CartesianClosedCategory C} {BiCCC : BiCartesianClosedCategory BCCC}
-          {TSC : TwoSortCategory C} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-          {HM : HyperModel SGF}.
-
-  Variable I A : b_ty.
-  Variable Phi : h_ty. (* Ez a formula az I x A felett (tartalmazza a kvantált változót) *)
-  Variable G : h_context. (* Ez a kontextus I felett van (szabad a kvantált változótól) *)
-  
-  (* Képzeljük el, hogy Chi a "prenex alakú" célformula *)
-  Variable Chi : h_ty.
-  
-  (* -----------------------------------------------------------------
-     A PRENEX ÁTALAKÍTÁS LOGIKAI JELENTÉSE:
-     Azt igazoljuk, hogy a Formula 1-ből következik a Formula 2.
-
-     Hagyományos (változós) logikában:
-     Formula 1:  G ∧ (∃x:A. Phi(x))
-     Formula 2:  ∃x:A. (G ∧ Phi(x))
-     Feltétel:   x ∉ FV(G)
-
-     A mi változómentes (point-free) hiperdoktrínánkban:
-     Formula 1:  G ∧ (∃A. Phi)
-     Formula 2:  ∃A. (π₁^*G ∧ Phi)
-     
-
-     Ahol a π₁^*G (pullback) pontosan azt a feltételt kódolja térben, 
-     hogy G független az A-tól (vagyis x ∉ FV(G)).
-     
-     Let pi1 := Pullback (interp_tm (BT_Fst (A:=I) (B:=A))).
-     Let ExA := pullback_has_left_adjoint (interp_tm (BT_Fst (A:=I) (B:=A))).
-     
-     
-     (* FORMULA 1: G ∧ (∃A. Phi) *)
-    hom (prod (interp_h_ctx I G) 
-              (interp_h_ty I (Ty_Ex A Phi)))
-              
-    (* FORMULA 2: ∃A. (π₁^*G ∧ Phi) *)
-        (@left_adj_obj _ _ _ ExA 
-           (prod (@fobj _ _ pi1 (interp_h_ctx I G)) 
-                 (interp_h_ty (b_Prod I A) Phi))).
-  ----------------------------------------------------------------- *)
-
-  (* A Prenex-emelés "Oda" iránya: 
-     Ha a felhúzott kontextus (pi1^* G) és Phi szorzatából következik a felhúzott Chi,
-     akkor a G és az ∃A. Phi szorzatából is következik Chi. 
-     Ez KÖZVETLENÜL a prenex kiemelés logikája! *)
-  Lemma prenex_exists_forth : 
-    hom (prod (@fobj _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (interp_h_ctx I G)) 
-              (interp_h_ty (b_Prod I A) Phi)) 
-        (@fobj _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (interp_h_ty I Chi)) -> 
-    hom (prod (interp_h_ctx I G) (interp_h_ty I (Ty_Ex A Phi))) (interp_h_ty I Chi).
-  Proof.
-    intros H_premise.
-    (* Itt a varázslat: az axiómád egyetlen lépésben átviszi a bizonyítást 
-       a szálon kívülről a szál belsejébe! *)
-    apply ex_elim_frobenius.
-    
-    (* És a fennmaradó cél pontosan a premisszánk! *)
-    exact H_premise.
-  Defined.
-End Prenex_Coq_Proof.
 

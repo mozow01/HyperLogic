@@ -26,6 +26,12 @@ Class Functor (C D : SetoidCategory) := mk_Functor {
       (@compose D (fobj x) (fobj y) (fobj z) (fmap g) (fmap f))
 }.
 
+Arguments fobj {C D} _ _.
+Arguments fmap {C D} _ {x y} _.
+Arguments fmap_proper {C D} _ {x y} _ _ _.
+Arguments fmap_id {C D} _ _.
+Arguments fmap_comp {C D} _ {x y z} _ _.
+
 (* Proper instance for setoid_rewrite *)
 Existing Instance fmap_proper.
 
@@ -76,4 +82,47 @@ Proof.
     intros. reflexivity.
   - (* Comp *)
     intros. reflexivity.
+Defined.
+
+Lemma functor_iso_cong {C D : SetoidCategory} (F : Functor C D) {X Y : @obj C} :
+  X ≅O Y -> fobj F X ≅O fobj F Y.
+Proof.
+  intros H.
+  destruct H as [to from to_from from_to].
+
+  refine {|
+    iso_to := @fmap C D F X Y to;
+    iso_from := @fmap C D F Y X from
+  |}.
+  - eapply (@RelationClasses.Equivalence_Transitive
+              _ _
+              (@hom_equiv_equivalence D (@fobj C D F Y) (@fobj C D F Y)))
+      with (y := @fmap C D F Y Y (@compose C Y X Y to from)).
+    + eapply (@RelationClasses.Equivalence_Symmetric
+                _ _
+                (@hom_equiv_equivalence D (@fobj C D F Y) (@fobj C D F Y))).
+      apply (@fmap_comp C D F Y X Y from to).
+    + eapply (@RelationClasses.Equivalence_Transitive
+                _ _
+                (@hom_equiv_equivalence D (@fobj C D F Y) (@fobj C D F Y)))
+        with (y := @fmap C D F Y Y (@id C Y)).
+      * apply (@fmap_proper C D F Y Y).
+        exact to_from.
+      * apply (@fmap_id C D F Y).
+
+  - eapply (@RelationClasses.Equivalence_Transitive
+              _ _
+              (@hom_equiv_equivalence D (@fobj C D F X) (@fobj C D F X)))
+      with (y := @fmap C D F X X (@compose C X Y X from to)).
+    + eapply (@RelationClasses.Equivalence_Symmetric
+                _ _
+                (@hom_equiv_equivalence D (@fobj C D F X) (@fobj C D F X))).
+      apply (@fmap_comp C D F X Y X to from).
+    + eapply (@RelationClasses.Equivalence_Transitive
+                _ _
+                (@hom_equiv_equivalence D (@fobj C D F X) (@fobj C D F X)))
+        with (y := @fmap C D F X X (@id C X)).
+      * apply (@fmap_proper C D F X X).
+        exact from_to.
+      * apply (@fmap_id C D F X).
 Defined.

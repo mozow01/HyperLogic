@@ -31,6 +31,20 @@ Class CartesianCategory (C : SetoidCategory) := mk_CartesianCategory {
     Proper (hom_equiv ==> hom_equiv ==> hom_equiv) (@prod_map x y z)
 }.
 
+Arguments terminal {C} {_}.
+Arguments terminal_map {C} {_} {x}.
+Arguments terminal_map_unique {C} {_} {x} _.
+
+Arguments prod {C} {_} _ _.
+Arguments prod_map {C} {_} {x y z} _ _.
+Arguments prod_fst {C} {_} {x y}.
+Arguments prod_snd {C} {_} {x y}.
+
+Arguments prod_map_fst {C} {_} {x y z} _ _.
+Arguments prod_map_snd {C} {_} {x y z} _ _.
+Arguments prod_eta {C} {_} {x y z} _.
+Arguments prod_map_proper_ax {C} {_} {x y z}.
+
 Existing Instance prod_map_proper_ax.
 
 (* Notations *)
@@ -92,4 +106,52 @@ Proof.
   apply mk_CartesianCategory with (terminal := terminal_item) (terminal_map := @terminal_map_item)
     (prod := prod_item) (prod_map := @prod_map_item) (prod_fst := @prod_fst_item) (prod_snd := @prod_snd_item).
   all: intros; try (unfold Proper, respectful; intros); apply thin_unique.
+Defined.
+
+Lemma prod_iso_cong {C : SetoidCategory} {CC : CartesianCategory C} {A B A' B' : @obj C} :
+  A ≅O A' -> B ≅O B' -> prod A B ≅O prod A' B'.
+Proof.
+  intros HA HB.
+  destruct HA as [toA fromA toA_fromA fromA_toA].
+  destruct HB as [toB fromB toB_fromB fromB_toB].
+
+  refine {|
+    iso_to := (toA ∘ prod_fst) ∏ (toB ∘ prod_snd);
+    iso_from := (fromA ∘ prod_fst) ∏ (fromB ∘ prod_snd)
+  |}.
+  - etransitivity.
+    + apply prod_unique. split.
+      * rewrite comp_assoc.
+        rewrite prod_map_fst.
+        rewrite <- comp_assoc.
+        rewrite prod_map_fst.
+        rewrite comp_assoc.
+        rewrite toA_fromA.
+        apply id_left.
+      * rewrite comp_assoc.
+        rewrite prod_map_snd.
+        rewrite <- comp_assoc.
+        rewrite prod_map_snd.
+        rewrite comp_assoc.
+        rewrite toB_fromB.
+        apply id_left.
+    + symmetry. apply pr_and_id.
+
+  - etransitivity.
+    + apply prod_unique. split.
+      * rewrite comp_assoc.
+        rewrite prod_map_fst.
+        rewrite <- comp_assoc.
+        rewrite prod_map_fst.
+        rewrite comp_assoc.
+        rewrite fromA_toA.
+        apply id_left.
+      * rewrite comp_assoc.
+        rewrite prod_map_snd.
+        rewrite <- comp_assoc.
+        rewrite prod_map_snd.
+        rewrite comp_assoc.
+        rewrite fromB_toB.
+        apply id_left.
+    + symmetry. apply pr_and_id.
 Defined.
