@@ -2,8 +2,6 @@ Require Import Coq.Classes.Morphisms.
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
 Require Import HyperLogic.Cat.Fibration.
-
-(** Morphism-based base syntax *)
 Require Import HyperLogic.Logic.Base.Simple.Base_Syntax.
 
 (* ================================================================= *)
