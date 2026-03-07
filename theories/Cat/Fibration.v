@@ -281,3 +281,39 @@ Definition ExistsQuantifier (B : SetoidCategory) {CB : CartesianCategory B} {GF 
 Definition ForallQuantifier (B : SetoidCategory) {CB : CartesianCategory B} {GF : GoodFibration B} {TSC : TwoSortCategory B}
   : Functor (Fiber (@S B CB TSC)) (Fiber terminal) :=
   @Pi_f B CB GF (@S B CB TSC) terminal (bang B).
+  
+Lemma pi_iso_cong :
+  forall {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B}
+         {I J : @obj B} (f : hom I J) (X Y : @obj (Fiber I)),
+  X ≅O Y ->
+  @right_adj_obj _ _ _ (pullback_has_right_adjoint f) X ≅O
+  @right_adj_obj _ _ _ (pullback_has_right_adjoint f) Y.
+Proof.
+  intros B CB GF I J f X Y H.
+  refine {|
+    iso_to := @right_adj_mor _ _ _ (pullback_has_right_adjoint f) _ _
+                (@compose (Fiber I) _ _ _ (@iso_to _ _ _ H) (@epsilon _ _ _ (pullback_has_right_adjoint f) X));
+    iso_from := @right_adj_mor _ _ _ (pullback_has_right_adjoint f) _ _
+                  (@compose (Fiber I) _ _ _ (@iso_from _ _ _ H) (@epsilon _ _ _ (pullback_has_right_adjoint f) Y))
+  |}.
+  - apply (fiber_is_thin J).
+  - apply (fiber_is_thin J).
+Defined.
+
+Lemma sigma_iso_cong :
+  forall {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B}
+         {I J : @obj B} (f : hom I J) (X Y : @obj (Fiber I)),
+  X ≅O Y ->
+  @left_adj_obj _ _ _ (pullback_has_left_adjoint f) X ≅O
+  @left_adj_obj _ _ _ (pullback_has_left_adjoint f) Y.
+Proof.
+  intros B CB GF I J f X Y H.
+  refine {|
+    iso_to := @left_adj_mor _ _ _ (pullback_has_left_adjoint f) _ _
+                (@compose (Fiber I) _ _ _ (@unit _ _ _ (pullback_has_left_adjoint f) Y) (@iso_to _ _ _ H));
+    iso_from := @left_adj_mor _ _ _ (pullback_has_left_adjoint f) _ _
+                  (@compose (Fiber I) _ _ _ (@unit _ _ _ (pullback_has_left_adjoint f) X) (@iso_from _ _ _ H))
+  |}.
+  - apply (fiber_is_thin J).
+  - apply (fiber_is_thin J).
+Defined.

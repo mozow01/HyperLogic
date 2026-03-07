@@ -62,21 +62,59 @@ Fixpoint interp_h_ctx {C : SetoidCategory} {CC : CartesianCategory C} {TSC : Two
 (* 2. STRUKTURÁLIS KOMPATIBILITÁSI LEMMÁK (AXIÓMÁK)                  *)
 (* ================================================================= *)
 
-
-Lemma form_pullback_iso : 
-  forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
-         {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} {HM : HyperModel SGF} 
+(** * Syntactic Substitution = Semantic Pullback *)
+Lemma form_pullback_iso :
+  forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
+         {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} {HM : HyperModel SGF}
          (I A : b_ty) (f : b_tm) (df : base_typing I f A) (Phi : h_ty),
-  interp_h_ty I (form_pullback (b_pair b_id f) Phi) ≅O 
+  interp_h_ty I (form_pullback (b_pair b_id f) Phi) ≅O
   @fobj _ _ (Pullback (interp_tm (BT_Pair BT_Id df))) (interp_h_ty (b_Prod I A) Phi).
 Proof.
   intros C CC TSC GF SGF HM I A f df Phi.
-  induction Phi.
-  - (* 1. Ty_Unit (Terminális objektum / Igaz) *)
-    simpl.
-    symmetry.
-    apply pb_term_iso.
+  induction Phi; simpl.
+  - (* Ty_Unit *)
+    symmetry. apply pb_term_iso.
+  - (* Ty_Void *)
+    symmetry. apply pb_init_iso.
+  - (* Ty_Prod *)
+    eapply iso_trans.
+    + apply (prod_iso_cong IHPhi1 IHPhi2).
+    + symmetry. apply pb_prod_iso.
+  - (* Ty_Sum *)
+    eapply iso_trans.
+    + apply (coprod_iso_cong IHPhi1 IHPhi2).
+    + symmetry. apply pb_coprod_iso.
+  - (* Ty_Arrow *)
+    eapply iso_trans.
+    + apply (exp_iso_cong IHPhi2 IHPhi1). (* Itt a csere! *)
+    + symmetry. apply pb_exp_iso.
+  - (* Ty_Atom *)
+    symmetry. 
+    (* Kifejezetten átadjuk a paramétereket és a típusolási fát *)
+    apply (i_atom_pb n b I (b_Prod I A) (b_pair b_id f) (BT_Pair BT_Id df)).
+  - (* Ty_All (Forall) *)
+    (* Itt technikai bázis-izomorfizmusra és a Beck-Chevalley tételre lesz szükség *)
+    admit.
+  - (* Ty_Ex (Exists) *)
+    (* Szintén Beck-Chevalley és kongruencia kell ide *)
+    admit.
 Admitted.
+
+Lemma pi_iso_cong :
+  forall {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B}
+         {I A : @obj B} (X Y : @obj (Fiber (prod I A))),
+  X ≅O Y ->
+  @right_adj_obj _ _ _ (pullback_has_right_adjoint (@prod_fst B CB I A)) X ≅O
+  @right_adj_obj _ _ _ (pullback_has_right_adjoint (@prod_fst B CB I A)) Y.
+Proof. Admitted.
+
+Lemma sigma_iso_cong :
+  forall {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B}
+         {I A : @obj B} (X Y : @obj (Fiber (prod I A))),
+  X ≅O Y ->
+  @left_adj_obj _ _ _ (pullback_has_left_adjoint (@prod_fst B CB I A)) X ≅O
+  @left_adj_obj _ _ _ (pullback_has_left_adjoint (@prod_fst B CB I A)) Y.
+Proof. Admitted.
     
 Axiom form_pullback_fst_iso : 
   forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
