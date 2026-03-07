@@ -62,6 +62,69 @@ Fixpoint interp_h_ctx {C : SetoidCategory} {CC : CartesianCategory C} {TSC : Two
 (* 2. STRUKTURÁLIS KOMPATIBILITÁSI LEMMÁK (AXIÓMÁK)                  *)
 (* ================================================================= *)
 
+Lemma typing_pullback_ext :
+  forall {I J b : b_ty} {g : b_tm} (dg : base_typing I g J),
+  base_typing (b_Prod I b) (b_pullback_ext g) (b_Prod J b).
+Proof.
+  intros I J b g dg.
+  unfold b_pullback_ext.
+  apply BT_Pair.
+  - eapply BT_Comp. (* Itt az eapply! *)
+    + exact dg.
+    + apply BT_Fst.
+  - apply BT_Snd.
+Defined. (* Ne feledd, ide Defined kell! *)
+
+Lemma form_pullback_general_iso :
+  forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
+         {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} {HM : HyperModel SGF}
+         (Phi : h_ty) (I J : b_ty) (g : b_tm) (dg : base_typing I g J),
+  interp_h_ty I (form_pullback g Phi) ≅O
+  @fobj _ _ (Pullback (interp_tm dg)) (interp_h_ty J Phi).
+Proof.
+  (* Figyeld meg: a Phi-ig intros-olunk, így az I, J, g, dg a célban marad! *)
+  intros C CC TSC GF SGF HM Phi.
+  induction Phi; intros I J g dg; simpl.
+  - (* Ty_Unit *)
+    symmetry. apply pb_term_iso.
+  - (* Ty_Void *)
+    symmetry. apply pb_init_iso.
+  - (* Ty_Prod *)
+    eapply iso_trans.
+    (* Itt a trükk: kifejezetten átadjuk az IH-nak a jelenlegi I, J, g, dg paramétereket! *)
+    + apply (prod_iso_cong (IHPhi1 I J g dg) (IHPhi2 I J g dg)).
+    + symmetry. apply pb_prod_iso.
+  - (* Ty_Sum *)
+    eapply iso_trans.
+    + apply (coprod_iso_cong (IHPhi1 I J g dg) (IHPhi2 I J g dg)).
+    + symmetry. apply pb_coprod_iso.
+  - (* Ty_Arrow *)
+    eapply iso_trans.
+    (* Ne feledd a felcserélést a nyílnál az interp_h_ty miatt! *)
+    + apply (exp_iso_cong (IHPhi2 I J g dg) (IHPhi1 I J g dg)).
+    + symmetry. apply pb_exp_iso.
+  - (* Ty_Atom *)
+    symmetry. apply (i_atom_pb n b I J g dg).
+  - (* Ty_All *)
+    eapply iso_trans.
+    + (* 1. Felhúzzuk az IH-t a kvantor alá a pi_iso_cong segítségével *)
+      apply pi_iso_cong.
+      (* Alkalmazzuk a nyitott IH-t a kiterjesztett kontextusra és a dg_ext-re *)
+      exact (IHPhi (b_Prod I b) (b_Prod J b) (b_pullback_ext g) (typing_pullback_ext dg)).
+      
+    + (* 2. Beck-Chevalley feltétel alkalmazása *)
+      (* A maradék goal pontosan f^* (Pi A) ≅O Pi (f_ext^* A) alakú, 
+         ami a beck_chevalley_pi axióma szimmetriája! *)
+      symmetry.
+      apply beck_chevalley_pi.
+  - (* Ty_Ex *)
+    eapply iso_trans.
+    + apply sigma_iso_cong.
+      exact (IHPhi (b_Prod I b) (b_Prod J b) (b_pullback_ext g) (typing_pullback_ext dg)).
+    + symmetry.
+      apply beck_chevalley_sigma.
+Defined.
+
 (** * Syntactic Substitution = Semantic Pullback *)
 Lemma form_pullback_iso :
   forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
@@ -70,84 +133,104 @@ Lemma form_pullback_iso :
   interp_h_ty I (form_pullback (b_pair b_id f) Phi) ≅O
   @fobj _ _ (Pullback (interp_tm (BT_Pair BT_Id df))) (interp_h_ty (b_Prod I A) Phi).
 Proof.
-  intros C CC TSC GF SGF HM I A f df Phi.
-  induction Phi; simpl.
-  - (* Ty_Unit *)
-    symmetry. apply pb_term_iso.
-  - (* Ty_Void *)
-    symmetry. apply pb_init_iso.
-  - (* Ty_Prod *)
-    eapply iso_trans.
-    + apply (prod_iso_cong IHPhi1 IHPhi2).
-    + symmetry. apply pb_prod_iso.
-  - (* Ty_Sum *)
-    eapply iso_trans.
-    + apply (coprod_iso_cong IHPhi1 IHPhi2).
-    + symmetry. apply pb_coprod_iso.
-  - (* Ty_Arrow *)
-    eapply iso_trans.
-    + apply (exp_iso_cong IHPhi2 IHPhi1). (* Itt a csere! *)
-    + symmetry. apply pb_exp_iso.
-  - (* Ty_Atom *)
-    symmetry. 
-    (* Kifejezetten átadjuk a paramétereket és a típusolási fát *)
-    apply (i_atom_pb n b I (b_Prod I A) (b_pair b_id f) (BT_Pair BT_Id df)).
-  - (* Ty_All (Forall) *)
-    (* Itt technikai bázis-izomorfizmusra és a Beck-Chevalley tételre lesz szükség *)
-    admit.
-  - (* Ty_Ex (Exists) *)
-    (* Szintén Beck-Chevalley és kongruencia kell ide *)
-    admit.
-Admitted.
+  intros.
+  (* Egyszerűen csak ráhívjuk az általánosított tételt a konkrét paraméterekkel! *)
+  apply (form_pullback_general_iso Phi I (b_Prod I A) (b_pair b_id f) (BT_Pair BT_Id df)).
+Defined.
 
-Lemma pi_iso_cong :
-  forall {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B}
-         {I A : @obj B} (X Y : @obj (Fiber (prod I A))),
-  X ≅O Y ->
-  @right_adj_obj _ _ _ (pullback_has_right_adjoint (@prod_fst B CB I A)) X ≅O
-  @right_adj_obj _ _ _ (pullback_has_right_adjoint (@prod_fst B CB I A)) Y.
-Proof. Admitted.
-
-Lemma sigma_iso_cong :
-  forall {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B}
-         {I A : @obj B} (X Y : @obj (Fiber (prod I A))),
-  X ≅O Y ->
-  @left_adj_obj _ _ _ (pullback_has_left_adjoint (@prod_fst B CB I A)) X ≅O
-  @left_adj_obj _ _ _ (pullback_has_left_adjoint (@prod_fst B CB I A)) Y.
-Proof. Admitted.
-    
-Axiom form_pullback_fst_iso : 
+Lemma form_pullback_fst_iso : 
   forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
          {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} {HM : HyperModel SGF} 
          (I A : b_ty) (Phi : h_ty),
   interp_h_ty (b_Prod I A) (form_pullback b_fst Phi) ≅O 
   @fobj _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (interp_h_ty I Phi).
+Proof.
+  intros.
+  (* Közvetlenül alkalmazzuk az általános lemmát, a Coq kitalálja az implicit paramétereket a célból *)
+  apply form_pullback_general_iso.
+Defined.
 
-Axiom ctx_pullback_iso : 
+Lemma ctx_pullback_iso : 
   forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
          {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} {HM : HyperModel SGF} 
          (I A : b_ty) (G : h_context),
   interp_h_ctx (b_Prod I A) (ctx_pullback b_fst G) ≅O 
   @fobj _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (interp_h_ctx I G).
-
+Proof.
+  intros C CC TSC GF SGF HM I A G.
+  induction G as [| Phi G' IHG']; simpl.
+  - (* nil eset: az üres kontextus a terminális objektum *)
+    symmetry. apply pb_term_iso.
+  - (* cons eset: Phi :: G', ami a szemantikában egy szorzat *)
+    eapply iso_trans.
+    + (* A kongruencia: bal oldalra az IH, jobb oldalra az előzőlemmánk *)
+      apply (prod_iso_cong IHG' (form_pullback_fst_iso I A Phi)).
+    + (* A szorzat visszahúzásának axiómája *)
+      symmetry. apply pb_prod_iso.
+Defined.
 (* Kvantor struktúrális trükkök (Identitás-visszahúzás és Frobenius Reciprocitás) *)
-Axiom pb_eval_iso : 
+Lemma pb_eval_iso : 
   forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
          {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} {HM : HyperModel SGF} 
          (I A : b_ty) (f : b_tm) (df : base_typing I f A) (Phi : h_ty),
   hom (interp_h_ty I (Ty_All A Phi)) 
       (@fobj _ _ (Pullback (interp_tm (BT_Pair BT_Id df))) 
         (@fobj _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (interp_h_ty I (Ty_All A Phi)))).
+Proof.
+  intros.
+  eapply compose.
+  - eapply compose.
+    + (* 3. lépés: Kompozíció szétbontása *)
+      apply (@iso_to _ _ _ (pullback_comp_iso 
+                              prod_fst 
+                              (prod_map (id (interp_ty I)) (interp_tm df)) 
+                              (interp_h_ty I (Ty_All A Phi)))).
+    + (* 2. lépés: Bázis egyenlőség bizonyítása ASSERT-tel! *)
+      (* Külön, egyértelműen kimondjuk és bebizonyítjuk a szükséges egyenlőséget *)
+      assert (H_eq : id (interp_ty I) ≅ compose prod_fst (prod_map (id (interp_ty I)) (interp_tm df))).
+      { symmetry. apply prod_map_fst. }
+      
+      (* Majd ezt az explicit H_eq bizonyítást adjuk át a _ helyett! *)
+      apply (@iso_to _ _ _ (pb_iso 
+                              (id (interp_ty I)) 
+                              (compose prod_fst (prod_map (id (interp_ty I)) (interp_tm df))) 
+                              H_eq 
+                              (interp_h_ty I (Ty_All A Phi)))).
+  - (* 1. lépés: Identitás visszahúzás *)
+    apply (@iso_from _ _ _ (pullback_id_iso (interp_h_ty I (Ty_All A Phi)))).
+Defined.
 
-Axiom pb_unit_iso : 
+Lemma pb_unit_iso : 
   forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
          {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} {HM : HyperModel SGF} 
          (I A : b_ty) (f : b_tm) (df : base_typing I f A) (Phi : h_ty),
   hom (@fobj _ _ (Pullback (interp_tm (BT_Pair BT_Id df))) 
         (@fobj _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (interp_h_ty I (Ty_Ex A Phi)))) 
       (interp_h_ty I (Ty_Ex A Phi)).
+Proof.
+  intros.
+  (* Visszafelé építkezünk az eapply compose miatt: a céltól (jobb oldal) haladunk a forrás (bal oldal) felé *)
+  eapply compose.
+  - (* 3. (Utolsó) lépés: Pullback(id) X -> X *)
+    apply (@iso_to _ _ _ (pullback_id_iso (interp_h_ty I (Ty_Ex A Phi)))).
+  - eapply compose.
+    + (* 2. (Középső) lépés: Pullback(pi1 o <id, f>) X -> Pullback(id) X *)
+      assert (H_eq : compose prod_fst (prod_map (id (interp_ty I)) (interp_tm df)) ≅ id (interp_ty I)).
+      { apply prod_map_fst. }
+      apply (@iso_to _ _ _ (pb_iso 
+                              (compose prod_fst (prod_map (id (interp_ty I)) (interp_tm df))) 
+                              (id (interp_ty I)) 
+                              H_eq 
+                              (interp_h_ty I (Ty_Ex A Phi)))).
+    + (* 1. (Első) lépés: Pullback(<id, f>) o Pullback(pi1) X -> Pullback(pi1 o <id, f>) X *)
+      (* Ide kell az iso_from! *)
+      apply (@iso_from _ _ _ (pullback_comp_iso 
+                                prod_fst 
+                                (prod_map (id (interp_ty I)) (interp_tm df)) 
+                                (interp_h_ty I (Ty_Ex A Phi)))).
+Defined.
 
-Axiom ex_elim_frobenius : 
+Lemma ex_elim_frobenius : 
   forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
          {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} {HM : HyperModel SGF} 
          (I A : b_ty) (G : h_context) (Phi Chi : h_ty),
@@ -155,7 +238,42 @@ Axiom ex_elim_frobenius :
             (interp_h_ty (b_Prod I A) Phi)) 
       (@fobj _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (interp_h_ty I Chi)) -> 
   hom (prod (interp_h_ctx I G) (interp_h_ty I (Ty_Ex A Phi))) (interp_h_ty I Chi).
+Proof.
+  intros C CC TSC GF SGF HM I A G Phi Chi H_premissza.
+  
+  (* 1. Curry-zés a premisszán *)
+  assert (H_curry : hom (interp_h_ty (b_Prod I A) Phi) 
+                        (exp (@fobj _ _ (Pullback (interp_tm BT_Fst)) (interp_h_ty I Chi)) 
+                             (@fobj _ _ (Pullback (interp_tm BT_Fst)) (interp_h_ctx I G)))).
+  { apply exp_map. 
+    eapply compose. 
+    - exact H_premissza. 
+    - apply prod_map. { apply prod_snd. } { apply prod_fst. } }
 
+  (* 2. Visszahúzás bevitele az exponenciális alá *)
+  assert (H_pb : hom (interp_h_ty (b_Prod I A) Phi) 
+                     (@fobj _ _ (Pullback (interp_tm BT_Fst)) 
+                            (exp (interp_h_ty I Chi) (interp_h_ctx I G)))).
+  { eapply compose. 
+    - apply (@iso_from _ _ _ (pb_exp_iso (interp_tm BT_Fst) _ _)). 
+    - exact H_curry. }
+
+  (* 3. Adjungálás alkalmazása: Phi -> P*(Chi^G) ból Sigma Phi -> Chi^G *)
+  assert (H_sigma : hom (interp_h_ty I (Ty_Ex A Phi)) 
+                        (exp (interp_h_ty I Chi) (interp_h_ctx I G))).
+  { apply left_adj_mor. exact H_pb. }
+
+  (* 4. A végső morfizmus összeállítása uncurry-vel (eval) *)
+  eapply compose.
+  - (* Itt adjuk meg explicite az eval paramétereit *)
+    apply (@eval (Fiber (interp_ty I)) _ _ (interp_h_ctx I G) (interp_h_ty I Chi)).
+  - (* Összeállítjuk a (Chi^G × G) tartományt a bemeneti (G × Sigma) ból *)
+    apply prod_map.
+    + (* Sigma -> Chi^G *)
+      eapply compose. { exact H_sigma. } { apply prod_snd. }
+    + (* G -> G *)
+      apply prod_fst.
+Defined.
 
 (* ================================================================= *)
 (* 3. INHABITED SOUNDNESS TÉTEL                                      *)
@@ -262,5 +380,3 @@ Proof.
     (* 4. Lépés: A kontextus megkettőzése és az Egzisztenciális Tanú behelyettesítése *)
     { apply (prod_map (id _) IHD1). }
 Defined.
-
-
