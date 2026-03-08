@@ -35,6 +35,8 @@ theories/Semantics/STLC_PI_Sum/STLC_PI_Sum_Completeness.v
 
 # --- Simple Semantics ---
 theories/Semantics/Simple/Base_Simple_Soundness.v
+theories/Semantics/Simple/Base_Simple_Completeness.v
+
 theories/Semantics/Simple/Simple_Soundness.v
 theories/Semantics/Simple/Examples.v
 theories/Semantics/Simple/Example_All_intro.v
