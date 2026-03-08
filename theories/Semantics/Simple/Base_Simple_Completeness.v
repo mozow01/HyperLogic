@@ -7,6 +7,7 @@ Require Import HyperLogic.Cat.Fibration.
 
 Require Import HyperLogic.Logic.Base.Simple.Base_Syntax.
 Require Import HyperLogic.Semantics.Simple.Base_Simple_Soundness.
+Require Import Coq.Program.Equality.
 
 (* ================================================================= *)
 (* 1. A SZINTAKTIKUS KATEGÓRIA (TERM MODELL) MORFIZMUSAI             *)
@@ -19,7 +20,9 @@ Record hom_base (A B : b_ty) : Set := mk_hom_base {
   deriv_of : base_typing A tm_of B
 }.
 
-(*
+Arguments tm_of {A B} _.
+Arguments deriv_of {A B} _.
+
 (* ================================================================= *)
 (* 2. A BÁZIS KATEGÓRIA PÉLDÁNYOSÍTÁSA                               *)
 (* ================================================================= *)
@@ -29,27 +32,18 @@ Proof.
   refine (mk_SetoidCategory 
     b_ty 
     hom_base 
-    (* id *)
     (fun X => mk_hom_base X X _ BT_Id)
-    (* compose: A _ helyére a Coq kitalálja a b_comp-ot a BT_Comp típusa alapján! *)
     (fun X Y Z f g => mk_hom_base X Z _ (BT_Comp (deriv_of f) (deriv_of g)))
-    (* hom_equiv *)
     (fun X Y f g => base_equiv (deriv_of f) (deriv_of g))
     _ _ _ _ _).
-  
-  - (* Equivalence *)
-    intros X Y. constructor.
+  - intros X Y. constructor.
     + intros f. apply BE_Refl.
     + intros f g. apply BE_Sym.
     + intros f g h. apply BE_Trans.
-  - (* comp_assoc *)
-    intros X Y Z W f g h. apply BE_Assoc.
-  - (* id_right *)
-    intros X Y f. apply BE_IdR.
-  - (* id_left *)
-    intros X Y f. apply BE_IdL.
-  - (* comp_proper *)
-    unfold Proper, respectful. intros X Y Z f g Hfg h i Hhi. 
+  - intros X Y Z W f g h. apply BE_Assoc.
+  - intros X Y f. apply BE_IdR.
+  - intros X Y f. apply BE_IdL.
+  - unfold Proper, respectful. intros X Y Z f g Hfg h i Hhi.
     apply BE_CongComp; assumption.
 Defined.
 
@@ -87,11 +81,96 @@ Proof.
   intro H. discriminate H.
 Defined.
 
+Require Import Coq.Program.Equality. (* Needed for dependent destruction *)
+
+Require Import Coq.Program.Equality.
+
 (* ================================================================= *)
-(* 3. COMPLETENESS (TELJESSÉG) TÉTEL                                 *)
+(* 3. COMPLETENESS HELPER LEMMAS                                     *)
 (* ================================================================= *)
-(* A tétel kimondja, hogy ha az interpretáció bármely modellben egyenlő, 
-   akkor a nyers szintaxisban is egyenlőnek kell lenniük. *)
+
+(* Lemma 1: Interpretation of a type in our syntactic category is exactly itself. *)
+Lemma interp_ty_id : forall A, 
+  @interp_ty Base_SetoidCategory Base_CartesianCategory Base_TwoSortCategory A = A.
+Proof.
+  induction A; simpl; congruence.
+Qed.
+
+(* Lemma 2: Term Identity. 
+   Interpreting a derivation mathematically preserves its underlying syntactic term. *)
+Lemma interp_tm_term : forall A B f (df : base_typing A f B),
+  tm_of (@interp_tm Base_SetoidCategory Base_CartesianCategory Base_TwoSortCategory A B f df) = f.
+Proof.
+  intros A B f df.
+  induction df; simpl.
+  - reflexivity.
+  - rewrite IHdf1, IHdf2. reflexivity.
+  - reflexivity.
+  - rewrite IHdf1, IHdf2. reflexivity.
+  - reflexivity.
+  - reflexivity.
+Qed.
+
+(* Lemma 3: Type Determinism (Uniqueness of Types). *)
+Lemma base_typing_unique : forall A f B1 (d1 : base_typing A f B1) B2 (d2 : base_typing A f B2),
+  B1 = B2.
+Proof.
+  intros A f B1 d1.
+  induction d1; intros B2 d2; dependent destruction d2.
+  - reflexivity.
+  - assert (H_B : B = B0). { eapply IHd1_2. exact d2_2. }
+    subst B0. eapply IHd1_1. exact d2_1.
+  - reflexivity.
+  - assert (H_B : B = B0). { eapply IHd1_1. exact d2_1. }
+    assert (H_C : C = C0). { eapply IHd1_2. exact d2_2. }
+    subst. reflexivity.
+  - reflexivity.
+  - reflexivity.
+Qed.
+
+(* Lemma 4: Proof Irrelevance. *)
+Lemma base_typing_pi : forall A B f (d1 d2 : base_typing A f B), base_equiv d1 d2.
+Proof.
+  intros A B f d1.
+  induction d1; intros d2; dependent destruction d2.
+  - apply BE_Refl.
+  - assert (H_B : B = B0). { eapply base_typing_unique. exact d1_2. exact d2_2. }
+    subst B0.
+    apply BE_CongComp.
+    + apply IHd1_2.
+    + apply IHd1_1.
+  - apply BE_Refl.
+  - apply BE_CongPair.
+    + apply IHd1_1.
+    + apply IHd1_2.
+  - apply BE_Refl.
+  - apply BE_Refl.
+Qed.
+
+(* Lemma 5: Safe Equivalence Casting (Now handles Types AND Terms!) *)
+Lemma base_equiv_cast : forall A B A' B' f g f' g'
+  (eqA : A' = A) (eqB : B' = B) 
+  (eqF : f' = f) (eqG : g' = g)
+  (df' : base_typing A' f' B') (dg' : base_typing A' g' B')
+  (df : base_typing A f B) (dg : base_typing A g B),
+  base_equiv df' dg' -> base_equiv df dg.
+Proof.
+  intros A B A' B' f g f' g' eqA eqB eqF eqG df' dg' df dg Heq.
+  
+  (* 1. Unify all types and terms globally! *)
+  subst. 
+  
+  (* 2. Chain the equivalences via Proof Irrelevance *)
+  eapply BE_Trans.
+  - apply base_typing_pi.
+  - eapply BE_Trans.
+    + exact Heq.
+    + apply base_typing_pi.
+Qed.
+
+(* ================================================================= *)
+(* 4. COMPLETENESS (TELJESSÉG) TÉTEL                                 *)
+(* ================================================================= *)
 
 Theorem base_completeness : forall {A B : b_ty} {f g : b_tm} 
   (df : base_typing A f B) (dg : base_typing A g B),
@@ -100,13 +179,21 @@ Theorem base_completeness : forall {A B : b_ty} {f g : b_tm}
   base_equiv df dg.
 Proof.
   intros A B f g df dg H.
-  (* Alkalmazzuk az univerzális hipotézist a saját Szintaktikus Kategóriánkra! *)
+  
+  (* 1. Instantiate the universal hypothesis with our Syntactic Category *)
   pose proof (H Base_SetoidCategory Base_CartesianCategory Base_TwoSortCategory) as Heq.
   
-  (* Mivel a Szintaktikus Kategóriában az egyenlőség (≅) definíció szerint maga 
-     a 'base_equiv', és az 'interp_tm df' pontosan visszaadja a 'df'-et,
-     a Heq pontosan a bizonyítandó célunkká konvertálódik. *)
-  exact Heq.
+  (* 2. Apply our Ultimate Casting Lemma *)
+  eapply base_equiv_cast.
+  
+  (* Fill in the Type Proofs *)
+  - apply interp_ty_id.
+  - apply interp_ty_id.
+  
+  (* Fill in the Term Proofs *)
+  - apply interp_tm_term.
+  - apply interp_tm_term.
+  
+(* Provide the actual Semantic Equivalence! *)
+  - exact Heq.
 Qed.
-
-*)
