@@ -9,13 +9,12 @@ theories/Cat/Adjoint.v
 theories/Cat/Fibration.v
 theories/Cat/Monad.v
 
-theories/Logic/Base/Individual/Base_Individual.v
-theories/Logic/Hyper/Epsilon/Epsilon_Syntax.v
-theories/Logic/Base/Epsilon/Base_Epsilon.v
 theories/Logic/Base/Simple/Base_Syntax.v
 theories/Logic/Hyper/Simple/Hyper_Syntax.v
 theories/Logic/Hyper/Simple/Hyper_Lemmas.v
-
+theories/Logic/Base/Epsilon/Base_Syntax.v
+theories/Logic/Hyper/Epsilon/Hyper_Syntax.v
+theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.v
 
 # --- STLC Logic (STLC_PI) ---
 theories/Logic/STLC_PI/STLC_PI.v

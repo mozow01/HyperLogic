@@ -279,7 +279,7 @@ Defined.
 (* 3. INHABITED SOUNDNESS TÉTEL                                      *)
 (* ================================================================= *)
 
-Definition hyper_soundness_inhabited 
+Theorem hyper_soundness_inhabited 
   {C : SetoidCategory} {CC : CartesianCategory C} {BCCC : CartesianClosedCategory C} {BiCCC : BiCartesianClosedCategory BCCC}
   {TSC : TwoSortCategory C} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} {HM : HyperModel SGF}
   {I : b_ty} {G : h_context} {p : h_tm} {Phi : h_ty}

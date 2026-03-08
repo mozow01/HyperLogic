@@ -22,15 +22,6 @@ theories/Cat/Fibration.vos theories/Cat/Fibration.vok theories/Cat/Fibration.req
 theories/Cat/Monad.vo theories/Cat/Monad.glob theories/Cat/Monad.v.beautified theories/Cat/Monad.required_vo: theories/Cat/Monad.v theories/Cat/Core.vo theories/Cat/Functor.vo theories/Cat/Adjoint.vo
 theories/Cat/Monad.vio: theories/Cat/Monad.v theories/Cat/Core.vio theories/Cat/Functor.vio theories/Cat/Adjoint.vio
 theories/Cat/Monad.vos theories/Cat/Monad.vok theories/Cat/Monad.required_vos: theories/Cat/Monad.v theories/Cat/Core.vos theories/Cat/Functor.vos theories/Cat/Adjoint.vos
-theories/Logic/Base/Individual/Base_Individual.vo theories/Logic/Base/Individual/Base_Individual.glob theories/Logic/Base/Individual/Base_Individual.v.beautified theories/Logic/Base/Individual/Base_Individual.required_vo: theories/Logic/Base/Individual/Base_Individual.v 
-theories/Logic/Base/Individual/Base_Individual.vio: theories/Logic/Base/Individual/Base_Individual.v 
-theories/Logic/Base/Individual/Base_Individual.vos theories/Logic/Base/Individual/Base_Individual.vok theories/Logic/Base/Individual/Base_Individual.required_vos: theories/Logic/Base/Individual/Base_Individual.v 
-theories/Logic/Hyper/Epsilon/Epsilon_Syntax.vo theories/Logic/Hyper/Epsilon/Epsilon_Syntax.glob theories/Logic/Hyper/Epsilon/Epsilon_Syntax.v.beautified theories/Logic/Hyper/Epsilon/Epsilon_Syntax.required_vo: theories/Logic/Hyper/Epsilon/Epsilon_Syntax.v 
-theories/Logic/Hyper/Epsilon/Epsilon_Syntax.vio: theories/Logic/Hyper/Epsilon/Epsilon_Syntax.v 
-theories/Logic/Hyper/Epsilon/Epsilon_Syntax.vos theories/Logic/Hyper/Epsilon/Epsilon_Syntax.vok theories/Logic/Hyper/Epsilon/Epsilon_Syntax.required_vos: theories/Logic/Hyper/Epsilon/Epsilon_Syntax.v 
-theories/Logic/Base/Epsilon/Base_Epsilon.vo theories/Logic/Base/Epsilon/Base_Epsilon.glob theories/Logic/Base/Epsilon/Base_Epsilon.v.beautified theories/Logic/Base/Epsilon/Base_Epsilon.required_vo: theories/Logic/Base/Epsilon/Base_Epsilon.v theories/Logic/Hyper/Epsilon/Epsilon_Syntax.vo
-theories/Logic/Base/Epsilon/Base_Epsilon.vio: theories/Logic/Base/Epsilon/Base_Epsilon.v theories/Logic/Hyper/Epsilon/Epsilon_Syntax.vio
-theories/Logic/Base/Epsilon/Base_Epsilon.vos theories/Logic/Base/Epsilon/Base_Epsilon.vok theories/Logic/Base/Epsilon/Base_Epsilon.required_vos: theories/Logic/Base/Epsilon/Base_Epsilon.v theories/Logic/Hyper/Epsilon/Epsilon_Syntax.vos
 theories/Logic/Base/Simple/Base_Syntax.vo theories/Logic/Base/Simple/Base_Syntax.glob theories/Logic/Base/Simple/Base_Syntax.v.beautified theories/Logic/Base/Simple/Base_Syntax.required_vo: theories/Logic/Base/Simple/Base_Syntax.v 
 theories/Logic/Base/Simple/Base_Syntax.vio: theories/Logic/Base/Simple/Base_Syntax.v 
 theories/Logic/Base/Simple/Base_Syntax.vos theories/Logic/Base/Simple/Base_Syntax.vok theories/Logic/Base/Simple/Base_Syntax.required_vos: theories/Logic/Base/Simple/Base_Syntax.v 
@@ -40,6 +31,15 @@ theories/Logic/Hyper/Simple/Hyper_Syntax.vos theories/Logic/Hyper/Simple/Hyper_S
 theories/Logic/Hyper/Simple/Hyper_Lemmas.vo theories/Logic/Hyper/Simple/Hyper_Lemmas.glob theories/Logic/Hyper/Simple/Hyper_Lemmas.v.beautified theories/Logic/Hyper/Simple/Hyper_Lemmas.required_vo: theories/Logic/Hyper/Simple/Hyper_Lemmas.v theories/Logic/Base/Simple/Base_Syntax.vo theories/Logic/Hyper/Simple/Hyper_Syntax.vo
 theories/Logic/Hyper/Simple/Hyper_Lemmas.vio: theories/Logic/Hyper/Simple/Hyper_Lemmas.v theories/Logic/Base/Simple/Base_Syntax.vio theories/Logic/Hyper/Simple/Hyper_Syntax.vio
 theories/Logic/Hyper/Simple/Hyper_Lemmas.vos theories/Logic/Hyper/Simple/Hyper_Lemmas.vok theories/Logic/Hyper/Simple/Hyper_Lemmas.required_vos: theories/Logic/Hyper/Simple/Hyper_Lemmas.v theories/Logic/Base/Simple/Base_Syntax.vos theories/Logic/Hyper/Simple/Hyper_Syntax.vos
+theories/Logic/Base/Epsilon/Base_Syntax.vo theories/Logic/Base/Epsilon/Base_Syntax.glob theories/Logic/Base/Epsilon/Base_Syntax.v.beautified theories/Logic/Base/Epsilon/Base_Syntax.required_vo: theories/Logic/Base/Epsilon/Base_Syntax.v 
+theories/Logic/Base/Epsilon/Base_Syntax.vio: theories/Logic/Base/Epsilon/Base_Syntax.v 
+theories/Logic/Base/Epsilon/Base_Syntax.vos theories/Logic/Base/Epsilon/Base_Syntax.vok theories/Logic/Base/Epsilon/Base_Syntax.required_vos: theories/Logic/Base/Epsilon/Base_Syntax.v 
+theories/Logic/Hyper/Epsilon/Hyper_Syntax.vo theories/Logic/Hyper/Epsilon/Hyper_Syntax.glob theories/Logic/Hyper/Epsilon/Hyper_Syntax.v.beautified theories/Logic/Hyper/Epsilon/Hyper_Syntax.required_vo: theories/Logic/Hyper/Epsilon/Hyper_Syntax.v theories/Logic/Base/Epsilon/Base_Syntax.vo theories/Logic/STLC_PI_Sum/STLC_PI_Sum.vo
+theories/Logic/Hyper/Epsilon/Hyper_Syntax.vio: theories/Logic/Hyper/Epsilon/Hyper_Syntax.v theories/Logic/Base/Epsilon/Base_Syntax.vio theories/Logic/STLC_PI_Sum/STLC_PI_Sum.vio
+theories/Logic/Hyper/Epsilon/Hyper_Syntax.vos theories/Logic/Hyper/Epsilon/Hyper_Syntax.vok theories/Logic/Hyper/Epsilon/Hyper_Syntax.required_vos: theories/Logic/Hyper/Epsilon/Hyper_Syntax.v theories/Logic/Base/Epsilon/Base_Syntax.vos theories/Logic/STLC_PI_Sum/STLC_PI_Sum.vos
+theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.vo theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.glob theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.v.beautified theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.required_vo: theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.v 
+theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.vio: theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.v 
+theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.vos theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.vok theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.required_vos: theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.v 
 theories/Logic/STLC_PI/STLC_PI.vo theories/Logic/STLC_PI/STLC_PI.glob theories/Logic/STLC_PI/STLC_PI.v.beautified theories/Logic/STLC_PI/STLC_PI.required_vo: theories/Logic/STLC_PI/STLC_PI.v 
 theories/Logic/STLC_PI/STLC_PI.vio: theories/Logic/STLC_PI/STLC_PI.v 
 theories/Logic/STLC_PI/STLC_PI.vos theories/Logic/STLC_PI/STLC_PI.vok theories/Logic/STLC_PI/STLC_PI.required_vos: theories/Logic/STLC_PI/STLC_PI.v 
