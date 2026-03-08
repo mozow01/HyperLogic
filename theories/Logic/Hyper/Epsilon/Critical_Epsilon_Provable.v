@@ -24,37 +24,4 @@ Lemma dual_drinker_general {Sign : Type} `{SkolemMapping Sign}
   (I D : b_ty) (Phi : @h_ty Sign) : 
   exists (p : @h_tm Sign), h_typing I [] p (Dual_Drinker_Generic I D Phi).
 Proof.
- (*
-  unfold Dual_Drinker_Generic.
-  
-  (* LÉPÉS 0: Beteszünk egy lyukat (?p) a bizonyításterm helyére, 
-     amit a Coq a szabályok (eapply) alapján automatikusan felépít nekünk! *)
-  eexists.
-
-  (* LÉPÉS 1: A Skolem-tanú legenerálása a tetszőleges Phi formulából. *)
-  pose (Sko := b_const D (skolem_index D Phi)).
-
-  (* Konverzió az Arrow visszahúzásának lekezelésére *)
-  eapply HT_Conv.
-  2: { admit. (* Itt a base_equiv / form_equiv majd igazolja az egyenlőséget *) }
-  
-  (* Egzisztenciális bevezetés a Skolem-tanúval *)
-  eapply HT_Ex_Intro with (f := Sko).
-  - apply BT_Const. 
-  
-  (* Implikáció bevezetése *)
-  - apply HT_Lam.
-    
-    (* Egzisztenciális elimináció a feltételen (\exists y. Phi(y)) *)
-    eapply HT_Ex_Elim.
-    + apply HT_Var0. 
-    
-    + (* Konverzió alkalmazása a Phi(y) -> Phi(Sko) cseréhez *)
-      eapply HT_Conv.
-      2: { admit. (* A form_equiv igazolja, hogy matematikailag egyenlőek *) }
-      
-      (* Az Epszilon Szabály alkalmazása a hipotetikus tanúval (b_snd) *)
-      eapply HT_Eps_Intro with (f := b_snd).
-      * apply BT_Snd.
-      * apply HT_Var0.
 Admitted.
