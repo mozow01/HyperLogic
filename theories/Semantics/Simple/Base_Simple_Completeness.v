@@ -168,6 +168,15 @@ Proof.
     + apply base_typing_pi.
 Defined.
 
+(* Helper: Safely cast the types of a derivation if the types are provably equal. *)
+Lemma base_typing_cast : forall A' B' A B t,
+  A' = A -> B' = B -> base_typing A' t B' -> base_typing A t B.
+Proof.
+  intros A' B' A B t eqA eqB d.
+  subst. exact d.
+Qed.
+
+
 (* ================================================================= *)
 (* 4. COMPLETENESS (TELJESSÉG) TÉTEL                                 *)
 (* ================================================================= *)
@@ -198,8 +207,30 @@ Proof.
   - exact Heq.
 Defined.
 
-Theorem base_completeness_inhabitational : forall {C : SetoidCategory} {CC : CartesianCategory C} 
-  {TSC : TwoSortCategory C} {A B : b_ty}, inhabited (hom (interp_ty A) (interp_ty B)) -> 
+Theorem base_completeness_inhabitational : forall {A B : b_ty}, 
+  (* PREMISE: The hom-set is inhabited in ALL valid models *)
+  (forall (C : SetoidCategory) (CC : CartesianCategory C) (TSC : TwoSortCategory C),
+     inhabited (hom (@interp_ty C CC TSC A) (@interp_ty C CC TSC B))) -> 
+  
+  (* CONCLUSION: There exists a syntactic term *)
   (exists (t : b_tm), inhabited (base_typing A t B)).
 Proof.
-Admitted.
+  intros A B H.
+  
+  (* 1. Instantiate the universal hypothesis with our Syntactic Model *)
+  pose proof (H Base_SetoidCategory Base_CartesianCategory Base_TwoSortCategory) as [f_hom].
+  
+  (* 2. Destruct the categorical morphism into its term and derivation.
+        f_hom has type: hom_base (interp_ty A) (interp_ty B) *)
+  destruct f_hom as [t_syn d_syn].
+  
+  (* 3. Provide the extracted term as the witness for our existential quantifier *)
+  exists t_syn.
+  constructor. (* This proves the 'inhabited' wrapper *)
+  
+  (* 4. Bridge the semantic types (interp_ty A) to syntactic types (A) *)
+  eapply base_typing_cast.
+  - apply interp_ty_id.
+  - apply interp_ty_id.
+  - exact d_syn.
+Qed.
