@@ -136,9 +136,8 @@ Inductive form_equiv {Sign : Type} `{SkolemMapping Sign} : @h_ty Sign -> @h_ty S
       
   (* 2. Visszahúzások kompozíciója (f* (g* Phi) == (f o g)* Phi) *)
   | FE_Pullback_Comp : forall f g Phi, 
-      form_equiv (form_pullback f (form_pullback g Phi)) (form_pullback (b_comp f g) Phi)
+      form_equiv (form_pullback g (form_pullback f Phi)) (form_pullback (b_comp f g) Phi)
       
-  (* 3. Kongruencia: Ha két morfizmus egyenlő a bázisban, a visszahúzott formulák is egyenlők *)
  (* 3. Kongruencia: Ha két morfizmus egyenlő a bázisban, a visszahúzott formulák is egyenlők *)
   | FE_Pullback_Cong : forall I J (f g : @b_tm Sign) Phi 
                               (df : base_typing I f J) (dg : base_typing I g J), 
