@@ -94,7 +94,7 @@ Lemma interp_ty_id : forall A,
   @interp_ty Base_SetoidCategory Base_CartesianCategory Base_TwoSortCategory A = A.
 Proof.
   induction A; simpl; congruence.
-Qed.
+Defined. 
 
 (* Lemma 2: Term Identity. 
    Interpreting a derivation mathematically preserves its underlying syntactic term. *)
@@ -109,7 +109,7 @@ Proof.
   - rewrite IHdf1, IHdf2. reflexivity.
   - reflexivity.
   - reflexivity.
-Qed.
+Defined.
 
 (* Lemma 3: Type Determinism (Uniqueness of Types). *)
 Lemma base_typing_unique : forall A f B1 (d1 : base_typing A f B1) B2 (d2 : base_typing A f B2),
@@ -126,7 +126,7 @@ Proof.
     subst. reflexivity.
   - reflexivity.
   - reflexivity.
-Qed.
+Defined.
 
 (* Lemma 4: Proof Irrelevance. *)
 Lemma base_typing_pi : forall A B f (d1 d2 : base_typing A f B), base_equiv d1 d2.
@@ -145,7 +145,7 @@ Proof.
     + apply IHd1_2.
   - apply BE_Refl.
   - apply BE_Refl.
-Qed.
+Defined.
 
 (* Lemma 5: Safe Equivalence Casting (Now handles Types AND Terms!) *)
 Lemma base_equiv_cast : forall A B A' B' f g f' g'
@@ -166,13 +166,13 @@ Proof.
   - eapply BE_Trans.
     + exact Heq.
     + apply base_typing_pi.
-Qed.
+Defined.
 
 (* ================================================================= *)
 (* 4. COMPLETENESS (TELJESSÉG) TÉTEL                                 *)
 (* ================================================================= *)
 
-Theorem base_completeness : forall {A B : b_ty} {f g : b_tm} 
+Theorem base_completeness_equational : forall {A B : b_ty} {f g : b_tm} 
   (df : base_typing A f B) (dg : base_typing A g B),
   (forall (C : SetoidCategory) (CC : CartesianCategory C) (TSC : TwoSortCategory C),
      @interp_tm C CC TSC A B f df ≅ @interp_tm C CC TSC A B g dg) ->
@@ -196,4 +196,10 @@ Proof.
   
 (* Provide the actual Semantic Equivalence! *)
   - exact Heq.
-Qed.
+Defined.
+
+Theorem base_completeness_inhabitational : forall {C : SetoidCategory} {CC : CartesianCategory C} 
+  {TSC : TwoSortCategory C} {A B : b_ty}, inhabited (hom (interp_ty A) (interp_ty B)) -> 
+  (exists (t : b_tm), inhabited (base_typing A t B)).
+Proof.
+Admitted.

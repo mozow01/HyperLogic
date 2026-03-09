@@ -95,32 +95,58 @@ Fixpoint form_pullback {Sign : Type} (f : @b_tm Sign) (Phi : @h_ty Sign) : @h_ty
 Definition ctx_pullback {Sign : Type} (f : @b_tm Sign) (G : @h_context Sign) : @h_context Sign :=
   map (form_pullback f) G.
   
+Declare Scope surface_scope.  
+
+Notation "Phi .[ t ]" := (form_pullback (b_pair b_id t) Phi) (at level 40, left associativity) : surface_scope.
+(* Epszilon jelölés *)
+Notation "'ε' D , Phi" := (b_const D (skolem_index D Phi)) (at level 50) : surface_scope.
+
+Open Scope surface_scope.
+
 (* ================================================================= *)
 (* 2.5 FORMULA EKVIVALENCIA (A Konverziós Szabályhoz)                *)
 (* ================================================================= *)
 
-Inductive form_equiv {Sign : Type} : @h_ty Sign -> @h_ty Sign -> Prop :=
+Inductive form_equiv {Sign : Type} `{SkolemMapping Sign} : @h_ty Sign -> @h_ty Sign -> Prop :=
   
-  (* 1. Atomok ekvivalenciája (A legfontosabb híd a bázis és a logika között!)
-     Ha a két bázisterm (t1 és t2) matematikailag egyenlő, az atomok is azok. *)
   | FE_Atom : forall p (t1 t2 : @b_tm Sign) I A 
                      (d1 : @base_typing Sign I t1 A) 
                      (d2 : @base_typing Sign I t2 A),
       @base_equiv Sign I A t1 t2 d1 d2 ->
       form_equiv (Ty_Atom p t1) (Ty_Atom p t2)
       
-  (* 2. Ekvivalencia reláció alapjai (Reflexív, Szimmetrikus, Tranzitív) *)
   | FE_Refl : forall Phi, form_equiv Phi Phi
   | FE_Sym  : forall Phi Psi, form_equiv Phi Psi -> form_equiv Psi Phi
   | FE_Trans: forall Phi Psi Chi, form_equiv Phi Psi -> form_equiv Psi Chi -> form_equiv Phi Chi
   
-  (* 3. Kongruencia a logikai kötőszavakra 
-        (Lehetővé teszi, hogy egy nagy formula mélyén is cserélhessünk) *)
   | FE_Prod : forall A B A' B', form_equiv A A' -> form_equiv B B' -> form_equiv (Ty_Prod A B) (Ty_Prod A' B')
   | FE_Sum  : forall A B A' B', form_equiv A A' -> form_equiv B B' -> form_equiv (Ty_Sum A B) (Ty_Sum A' B')
   | FE_Arrow: forall A B A' B', form_equiv A A' -> form_equiv B B' -> form_equiv (Ty_Arrow A B) (Ty_Arrow A' B')
   | FE_All  : forall D A A', form_equiv A A' -> form_equiv (Ty_All D A) (Ty_All D A')
-  | FE_Ex   : forall D A A', form_equiv A A' -> form_equiv (Ty_Ex D A) (Ty_Ex D A').
+  | FE_Ex   : forall D A A', form_equiv A A' -> form_equiv (Ty_Ex D A) (Ty_Ex D A')
+  
+  (* 4. Skolem-invariancia gyengítésre (Beck-Chevalley feltétel) *)
+  | FE_Eps_Lift : forall D Phi,
+      form_equiv ((form_pullback b_fst Phi) .[ ε D, form_pullback b_fst Phi ]) 
+                 (form_pullback b_fst (Phi .[ ε D, Phi ]))
+  (* --- FIBRÁCIÓS FUNKTOR AXIÓMÁK --- *)
+  (* 1. Identitás visszahúzása nem változtat a formulán *)
+  | FE_Pullback_Id : forall Phi, 
+      form_equiv (form_pullback b_id Phi) Phi
+      
+  (* 2. Visszahúzások kompozíciója (f* (g* Phi) == (f o g)* Phi) *)
+  | FE_Pullback_Comp : forall f g Phi, 
+      form_equiv (form_pullback f (form_pullback g Phi)) (form_pullback (b_comp f g) Phi)
+      
+  (* 3. Kongruencia: Ha két morfizmus egyenlő a bázisban, a visszahúzott formulák is egyenlők *)
+ (* 3. Kongruencia: Ha két morfizmus egyenlő a bázisban, a visszahúzott formulák is egyenlők *)
+  | FE_Pullback_Cong : forall I J (f g : @b_tm Sign) Phi 
+                              (df : base_typing I f J) (dg : base_typing I g J), 
+      @base_equiv Sign I J f g df dg -> 
+      form_equiv (form_pullback f Phi) (form_pullback g Phi).
+
+(* 1. Megnyitjuk a scope-ot, hogy a parser azonnal használja *)
+Open Scope surface_scope.
 
 (* ================================================================= *)
 (* 3. DUAL CONTEXT TYPING (Az Epsilon Szabályokkal!)                 *)
