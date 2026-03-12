@@ -107,7 +107,7 @@ Open Scope surface_scope.
 (* 2.5 FORMULA EKVIVALENCIA (A Konverziós Szabályhoz)                *)
 (* ================================================================= *)
 
-Inductive form_equiv {Sign : Type} `{SkolemMapping Sign} : @h_ty Sign -> @h_ty Sign -> Prop :=
+Inductive form_equiv {Sign : Type} `{SkolemMapping Sign} : @h_ty Sign -> @h_ty Sign -> Type :=
   
   | FE_Atom : forall p (t1 t2 : @b_tm Sign) I A 
                      (d1 : @base_typing Sign I t1 A) 

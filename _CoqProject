@@ -42,3 +42,7 @@ theories/Semantics/Simple/Examples.v
 theories/Semantics/Simple/Example_All_intro.v
 
 theories/Semantics/Simple/Example_All_elim.v
+
+# --- Epsilon Semantics ---
+theories/Semantics/Epsilon/Epsilon_Fibration.v
+theories/Semantics/Epsilon/Epsilon_Soundness.v
