@@ -139,17 +139,6 @@ Class EpsilonGoodFibration
                 (interp_h_ty I (form_pullback (b_pair b_id (b_const A (skolem_index A Phi))) Phi)))
           (interp_h_ty I Chi) ;
 
-  (** 3. BECK-CHEVALLEY (Behelyettesítés felcserélhetősége az Epszilonnal) 
-      Legyen Psi a Phi visszahúzása a (g x id) mentén: Psi = Phi[g(j), a] 
-  eps_beck_chevalley_fwd : forall (I J A : b_ty) (g : @b_tm Sign) (dg : @base_typing Sign J g I) (Phi : @h_ty Sign),
-      let Psi := form_pullback (b_pair (b_comp g b_fst) b_snd) Phi in
-      hom (interp_h_ty J (form_pullback g (form_pullback (b_pair b_id (b_const A (skolem_index A Phi))) Phi)))
-          (interp_h_ty J (form_pullback (b_pair b_id (b_const A (skolem_index A Psi))) Psi)) ;
-
-  eps_beck_chevalley_rev : forall (I J A : b_ty) (g : @b_tm Sign) (dg : @base_typing Sign J g I) (Phi : @h_ty Sign),
-      let Psi := form_pullback (b_pair (b_comp g b_fst) b_snd) Phi in
-      hom (interp_h_ty J (form_pullback (b_pair b_id (b_const A (skolem_index A Psi))) Psi))
-          (interp_h_ty J (form_pullback g (form_pullback (b_pair b_id (b_const A (skolem_index A Phi))) Phi))); *)
           
   eps_beck_chevalley_iso : forall (I J A : b_ty) (g : b_tm) (dg : base_typing J g I) (Phi : h_ty),
     interp_h_ty J (form_pullback g (form_pullback (b_pair b_id (b_const A (skolem_index A Phi))) Phi)) ≅O
