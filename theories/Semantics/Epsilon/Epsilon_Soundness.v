@@ -171,6 +171,9 @@ Axiom interp_pb_comp_ax : forall {Sign : Type} {SM : SkolemMapping Sign}
   A szintaktikai ekvivalencia (base_equiv) és az interpretáció kontextusának 
   (I_curr) mesterséges összekapcsolása. 
   MEGOLDÁS: A form_equiv_iso tétel kiegészítése 'WellFormed I Phi' feltétellel.
+  
+Architekturális Megjegyzés: > Az Epszilon-modell soundness bizonyítása során azért választottuk a Curry-stílusú (extrinsic) megközelítést, hogy elkerüljük a Coq függő típusos (dependent types) unifikációs problémáit ("transport hell").  Ezért jelenleg axiómákkal hidaljuk át a gépelési bizonyítékok hiányát. A végső igazoláshoz egy WellFormed I Phi predikátumot kell a tételek premisszái közé emelni, amely kinyitja az utat a típusos kategóriaelméleti interpretációhoz.
+
 *)
 (* 3. Axióma: A szintaktikai kongruencia (szétválasztott kontextusokkal) *)
 Axiom interp_pb_cong_untyped_ax : forall {Sign : Type} {SM : SkolemMapping Sign} 
