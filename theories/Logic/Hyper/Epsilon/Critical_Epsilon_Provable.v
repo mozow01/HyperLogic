@@ -62,51 +62,55 @@ Lemma dual_drinker_surface_provable {Sign : Type} `{SkolemMapping Sign}
 Proof.
   eexists. unfold Dual_Drinker.
   
-  (* Base-level existential introduction: The witness is the Epsilon constant *)
+  (* GOAL: ⊢ ∃x . ( (∃y D(y)) ⇒ D(x) ) 
+     INTUITION: Who should be this 'x'? Let it be the Epsilon witness! 
+     Epsilon is the magical operator that 'picks an element for which D holds, 
+     if such an element exists.' *)
   eapply HT_Ex_Intro with (f := ε D, Phi).
-  - solve_bt. 
+  - solve_bt. (* Categorical typing administration... *)
   
-  - (* STEP 1: Lambda abstraction (introduces ⇑(∃ D, Phi) into the context) *)
+  - (* GOAL: ⊢ (∃y D(y)) ⇒ D(ε y. D(y)) 
+       STEP: Assume the left side (Implication introduction). *)
     eapply HT_Lam; fold (@form_pullback Sign).
 
-    (* STEP 2: Existential elimination (eliminating the ∃ D, Phi hypothesis) *)
+    (* GOAL: [ ∃y D(y) ] ⊢ D(ε y. D(y))
+       STEP: Eliminate the hypothesis! If 'there exists a y who drinks', 
+       let's call them 'var0'. From now on, in our local context, 
+       we have a specific drinker (var0). *)
     eapply HT_Ex_Elim.
-    + (* Conversion: Clean up the premise after the Epsilon substitution *)
+    + (* SUB-GOAL 1: Verify that our premise was indeed [ ∃y D(y) ].
+         STEP: Simply recall the hypothesis from the context (HT_Var0). *)
       eapply HT_Conv.
       * apply HT_Var0.
-      * eapply FE_Trans.
-        1: { (* COMPOSITION: Merge the pullback with the substitution *)
-             eapply FE_Pullback_Comp.
-             - solve_bt. 
-             - eapply BT_Pair; solve_bt.
-             - solve_wf. 
-           }
+      * (* ... Categorical noise: Prove that pulling back the variable 
+           does not change the meaning of the formula (FE_Pullback_Id) ... *)
         eapply FE_Trans.
-        2: { (* IDENTITY: Apply the logical equivalent of the identity morphism *)
-             apply FE_Pullback_Id. solve_wf. 
-           }
-        (* CONGRUENCE: Apply the categorical axiom to close the equivalence *)
-        eapply FE_Pullback_Cong.
-        -- apply (BE_Comp_Pair_Id_Fst_Correct BT_Const).
-        -- solve_wf.
+        1: { eapply FE_Pullback_Comp. - solve_bt. - eapply BT_Pair; solve_bt. - solve_wf. }
+        eapply FE_Trans.
+        2: { apply FE_Pullback_Id. solve_wf. }
+        eapply FE_Pullback_Cong. -- apply (BE_Comp_Pair_Id_Fst_Correct BT_Const). -- solve_wf.
 
-    + (* STEP 3: Process the local context via Epsilon introduction *)
+   + (* SUB-GOAL 2: [ D(var0) ] ⊢ D(ε y. D(y))
+         INTUITION: This is the heart of the proof! We know var0 drinks. 
+         We must show that the person chosen by Epsilon also drinks. 
+         STEP: Apply the Epsilon Axiom (HT_Eps_Intro)! This states that if you 
+         can provide ANY witness (in this case, var0), then the formula 
+         automatically holds for the Epsilon term. *)
       eapply HT_Conv.
-      * (* Pass the 'var0' (local x) witness *)
+      * (* Pass 'var0' as the explicit witness for the Epsilon axiom. *)
         eapply HT_Eps_Intro with (f := var0) (Phi := form_pullback (b_pullback_ext π₁) Phi).
         -- solve_bt.
-        -- eapply HT_Conv.
+        -- (* Recall the fact that var0 drinks. *)
+           eapply HT_Conv.
            ++ apply HT_Var0.
-           ++ eapply FE_Sym. 
-              (* Categorical simplification using the local identity law *)
+           ++ (* ... Categorical noise: Substitution cleanup ... *)
+              eapply FE_Sym. 
               apply FE_Pullback_Ext_Fst_Snd. solve_wf.
 
-      * (* STEP 4: Beck-Chevalley invariance (Epsilon Lifting) *)
+      * (* ... Categorical noise: Beck-Chevalley lifting. Since var0 
+           lives in the local context, the formula must be synchronized 
+           with the base context. ... *)
         eapply FE_Eps_Lift with (J := I).
         -- solve_bt.
         -- solve_wf.
-
-(* --- Clean up remaining implicit obligations --- *)
-Unshelve.
-  all: try exact (b_Prod I D); auto.
 Defined.
