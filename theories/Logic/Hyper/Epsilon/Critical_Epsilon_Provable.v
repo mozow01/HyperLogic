@@ -62,21 +62,17 @@ Lemma dual_drinker_surface_provable {Sign : Type} `{SkolemMapping Sign}
 Proof.
   eexists. unfold Dual_Drinker.
   
-  (* GOAL: ⊢ ∃x . ( (∃y D(y)) ⇒ D(x) ) 
-     INTUITION: Who should be this 'x'? Let it be the Epsilon witness! 
-     Epsilon is the magical operator that 'picks an element for which D holds, 
-     if such an element exists.' *)
+  (* ⊢ ∃x . ( (∃y D(y)) ⇒ D(x) ) 
+     existential generalization from (ε D, Phi) *)
   eapply HT_Ex_Intro with (f := ε D, Phi).
-  - solve_bt. (* Categorical typing administration... *)
+  - solve_bt. (* typing administration: (ε D, Phi) is a D term in I *)
   
-  - (* GOAL: ⊢ (∃y D(y)) ⇒ D(ε y. D(y)) 
-       STEP: Assume the left side (Implication introduction). *)
+  - (* ⊢ (∃y D(y)) ⇒ D(ε y. D(y)) 
+       (implication introduction). *)
     eapply HT_Lam; fold (@form_pullback Sign).
 
-    (* GOAL: [ ∃y D(y) ] ⊢ D(ε y. D(y))
-       STEP: Eliminate the hypothesis! If 'there exists a y who drinks', 
-       let's call them 'var0'. From now on, in our local context, 
-       we have a specific drinker (var0). *)
+    (* [ ∃y D(y) ] ⊢ D(ε y. D(y))
+        (var0). *)
     eapply HT_Ex_Elim.
     + (* SUB-GOAL 1: Verify that our premise was indeed [ ∃y D(y) ].
          STEP: Simply recall the hypothesis from the context (HT_Var0). *)
