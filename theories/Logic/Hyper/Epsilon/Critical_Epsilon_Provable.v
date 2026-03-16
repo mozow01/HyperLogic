@@ -1,12 +1,14 @@
-(* Logic/Hyper/Epsilon/Critical_Epsilon_Provable.v *)
- 
+(* ========================================================================= *)
+(* Logic/Hyper/Epsilon/Critical_Epsilon_Provable.v                           *)
+(* ========================================================================= *)
+
 Require Import HyperLogic.Logic.Base.Epsilon.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Epsilon.Hyper_Syntax.
 
-(* Behúzzuk az új, elegáns logikai jelöléseket *)
+(* Import logical notations *)
 Require Import HyperLogic.Logic.Hyper.Epsilon.Notations. 
 
-(* Behúzzuk a "géptermet" (a kategóriaelméleti helyettesítési lemmákat) *)
+(* Import substitution lemmas (the "engine room") *)
 Require Import HyperLogic.Logic.Hyper.Epsilon.Epsilon_Syntax_Lemmas.
 
 Require Import List.
@@ -14,26 +16,45 @@ Import ListNotations.
 
 Open Scope logic_scope.
 
-(* --- TERMEK ÉS BÁZIS MORFIZMUSOK --- *)
-(* A 'var0' a legfelső lokális változó, ami kategóriaelméletileg a második projekció (π₂) *)
+(* ------------------------------------------------------------------------- *)
+(* Terms and Base Morphisms                                                  *)
+(* ------------------------------------------------------------------------- *)
+
+(* 'var0' represents the top local variable, which categorically corresponds 
+   to the second projection (π₂) *)
 Notation "'var0'" := π₂ : logic_scope.
 
-(* ================================================================= *)
-(* A "DUAL DRINKER" PARADOXON DEFINÍCIÓJA                            *)
-(* ================================================================= *)
- 
-(* A klasszikus Drinker paradoxon: ∃x (D(x) -> ∀y D(y))
-   Ennek duálisa: ∃x ( (∃y D(y)) -> D(x) )
-   A mi intuicionista fibrációs rendszerünkben a globális állítást (∃y) "fel kell emelnünk"
-   a lokális szintre (⇑), mielőtt implikációba tesszük a lokális formulával. 
+(* ------------------------------------------------------------------------- *)
+(* Definition of the "Dual Drinker" Paradox                                  *)
+(* ------------------------------------------------------------------------- *)
+
+(* The classic Drinker paradox is: ∃x (D(x) -> ∀y D(y)).
+   Its dual is: ∃x ( (∃y D(y)) -> D(x) ).
+   
+   In our intuitionistic fibered system, the global statement (∃y) must be 
+   lifted to the local level (⇑) before it can form an implication with 
+   the local formula. 
 *)
-Definition Dual_Drinker {Sign : Type} `{SkolemMapping Sign} (I D : b_ty) (Phi : @h_ty Sign) : @h_ty Sign :=
+Definition Dual_Drinker {Sign : Type} `{SkolemMapping Sign} 
+  (I D : b_ty) (Phi : @h_ty Sign) : @h_ty Sign :=
   ∃ D , ( (⇑ (∃ D , Phi)) ⇒ Phi ).
 
-(* ================================================================= *)
-(* A FŐ TÉTEL: DUAL DRINKER BIZONYÍTHATÓSÁG                          *)
-(* ================================================================= *)
+(* ------------------------------------------------------------------------- *)
+(* Proof Automation Tactics                                                  *)
+(* ------------------------------------------------------------------------- *)
 
+(* Tactic to automatically solve well-formedness (wff) goals. *)
+Ltac solve_wf :=
+  try eassumption; 
+  try (eapply WF_Ex; eassumption). 
+  
+(* Tactic to automatically infer and apply base typing judgments. *)
+Ltac solve_bt := 
+  eauto using BT_Const, BT_Id, BT_Fst, BT_Snd.
+
+(* ------------------------------------------------------------------------- *)
+(* Main Theorem: Provability of the Dual Drinker                             *)
+(* ------------------------------------------------------------------------- *)
 
 Lemma dual_drinker_surface_provable {Sign : Type} `{SkolemMapping Sign} 
   (I D : b_ty) (Phi : @h_ty Sign) (wf_Phi : (I ▹ D) ⊢ Phi wff ) : 
@@ -41,52 +62,51 @@ Lemma dual_drinker_surface_provable {Sign : Type} `{SkolemMapping Sign}
 Proof.
   eexists. unfold Dual_Drinker.
   
-  (* Egzisztenciális bevezetés a bázison: A tanú a mi Epszilon konstansunk! *)
+  (* Base-level existential introduction: The witness is the Epsilon constant *)
   eapply HT_Ex_Intro with (f := ε D, Phi).
-  - apply BT_Const.
-  - (* 1. LÉPÉS: Lambda (Beteszi a hipotézisek közé a ⇑(∃ D, Phi)-t) *)
-    eapply HT_Lam.
+  - solve_bt. 
+  
+  - (* STEP 1: Lambda abstraction (introduces ⇑(∃ D, Phi) into the context) *)
+    eapply HT_Lam; fold (@form_pullback Sign).
 
-    (* 2. LÉPÉS: Egzisztenciális Elimináció (Kibontjuk a ∃ D, Phi hipotézist) *)
+    (* STEP 2: Existential elimination (eliminating the ∃ D, Phi hypothesis) *)
     eapply HT_Ex_Elim.
-    + (* A premissza letisztítása az epszilon behelyettesítés után *)
+    + (* Conversion: Clean up the premise after the Epsilon substitution *)
       eapply HT_Conv.
       * apply HT_Var0.
       * eapply FE_Trans.
-        1: { (* KOMPOZÍCIÓ: Visszahúzás összevonása a helyettesítéssel *)
+        1: { (* COMPOSITION: Merge the pullback with the substitution *)
              eapply FE_Pullback_Comp.
-             - apply (@BT_Fst Sign I D). 
-             - eapply BT_Pair. { apply BT_Id. } { apply BT_Const. }
-             - apply WF_Ex. exact wf_Phi. 
+             - solve_bt. 
+             - eapply BT_Pair; solve_bt.
+             - solve_wf. 
            }
         eapply FE_Trans.
-        2: { (* IDENTITÁS: Az eltüntetett identitás morfizmus logikai megfelelője *)
-             apply FE_Pullback_Id.
-             apply WF_Ex. exact wf_Phi. 
+        2: { (* IDENTITY: Apply the logical equivalent of the identity morphism *)
+             apply FE_Pullback_Id. solve_wf. 
            }
-        (* KONGRUENCIA: Itt használjuk a kategóriaelméleti axiómát *)
+        (* CONGRUENCE: Apply the categorical axiom to close the equivalence *)
         eapply FE_Pullback_Cong.
         -- apply (BE_Comp_Pair_Id_Fst_Correct BT_Const).
-        -- apply WF_Ex. exact wf_Phi.
+        -- solve_wf.
 
-    + (* 3. LÉPÉS: A lokális kontextus feldolgozása az Epszilon bevezetéssel *)
+    + (* STEP 3: Process the local context via Epsilon introduction *)
       eapply HT_Conv.
-      * (* A var0 (lokális x) tanú átadása! A formula kiterjesztve várja! 
-         
-                  *)
-        eapply HT_Eps_Intro with (f := var0) (Phi := ( form_pullback (b_pullback_ext π₁) Phi) ).
-        -- apply (@BT_Snd Sign I D).
+      * (* Pass the 'var0' (local x) witness *)
+        eapply HT_Eps_Intro with (f := var0) (Phi := form_pullback (b_pullback_ext π₁) Phi).
+        -- solve_bt.
         -- eapply HT_Conv.
            ++ apply HT_Var0.
-           ++ eapply FE_Sym.
-              (* VARÁZSLAT: A tegnapi 30 soros kategóriaelméleti daráló helyett ez az egyetlen sor! *)
-              apply FE_Pullback_Ext_Fst_Snd. exact wf_Phi.
+           ++ eapply FE_Sym. 
+              (* Categorical simplification using the local identity law *)
+              apply FE_Pullback_Ext_Fst_Snd. solve_wf.
 
-      * (* 4. LÉPÉS: Beck-Chevalley invariancia (Epszilon Lifting) *)
+      * (* STEP 4: Beck-Chevalley invariance (Epsilon Lifting) *)
         eapply FE_Eps_Lift with (J := I).
-        -- apply (@BT_Fst Sign I D).
-        -- exact wf_Phi.
+        -- solve_bt.
+        -- solve_wf.
 
+(* --- Clean up remaining implicit obligations --- *)
 Unshelve.
   all: try exact (b_Prod I D); auto.
 Defined.
