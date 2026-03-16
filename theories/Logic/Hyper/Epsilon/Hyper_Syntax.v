@@ -104,48 +104,141 @@ Notation "'ε' D , Phi" := (b_const D (skolem_index D Phi)) (at level 50) : surf
 Open Scope surface_scope.
 
 (* ================================================================= *)
-(* 2.5 FORMULA EKVIVALENCIA (A Konverziós Szabályhoz)                *)
+(* 2.7 WELL-FORMEDNESS (WFF) A FORMULÁKRA                            *)
 (* ================================================================= *)
 
-Inductive form_equiv {Sign : Type} `{SkolemMapping Sign} : @h_ty Sign -> @h_ty Sign -> Type :=
+Inductive WellFormed {Sign : Type} : b_ty -> @h_ty Sign -> Type :=
+  (* Propozicionális szint: A kontextus (I) változatlanul megy tovább *)
+  | WF_Unit  : forall I, WellFormed I Ty_Unit
+  | WF_Void  : forall I, WellFormed I Ty_Void
+  | WF_Prod  : forall I Phi Psi, WellFormed I Phi -> WellFormed I Psi -> WellFormed I (Ty_Prod Phi Psi)
+  | WF_Sum   : forall I Phi Psi, WellFormed I Phi -> WellFormed I Psi -> WellFormed I (Ty_Sum Phi Psi)
+  | WF_Arrow : forall I Phi Psi, WellFormed I Phi -> WellFormed I Psi -> WellFormed I (Ty_Arrow Phi Psi)
+
+  (* Atomi szint: Itt kapcsolódik be a bázis! A termnek jól gépeltnek kell lennie az I felett. *)
+  | WF_Atom  : forall I p (t : @b_tm Sign) A, 
+      @base_typing Sign I t A -> 
+      WellFormed I (Ty_Atom p t)
+
+  (* Kvantorok: A kontextus kiterjed (I x A)-ra a kötött változó miatt! *)
+  | WF_All   : forall I A Body, 
+      WellFormed (b_Prod I A) Body -> 
+      WellFormed I (Ty_All A Body)
+  | WF_Ex    : forall I A Body, 
+      WellFormed (b_Prod I A) Body -> 
+      WellFormed I (Ty_Ex A Body).
+
+Lemma wf_pullback : forall {Sign : Type} I J (f : @b_tm Sign) (Phi : @h_ty Sign),
+  @base_typing Sign I f J ->
+  WellFormed J Phi ->
+  WellFormed I (form_pullback f Phi).
+Proof.
+  intros Sign I J f Phi Hf Hwf.
   
-  | FE_Atom : forall p (t1 t2 : @b_tm Sign) I A 
+  (* VISSZADOBJUK I-t és f-et! 
+     Ez a legfontosabb lépés, különben a kvantoroknál elhasal az indukció, 
+     mert ott megváltozik a kontextus (I x A) és a morfizmus (b_pullback_ext). *)
+  revert I f Hf. 
+  
+  induction Hwf; intros I' f' Hf'.
+  - simpl. apply WF_Unit.
+  - simpl. apply WF_Void.
+  - simpl. apply WF_Prod; auto.
+  - simpl. apply WF_Sum; auto.
+  - simpl. apply WF_Arrow; auto.
+  
+  - (* Atomi eset *)
+    simpl. eapply WF_Atom. 
+    (* Az eapply megkeresi a metaváltozókat helyettünk! *)
+    eapply BT_Comp.
+    + exact b.   (* Ez a t gépelése az eredeti kontextusból *)
+    + exact Hf'. (* Ez pedig az f' gépelése az új kontextusból *)
+
+  - (* Ty_All eset *)
+    simpl. apply WF_All.
+    (* Itt hívjuk az indukciós hipotézist az új, kiterjesztett környezetre *)
+    apply IHHwf.
+    unfold b_pullback_ext.
+    (* Most be kell gépelnünk a <f o pi1, pi2> kiterjesztett morfizmust *)
+    eapply BT_Pair.
+    + eapply BT_Comp.
+      * exact Hf'.      (* f' : I' -> J *)
+      * apply BT_Fst.   (* pi1 : I' x A -> I' *)
+    + apply BT_Snd.     (* pi2 : I' x A -> A *)
+
+  - (* Ty_Ex eset (Ugyanaz a lépéssorozat, mint a Ty_All) *)
+    simpl. apply WF_Ex.
+    apply IHHwf.
+    unfold b_pullback_ext.
+    eapply BT_Pair.
+    + eapply BT_Comp.
+      * exact Hf'.
+      * apply BT_Fst.
+    + apply BT_Snd.
+Qed.
+
+(* ================================================================= *)
+(* 2.5 FORMULA EKVIVALENCIA (Már a WFF és a Bázis kontextus védelmében!) *)
+(* ================================================================= *)
+
+Inductive form_equiv {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_ty Sign -> @h_ty Sign -> Type :=
+  
+  | FE_Atom : forall p (t1 t2 : @b_tm Sign) A 
                      (d1 : @base_typing Sign I t1 A) 
                      (d2 : @base_typing Sign I t2 A),
       @base_equiv Sign I A t1 t2 d1 d2 ->
-      form_equiv (Ty_Atom p t1) (Ty_Atom p t2)
+      form_equiv I (Ty_Atom p t1) (Ty_Atom p t2)
       
-  | FE_Refl : forall Phi, form_equiv Phi Phi
-  | FE_Sym  : forall Phi Psi, form_equiv Phi Psi -> form_equiv Psi Phi
-  | FE_Trans: forall Phi Psi Chi, form_equiv Phi Psi -> form_equiv Psi Chi -> form_equiv Phi Chi
+  (* Strukturális szabályok (Alapeseteknél megköveteljük a WFF-et!) *)
+  | FE_Refl : forall Phi, 
+      WellFormed I Phi -> 
+      form_equiv I Phi Phi
+      
+  | FE_Sym  : forall Phi Psi, 
+      form_equiv I Phi Psi -> 
+      form_equiv I Psi Phi
+      
+  | FE_Trans: forall Phi Psi Chi, 
+      form_equiv I Phi Psi -> 
+      form_equiv I Psi Chi -> 
+      form_equiv I Phi Chi
   
-  | FE_Prod : forall A B A' B', form_equiv A A' -> form_equiv B B' -> form_equiv (Ty_Prod A B) (Ty_Prod A' B')
-  | FE_Sum  : forall A B A' B', form_equiv A A' -> form_equiv B B' -> form_equiv (Ty_Sum A B) (Ty_Sum A' B')
-  | FE_Arrow: forall A B A' B', form_equiv A A' -> form_equiv B B' -> form_equiv (Ty_Arrow A B) (Ty_Arrow A' B')
-  | FE_All  : forall D A A', form_equiv A A' -> form_equiv (Ty_All D A) (Ty_All D A')
-  | FE_Ex   : forall D A A', form_equiv A A' -> form_equiv (Ty_Ex D A) (Ty_Ex D A')
+  (* Kongruencia a logikai kötőszavakra *)
+  | FE_Prod : forall A B A' B', form_equiv I A A' -> form_equiv I B B' -> form_equiv I (Ty_Prod A B) (Ty_Prod A' B')
+  | FE_Sum  : forall A B A' B', form_equiv I A A' -> form_equiv I B B' -> form_equiv I (Ty_Sum A B) (Ty_Sum A' B')
+  | FE_Arrow: forall A B A' B', form_equiv I A A' -> form_equiv I B B' -> form_equiv I (Ty_Arrow A B) (Ty_Arrow A' B')
   
-  (* 4. Skolem-invariancia gyengítésre (Beck-Chevalley feltétel) *)
-  | FE_Eps_Lift : forall D Phi,
-      form_equiv ((form_pullback b_fst Phi) .[ ε D, form_pullback b_fst Phi ]) 
-                 (form_pullback b_fst (Phi .[ ε D, Phi ]))
-  (* --- FIBRÁCIÓS FUNKTOR AXIÓMÁK --- *)
-  (* 1. Identitás visszahúzása nem változtat a formulán *)
+  (* Kvantorok: Az ekvivalenciát a kiterjesztett (I x D) kontextusban vizsgáljuk! *)
+  | FE_All  : forall D Body Body', 
+      form_equiv (b_Prod I D) Body Body' -> 
+      form_equiv I (Ty_All D Body) (Ty_All D Body')
+      
+  | FE_Ex   : forall D Body Body', 
+      form_equiv (b_Prod I D) Body Body' -> 
+      form_equiv I (Ty_Ex D Body) (Ty_Ex D Body')
+  
+ (* Beck-Chevalley epszilon lift - Általánosítva bármely g morfizmusra! *)
+  | FE_Eps_Lift : forall J (g : @b_tm Sign) D Phi (dg : @base_typing Sign I g J),
+      WellFormed (b_Prod J D) Phi ->
+      form_equiv I ((form_pullback (b_pullback_ext g) Phi) .[ ε D, form_pullback (b_pullback_ext g) Phi ])
+                   (form_pullback g (Phi .[ ε D, Phi ]))
+  (* --- FIBRÁCIÓS FUNKTOR SZABÁLYOK (WFF premisszákkal!) --- *)
+  
   | FE_Pullback_Id : forall Phi, 
-      form_equiv (form_pullback b_id Phi) Phi
+      WellFormed I Phi ->
+      form_equiv I (form_pullback b_id Phi) Phi
       
-  (* 2. Visszahúzások kompozíciója (f* (g* Phi) == (f o g)* Phi) *)
-  | FE_Pullback_Comp : forall f g Phi, 
-      form_equiv (form_pullback g (form_pullback f Phi)) (form_pullback (b_comp f g) Phi)
+  | FE_Pullback_Comp : forall J K (f g : @b_tm Sign) Phi
+                              (df : base_typing J f K) (dg : base_typing I g J),
+      WellFormed K Phi ->
+      form_equiv I (form_pullback g (form_pullback f Phi)) (form_pullback (b_comp f g) Phi)
       
- (* 3. Kongruencia: Ha két morfizmus egyenlő a bázisban, a visszahúzott formulák is egyenlők *)
-  | FE_Pullback_Cong : forall I J (f g : @b_tm Sign) Phi 
+  (* ÍME A VARÁZSLAT: Nincs több I_curr vs I probléma, a gépelés az I-ből indul! *)
+  | FE_Pullback_Cong : forall J (f g : @b_tm Sign) Phi 
                               (df : base_typing I f J) (dg : base_typing I g J), 
       @base_equiv Sign I J f g df dg -> 
-      form_equiv (form_pullback f Phi) (form_pullback g Phi).
-
-(* 1. Megnyitjuk a scope-ot, hogy a parser azonnal használja *)
-Open Scope surface_scope.
+      WellFormed J Phi ->
+      form_equiv I (form_pullback f Phi) (form_pullback g Phi).
 
 (* ================================================================= *)
 (* 3. DUAL CONTEXT TYPING (Az Epsilon Szabályokkal!)                 *)
@@ -164,9 +257,8 @@ Inductive h_typing {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_context S
   
   | HT_Conv : forall G p Phi Psi,
       h_typing I G p Phi ->
-      form_equiv Phi Psi ->
+      form_equiv I Phi Psi ->   (* <--- IDE KELL AZ I *)
       h_typing I G p Psi
-
   (* --- Propozicionális Modul (Az 'I' bázis passzív marad) --- *)
   | HT_Unit : forall G,
       h_typing I G tm_unit Ty_Unit
@@ -267,11 +359,10 @@ Inductive h_derivation {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_conte
       h_derivation I (Psi :: G) (tm_var (S i)) Phi
       
   (* --- ÚJ: KONVERZIÓS SZABÁLY (h_derivation szinten) --- *)
-  | HD_Conv : forall G p Phi Psi,
-      h_derivation I G p Phi ->  (* FIGYELEM: Itt h_derivation kell! *)
-      form_equiv Phi Psi ->      (* Az ekvivalencia maradhat Prop szinten *)
+ | HD_Conv : forall G p Phi Psi,
+      h_derivation I G p Phi ->  
+      form_equiv I Phi Psi ->   (* <--- IDE IS KELL AZ I *)
       h_derivation I G p Psi
-
   (* --- Propozicionális Modul (Az 'I' bázis passzív marad) --- *)
   | HD_Unit : forall G,
       h_derivation I G tm_unit Ty_Unit
@@ -389,7 +480,7 @@ Fixpoint embed_ty {Sign : Type} (A : STLC_PI_Sum.ty) : @h_ty Sign :=
   | STLC_PI_Sum.Ty_Arrow A B => Ty_Arrow (embed_ty A) (embed_ty B)
   | STLC_PI_Sum.Ty_Prod A B  => Ty_Prod (embed_ty A) (embed_ty B)
   | STLC_PI_Sum.Ty_Sum A B   => Ty_Sum (embed_ty A) (embed_ty B)
-  end.
+  end. 
 
 (* Egy teljes logikai kontextus lefordítása *)
 Definition embed_ctx {Sign : Type} (G : STLC_PI_Sum.context) : @h_context Sign :=

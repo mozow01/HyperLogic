@@ -100,7 +100,12 @@ Inductive base_equiv {Sign : Type} : forall (A B : b_ty) (f g : @b_tm Sign),
                    (BT_Pair (BT_Comp BT_Fst dh) (BT_Comp BT_Snd dh)) dh
 
     | BE_EtaUnit : forall A (f : @b_tm Sign) (df: @base_typing Sign A f b_Unit),
-        base_equiv A b_Unit f b_unit df BT_Unit. 
+        base_equiv A b_Unit f b_unit df BT_Unit
+        
+    | BE_CompPair : forall A B C D (f g h : @b_tm Sign) 
+        (df: @base_typing Sign B f C) (dg: @base_typing Sign B g D) (dh: @base_typing Sign A h B),
+        base_equiv A (b_Prod C D) (b_comp (b_pair f g) h) (b_pair (b_comp f h) (b_comp g h)) 
+                   (BT_Comp (BT_Pair df dg) dh) (BT_Pair (BT_Comp df dh) (BT_Comp dg dh)). 
 
 (* --- 5. SETOID ÉS MORFIZMUS REGISZTRÁCIÓ --- *)
 

@@ -114,141 +114,302 @@ Proof.
     + symmetry. apply pb_prod_iso.
 Defined.
 
-
-
 (* ================================================================= *)
 (* 1.5 FORMULA EKVIVALENCIA = KATEGÓRIAELMÉLETI IZOMORFIZMUS         *)
 (* ================================================================= *)
+     
+(* 1. Axióma: A szintaktikai identitás visszahúzás izomorf az eredetivel *)
 
-(** [TÍPUSRENDSZER ÁTHIDALÁSA - NEHÉZ]
-  Ez az axióma kényszeríti ki a b_fst gépelését ott, ahol a szintaxis nem 
-  garantálja a szorzat-kontextust. 
-  MEGOLDÁS: WellFormed (WFF) predikátum bevezetése után törölhető, 
-  mert a WFF deriváció tartalmazni fogja a megfelelő base_typing-ot.
-*)
-Axiom b_fst_typing_hack : forall {Sign : Type} (I_curr : b_ty), 
-  @base_typing Sign I_curr (@b_fst Sign) I_curr.
 
-(** [EPSZILON KOMPATIBILITÁS - NEHÉZ]
-  Azt igazolja, hogy az epszilon-lifted visszahúzás felcserélhető a behelyettesítéssel.
-  IGAZOLÁS: Tisztán bázis-kategóriás (BCCC) diagram-számolás. 
-  Nem igényel WFF-et, de sok kompozíciós lemmát igen.
-*) 
-Axiom eps_lift_subst_cong_hack : forall {Sign : Type} {SM : SkolemMapping Sign} 
+
+Lemma interp_pb_cong : forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C} {BCCC : CartesianClosedCategory C} 
   {BiCCC : BiCartesianClosedCategory BCCC} {TSC : TwoSortCategory C} 
   {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration}
-  (I_curr D : b_ty) (Phi : h_ty),
-  interp_h_ty I_curr
-    (form_pullback (b_pair (b_comp b_fst b_fst) b_snd) Phi
-     .[ ε D, form_pullback (b_pair (b_comp b_fst b_fst) b_snd) Phi])
-  ≅O interp_h_ty I_curr
-       (form_pullback b_fst Phi .[ ε D, form_pullback b_fst Phi]).
- 
- (** [STRUKTURÁLIS HÍD - KÖNNYŰ]
-  A szintaktikai form_pullback és a kategóriaelméleti Pullback funktor azonossága.
-  IGAZOLÁS: Indukció a Phi struktúráján (mint a form_pullback_general_iso-ban), 
-  kiegészítve az új Epszilon-ágakkal.
-*)      
-(* 1. Axióma: A szintaktikai identitás visszahúzás izomorf az eredetivel *)
-Axiom interp_pb_id_ax : forall {Sign : Type} {SM : SkolemMapping Sign} 
+  {EHM : EpsilonHyperModel SGF} (I J : b_ty) (f g : @b_tm Sign) (Phi : @h_ty Sign)
+  (df : base_typing I f J) (dg : base_typing I g J),
+  base_equiv df dg ->
+  WellFormed J Phi ->
+  (interp_h_ty I (form_pullback f Phi)) ≅O (interp_h_ty I (form_pullback g Phi)).
+Proof. 
+  intros Sign SM C CC BCCC BiCCC TSC BEM GF SGF EHM I J f g Phi df dg Heq Hwf.
+  
+  (* Visszadobjuk az I, f, g paramétereket, hogy a kvantorok ágaiban frissülhessenek! *)
+  revert I f g df dg Heq.
+  induction Hwf; intros I' f' g' df' dg' Heq'; simpl.
+  
+  - apply iso_refl. (* Unit *)
+  - apply iso_refl. (* Void *)
+  - (* Prod *) 
+    apply prod_iso_cong.
+    { eapply IHHwf1. exact Heq'. }
+    { eapply IHHwf2. exact Heq'. }
+    
+  - (* Sum *) 
+    apply coprod_iso_cong.
+    { eapply IHHwf1. exact Heq'. }
+    { eapply IHHwf2. exact Heq'. }
+     
+  - (* Arrow *) 
+    apply exp_iso_cong.
+    { eapply IHHwf2. exact Heq'. } (* Itt kéri a Psi-t, szóval IHHwf2 *)
+    { eapply IHHwf1. exact Heq'. } (* Itt pedig a Phi-t, szóval IHHwf1 *)
+    
+  - (* Atom: b_comp t f' == b_comp t g' *)
+    eapply i_atom_cong_global.
+    eapply BE_CongComp.
+    + exact Heq'.                  (* 1. premissza (belső): f' == g' *)
+    + exact (BE_Refl _ _ _ b).     (* 2. premissza (külső): t == t (b gépeléssel) *)
+    
+ - (* Ty_All: A kvantor kiterjeszti a kontextust. *)
+    apply pi_iso_cong.
+    eapply (IHHwf (b_Prod I' A) (b_pullback_ext f') (b_pullback_ext g')).
+    
+    (* A Coq egyből az egyenlőséget kéri, a gépelést ebből nyeri ki! *)
+    unfold b_pullback_ext. 
+    eapply BE_CongPair.
+    + eapply BE_CongComp.
+      * exact (BE_Refl _ _ _ BT_Fst). (* belső morfizmus: b_fst == b_fst *)
+      * exact Heq'.                   (* külső morfizmus: f' == g' *)
+    + exact (BE_Refl _ _ _ BT_Snd).   (* második elem: b_snd == b_snd *)
+
+  - (* Ty_Ex: Hajszálpontosan ugyanaz a struktúra! *)
+    apply sigma_iso_cong.
+    eapply (IHHwf (b_Prod I' A) (b_pullback_ext f') (b_pullback_ext g')).
+    
+    unfold b_pullback_ext. 
+    eapply BE_CongPair.
+    + eapply BE_CongComp.
+      * exact (BE_Refl _ _ _ BT_Fst). 
+      * exact Heq'.    
+    + exact (BE_Refl _ _ _ BT_Snd).
+Defined. 
+
+Lemma interp_pb_id : forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C} {BCCC : CartesianClosedCategory C} 
   {BiCCC : BiCartesianClosedCategory BCCC} {TSC : TwoSortCategory C} 
   {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
   {EHM : EpsilonHyperModel SGF} (I : b_ty) (Phi : @h_ty Sign),
+  WellFormed I Phi ->
   (interp_h_ty I (form_pullback b_id Phi)) ≅O (interp_h_ty I Phi).
+Proof. 
+  intros Sign SM C CC BCCC BiCCC TSC BEM GF SGF EHM I Phi Hwf.
+  induction Hwf.
+  - simpl. apply iso_refl.
+  - simpl. apply iso_refl.
+  - simpl. apply prod_iso_cong; assumption.
+  - simpl. apply coprod_iso_cong; assumption.
+  - simpl. apply exp_iso_cong; assumption.
+  
+  - (* Atom *)
+    simpl. eapply i_atom_cong_global.
+    (* Belátjuk, hogy b_comp t b_id == t *)
+    apply BE_IdR.
+    
+  - (* Ty_All *)
+    simpl. apply pi_iso_cong.
+    eapply iso_trans.
+    + (* Explicit megadjuk az interp_pb_cong paramétereit! *)
+      eapply (interp_pb_cong (b_Prod I A) (b_Prod I A) (b_pullback_ext b_id) b_id Body).
+      * (* Itt jön a bázis-kategória bizonyítás, amit fentebb írtam *)
+        unfold b_pullback_ext.
+        eapply BE_Trans. 2: { apply BE_EtaPair. }
+        eapply BE_CongPair.
+        -- eapply BE_Trans. apply BE_IdL. eapply BE_Sym. apply BE_IdR.
+        -- eapply BE_Sym. apply BE_IdR.
+      * exact Hwf.
+    + exact IHHwf.
+    
+  - (* Ty_Ex *)
+    simpl. apply sigma_iso_cong.
+    eapply iso_trans.
+    + (* Explicit instanciálás: rögzítjük a kontextust és a morfizmusokat *)
+      eapply (interp_pb_cong (b_Prod I A) (b_Prod I A) (b_pullback_ext b_id) b_id Body).
+      * (* Bázis bizonyítás: <id ∘ π₁, π₂> ≅ id *)
+        unfold b_pullback_ext.
+        eapply BE_Trans. 2: { apply BE_EtaPair. }
+        eapply BE_CongPair.
+        -- eapply BE_Trans. apply BE_IdL. eapply BE_Sym. apply BE_IdR.
+        -- eapply BE_Sym. apply BE_IdR.
+      * exact Hwf.
+    + exact IHHwf.
+      Unshelve.
+  (* Most a Coq kiadja a b_ty és base_typing célokat. *)
+  (* Mivel ezek ott vannak a kontextusodban, csak be kell őket fejezni: *)
+  exact I.
+  exact A.
+  exact b.
+Defined. 
 
-(* 2. Axióma: A szintaktikai kompozíció visszahúzása *)
-Axiom interp_pb_comp_ax : forall {Sign : Type} {SM : SkolemMapping Sign} 
+Lemma interp_pb_comp : forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C} {BCCC : CartesianClosedCategory C} 
   {BiCCC : BiCartesianClosedCategory BCCC} {TSC : TwoSortCategory C} 
   {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF} (I J K: b_ty) (f g : @b_tm Sign) (Phi : @h_ty Sign),
+  {EHM : EpsilonHyperModel SGF} (I J K: b_ty) (f g : @b_tm Sign) (Phi : @h_ty Sign)
+  (df : base_typing J f K) (dg : base_typing I g J),
+  WellFormed K Phi ->
   (interp_h_ty I (form_pullback (b_comp f g) Phi)) ≅O (interp_h_ty I (form_pullback g (form_pullback f Phi))).
-
-(** [KONTEXTUS SZINKRONIZÁCIÓ - KÖZEPES]
-  A szintaktikai ekvivalencia (base_equiv) és az interpretáció kontextusának 
-  (I_curr) mesterséges összekapcsolása. 
-  MEGOLDÁS: A form_equiv_iso tétel kiegészítése 'WellFormed I Phi' feltétellel.
+Proof.
+  intros Sign SM C CC BCCC BiCCC TSC BEM GF SGF EHM I J K f g Phi df dg Hwf.
   
-Architekturális Megjegyzés: > Az Epszilon-modell soundness bizonyítása során azért választottuk a Curry-stílusú (extrinsic) megközelítést, hogy elkerüljük a Coq függő típusos (dependent types) unifikációs problémáit ("transport hell").  Ezért jelenleg axiómákkal hidaljuk át a gépelési bizonyítékok hiányát. A végső igazoláshoz egy WellFormed I Phi predikátumot kell a tételek premisszái közé emelni, amely kinyitja az utat a típusos kategóriaelméleti interpretációhoz.
-
-*)
-(* 3. Axióma: A szintaktikai kongruencia (szétválasztott kontextusokkal) *)
-Axiom interp_pb_cong_untyped_ax : forall {Sign : Type} {SM : SkolemMapping Sign} 
-  {C : SetoidCategory} {CC : CartesianCategory C} {BCCC : CartesianClosedCategory C} 
-  {BiCCC : BiCartesianClosedCategory BCCC} {TSC : TwoSortCategory C} 
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF} (I_curr I J : b_ty) (f g : @b_tm Sign) 
-  (df : base_typing I f J) (dg : base_typing I g J) (Phi : @h_ty Sign),
-  base_equiv df dg -> 
-  (interp_h_ty I_curr (form_pullback f Phi)) ≅O (interp_h_ty I_curr (form_pullback g Phi)).
+  (* Fontos: revertálunk mindent, mert a kvantoroknál változni fognak a típusok! *)
+  revert I J f g df dg.
+  induction Hwf; intros I0 J0 f0 g0 df0 dg0; simpl.
   
+  - apply iso_refl. (* Unit *)
+  - apply iso_refl. (* Void *)
+  
+ - (* Prod *) 
+    apply prod_iso_cong. 
+    { apply (IHHwf1 I0 J0 f0 g0 df0 dg0). } 
+    { apply (IHHwf2 I0 J0 f0 g0 df0 dg0). }
+    
+  - (* Sum *) 
+    apply coprod_iso_cong. 
+    { apply (IHHwf1 I0 J0 f0 g0 df0 dg0). } 
+    { apply (IHHwf2 I0 J0 f0 g0 df0 dg0). }
+    
+  - (* Arrow: Itt vigyázz, ahogy múltkor is, az 1-es és 2-es cserélődik! *) 
+    apply exp_iso_cong. 
+    { apply (IHHwf2 I0 J0 f0 g0 df0 dg0). } 
+    { apply (IHHwf1 I0 J0 f0 g0 df0 dg0). }
+  - (* Atom *)
+    eapply i_atom_cong_global.
+    (* Explicit Asszociativitás: megadjuk az I0, J0, I, A típusokat és a b bizonyítékot! *)
+    exact (BE_Assoc I0 J0 I A g0 f0 t dg0 df0 b).
+    
+  - (* Ty_All *)
+    apply pi_iso_cong.
+    eapply iso_trans.
+    + eapply (interp_pb_cong (b_Prod I0 A) (b_Prod I A) 
+                             (b_pullback_ext (b_comp f0 g0)) 
+                             (b_comp (b_pullback_ext f0) (b_pullback_ext g0)) Body).
+      * (* Bázis-kategória diagram számolás 100% EXPLICIT gépeléssel *)
+        unfold b_pullback_ext.
+        eapply BE_Trans. 
+        { eapply BE_CongPair.
+          - eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ BT_Fst dg0 df0). 
+          - exact (BE_Refl _ _ _ BT_Snd). }
+        eapply BE_Sym. eapply BE_Trans. 
+        { exact (BE_CompPair _ _ _ _ _ _ _ (BT_Comp df0 BT_Fst) BT_Snd (BT_Pair (BT_Comp dg0 BT_Fst) BT_Snd)). } 
+        eapply BE_CongPair.
+        -- eapply BE_Trans. 
+           { eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ (BT_Pair (BT_Comp dg0 BT_Fst) BT_Snd) BT_Fst df0). }
+           eapply BE_CongComp. 
+           ++ apply BE_BetaFst. 
+           ++ exact (BE_Refl _ _ _ df0).    
+        -- apply BE_BetaSnd.    
+      * exact Hwf.
+    + (* Explicit megadjuk az indukciós hipotézis paramétereit! *)
+      eapply (IHHwf (b_Prod I0 A) (b_Prod J0 A) (b_pullback_ext f0) (b_pullback_ext g0)).
+      * unfold b_pullback_ext. eapply BT_Pair.
+        -- eapply BT_Comp. exact df0. apply BT_Fst.
+        -- apply BT_Snd.
+      * unfold b_pullback_ext. eapply BT_Pair.
+        -- eapply BT_Comp. exact dg0. apply BT_Fst.
+        -- apply BT_Snd.
+
+  - (* Ty_Ex: Hajszálpontosan ugyanaz a bizonyítás *)
+    apply sigma_iso_cong.
+    eapply iso_trans.
+    + eapply (interp_pb_cong (b_Prod I0 A) (b_Prod I A) 
+                             (b_pullback_ext (b_comp f0 g0)) 
+                             (b_comp (b_pullback_ext f0) (b_pullback_ext g0)) Body).
+      * unfold b_pullback_ext.
+        eapply BE_Trans. 
+        { eapply BE_CongPair.
+          - eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ BT_Fst dg0 df0). 
+          - exact (BE_Refl _ _ _ BT_Snd). }
+        eapply BE_Sym. eapply BE_Trans. 
+        { exact (BE_CompPair _ _ _ _ _ _ _ (BT_Comp df0 BT_Fst) BT_Snd (BT_Pair (BT_Comp dg0 BT_Fst) BT_Snd)). } 
+        eapply BE_CongPair.
+        -- eapply BE_Trans. 
+           { eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ (BT_Pair (BT_Comp dg0 BT_Fst) BT_Snd) BT_Fst df0). }
+           eapply BE_CongComp. 
+           ++ apply BE_BetaFst. 
+           ++ exact (BE_Refl _ _ _ df0).    
+        -- apply BE_BetaSnd.    
+      * exact Hwf.
+    + eapply (IHHwf (b_Prod I0 A) (b_Prod J0 A) (b_pullback_ext f0) (b_pullback_ext g0)).
+      * unfold b_pullback_ext. eapply BT_Pair.
+        -- eapply BT_Comp. exact df0. apply BT_Fst.
+        -- apply BT_Snd.
+      * unfold b_pullback_ext. eapply BT_Pair.
+        -- eapply BT_Comp. exact dg0. apply BT_Fst.
+        -- apply BT_Snd.
+Defined.
+
+
 Lemma form_equiv_iso :
   forall {Sign : Type} {SM : SkolemMapping Sign} 
          {C : SetoidCategory} {CC : CartesianCategory C} {BCCC : CartesianClosedCategory C} {BiCCC : BiCartesianClosedCategory BCCC}
          {TSC : TwoSortCategory C} {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
          {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration}
          (I : b_ty) (Phi Psi : @h_ty Sign),
-  form_equiv Phi Psi -> interp_h_ty I Phi ≅O interp_h_ty I Psi.
+  form_equiv I Phi Psi -> interp_h_ty I Phi ≅O interp_h_ty I Psi.
 Proof. 
-
-  (* 1. Bevezetjük az összes Typeclass-t és paramétert *)
-  intros Sign SM C CC BCCC BiCCC TSC BEM GF SGF EHM EGF I Phi Psi H.
+  (* 1. Bevezetjük a paramétereket *)
+  intros Sign SM C CC BCCC BiCCC TSC BEM GF SGF EHM EGF I Phi Psi Heq.
   
-  (* 2. Visszatoljuk az I-t a célba, hogy az indukció során általános maradjon.
-        Így elkerüljük az index-szétcsúszást az Atomoknál! *)
-  generalize dependent I.
+  (* 2. NINCS TÖBBÉ generalize dependent I !!!
+     Mivel az I az induktív típus indexe, a Coq mindent elintéz a motorháztető alatt. *)
   
-  (* 3. Indukció a form_equiv reláción (H) *)
-  induction H; intros I_curr; simpl.
+  (* 3. Indukció a form_equiv reláción *)
+  induction Heq; simpl.
 
   - (* FE_Atom *)
-    (* Itt I_curr a célbeli bázis, az axióma pedig lekezeli az egyenlőséget *)
-    simpl.
-    (* Explicit átadjuk a paramétereket: p, bázistípus, kódómén, termek, gépelések és az ekvivalencia *)
-    apply (i_atom_cong_global p I_curr I A t1 t2 d1 d2 b).
+    eapply i_atom_cong_global.
+    exact b.
 
   - (* FE_Refl *) apply iso_refl.
-  - (* FE_Sym *) symmetry. apply IHform_equiv.
-  - (* FE_Trans *) eapply iso_trans. { apply IHform_equiv1. } { apply IHform_equiv2. }
+  - (* FE_Sym *) symmetry. apply IHHeq.
+  - (* FE_Trans *) eapply iso_trans. { apply IHHeq1. } { apply IHHeq2. }
   
-  - (* FE_Prod *) apply prod_iso_cong. { apply IHform_equiv1. } { apply IHform_equiv2. }
-  - (* FE_Sum *) apply coprod_iso_cong. { apply IHform_equiv1. } { apply IHform_equiv2. }
-  - (* FE_Arrow *) apply exp_iso_cong. { apply IHform_equiv2. } { apply IHform_equiv1. }
+  - (* FE_Prod *) apply prod_iso_cong. { apply IHHeq1. } { apply IHHeq2. }
+  - (* FE_Sum *) apply coprod_iso_cong. { apply IHHeq1. } { apply IHHeq2. }
+  - (* FE_Arrow *) apply exp_iso_cong. { apply IHHeq2. } { apply IHHeq1. }
   
   - (* FE_All *) 
     apply pi_iso_cong. 
-    (* Itt megadjuk az IH-nak a kiterjesztett kontextust (I_curr * D) *)
-    apply (IHform_equiv (b_Prod I_curr D)).
+    (* Nézd meg, milyen gyönyörű! Nem kell megadni az (I_curr * D)-t, 
+       mert az IHHeq már alapból azon a kontextuson él! *)
+    apply IHHeq.
 
   - (* FE_Ex *) 
     apply sigma_iso_cong. 
-    apply (IHform_equiv (b_Prod I_curr D)).
+    apply IHHeq.
+
   - (* FE_Eps_Lift *)
-    simpl.
+    (* Mivel a form_equiv_iso szimmetrikus, a cél jobb oldalán lévő 
+       (form_pullback g (Phi .[ ε D, Phi ])) kerül balra. *)
     symmetry.
     
-    (* Transzitivitással bontjuk ketté a problémát *)
-    eapply iso_trans.
-    {
-      (* Most már odaadhatjuk neki a hiányzó dg-t az axiómánkból! 
-         A b_fst_typing_hack I_curr megadja a base_typing bizonyítást. *)
-      eapply (eps_beck_chevalley_iso _ I_curr D b_fst (b_fst_typing_hack I_curr)). 
-    }
-    apply eps_lift_subst_cong_hack.
-  - (* FE_Pullback_Id *)
-    (* Erre a célra: ... (form_pullback b_id Phi) ≅O ... Phi *)
-    apply interp_pb_id_ax.
-  - (* FE_Pullback_Comp *)
-    symmetry.
-    apply (interp_pb_comp_ax I_curr I_curr I_curr).
+    (* Az axióma PONTOSAN ezt az izomorfizmust mondja ki bármely g morfizmusra! *)
+    eapply eps_beck_chevalley_iso.
+    
+    (* Csak átadjuk a gépelést a g-nek, és a Coq mindent megold! *)
+    exact dg.
 
+  - (* FE_Pullback_Id *)
+    apply interp_pb_id.
+    exact w.
+ - (* FE_Pullback_Comp *)
+    symmetry.
+    (* Explicit átadjuk az I, J, K bázisokat, mert a képletből a Coq nem tudja kikövetkeztetni őket! *)
+    apply (interp_pb_comp I J K).
+    exact df.
+    exact dg.
+    exact w.
+    
   - (* FE_Pullback_Cong *)
-    eapply interp_pb_cong_untyped_ax.
+    (* AZ IGAZSÁG PILLANATA!
+       Tegnap itt omlott össze a Coq, mert I_curr nem volt egyenlő I-vel.
+       Most viszont az I tökéletesen egyezik a form_equiv I indexével, 
+       így rá tudjuk húzni a tiszta típusos axiómát! *)
+    eapply interp_pb_cong.
     exact b.
-Defined.
+    exact w.
+Defined. 
 
 (* ================================================================= *)
 (* 2. INHABITED SOUNDNESS TÉTEL                                      *)
