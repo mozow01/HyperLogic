@@ -14,6 +14,8 @@ theories/Logic/Hyper/Simple/Hyper_Syntax.v
 theories/Logic/Hyper/Simple/Hyper_Lemmas.v
 theories/Logic/Base/Epsilon/Base_Syntax.v
 theories/Logic/Hyper/Epsilon/Hyper_Syntax.v
+theories/Logic/Hyper/Epsilon/Notations.v
+theories/Logic/Hyper/Epsilon/Epsilon_Syntax_Lemmas.v 
 theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.v
 
 # --- STLC Logic (STLC_PI) ---
