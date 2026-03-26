@@ -48,3 +48,11 @@ theories/Semantics/Simple/Example_All_elim.v
 # --- Epsilon Semantics ---
 theories/Semantics/Epsilon/Epsilon_Fibration.v
 theories/Semantics/Epsilon/Epsilon_Soundness.v
+theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Fibration.v
+theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Soundness.v
+
+
+# --- Epsilon Adjoin Semantics ---
+theories/Logic/Base/Epsilon_Adjoint/Base_Syntax.v
+theories/Logic/Hyper/Epsilon_Adjoint/Hyper_Syntax.v
+theories/Logic/Hyper/Epsilon_Adjoint/Hyper_Syntax_Lemmas.v
