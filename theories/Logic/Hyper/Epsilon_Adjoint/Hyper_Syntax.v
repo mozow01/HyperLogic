@@ -133,7 +133,7 @@ Inductive form_equiv {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_ty Sign
 (* 2.6 KONTEXTUS EKVIVALENCIA (A Completenesshez)                    *)
 (* ================================================================= *)
 
-Inductive ctx_equiv {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_context Sign -> @h_context Sign -> Prop :=
+Inductive ctx_equiv {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_context Sign -> @h_context Sign -> Type :=
   | CEq_Nil  : ctx_equiv I [] []
   | CEq_Cons : forall Phi Psi G1 G2,
                  form_equiv I Phi Psi ->
