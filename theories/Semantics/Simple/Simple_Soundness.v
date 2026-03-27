@@ -5,7 +5,7 @@ Import ListNotations.
 (* Kategóriaelméleti alapok *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
-Require Import HyperLogic.Cat.CCC.
+Require Import HyperLogic.Cat.CCC. 
 Require Import HyperLogic.Cat.BCCC.
 Require Import HyperLogic.Cat.Functor.
 Require Import HyperLogic.Cat.Adjoint.
@@ -43,10 +43,10 @@ Fixpoint interp_h_ty {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoS
   | Ty_Arrow A B => exp (interp_h_ty I B) (interp_h_ty I A)
   | Ty_Atom p t => i_atom p t I
   | Ty_All A Body => 
-      @right_adj_obj _ _ _ (pullback_has_right_adjoint (interp_tm (BT_Fst (A:=I) (B:=A)))) 
+      @right_adj_obj _ _ _ pullback_has_right_adjoint 
                            (interp_h_ty (b_Prod I A) Body)
   | Ty_Ex A Body => 
-      @left_adj_obj _ _ _ (pullback_has_left_adjoint (interp_tm (BT_Fst (A:=I) (B:=A)))) 
+      @left_adj_obj _ _ _ pullback_has_left_adjoint 
                           (interp_h_ty (b_Prod I A) Body)
   end.
 
@@ -340,26 +340,28 @@ Proof.
     eapply compose.
     { (* 2. Lépés: A Counit (epsilon) alkalmazása az fmap-en belül *)
       eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id b))) _ _).
-      apply (@epsilon _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (pullback_has_right_adjoint _)). }
+      (* JAVÍTVA: Töröltük az aláhúzást és a zárójelet a pullback_has_right_adjoint mellől! *)
+      apply (@epsilon _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) pullback_has_right_adjoint). }
     eapply compose.
     { (* 3. Lépés: A pb_eval_iso axióma (ami paraméterek nélkül is egyértelmű a Coq-nak) *)
       apply pb_eval_iso. }
     { (* 4. Lépés: Maga a deriváció (IHD) *)
       exact IHD. }
       
-    - (* HD_Ex_Intro *)
+   - (* HD_Ex_Intro *)
     eapply compose.
     { apply pb_unit_iso. }
     eapply compose.
     { (* Az @ jellel pontosan a funktor helyére (3. paraméter) tesszük a Pullback-et *)
       eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id b))) _ _).
-      apply (@unit _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (pullback_has_left_adjoint _)). }
+      (* JAVÍTVA: Töröltük a felesleges ( _ ) paramétert az axióma mögül! *)
+      apply (@unit _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) pullback_has_left_adjoint). }
     eapply compose.
     { (* Itt is expliciten átadjuk a form_pullback_iso mind az 5 paraméterét! *)
       exact (@iso_to _ _ _ (form_pullback_iso I A f b Phi)). }
     { exact IHD. }
 
-- (* HD_Ex_Elim *)
+  - (* HD_Ex_Elim *)
     eapply compose.
     { apply ex_elim_frobenius. 
       

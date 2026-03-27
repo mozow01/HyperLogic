@@ -329,7 +329,7 @@ Proof.
   (* --------------------------------------------------------------- *)
 
   - (* HD_All_Intro *)
-    apply right_adj_mor.
+    apply right_adj_mor. 
     eapply compose.
     + exact IHH_der.
     + apply (@iso_from _ _ _ (ctx_subst_iso I A G)). 
@@ -340,7 +340,7 @@ Proof.
       exact (@iso_from _ _ _ (form_subst_iso I (b_Prod I A) (b_pair b_id f) (BT_Pair BT_Id b) Phi)). 
     + eapply compose.
       * eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id b))) _ _).
-        apply (@epsilon _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (pullback_has_right_adjoint _)). 
+        apply (@epsilon _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) pullback_has_right_adjoint). 
       * assert (H_eq : compose prod_fst (prod_map (id (interp_ty I)) (interp_tm b)) ≅ id (interp_ty I)).
         { apply prod_map_fst. }
         eapply compose.
@@ -362,12 +362,13 @@ Proof.
         -- apply (@iso_from _ _ _ (pullback_comp_iso prod_fst (prod_map (id (interp_ty I)) (interp_tm b)) (interp_h_ty I (Ty_Ex A Phi)))). 
         -- eapply compose.
            ++ eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id b))) _ _).
-              apply (@unit _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (pullback_has_left_adjoint _)). 
+              apply (@unit _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) pullback_has_left_adjoint). 
            ++ eapply compose.
               ** (* JAVÍTÁS ITT IS: Expliciten megkapja a <id, f> párt! *)
                  exact (@iso_to _ _ _ (form_subst_iso I (b_Prod I A) (b_pair b_id f) (BT_Pair BT_Id b) Phi)). 
               ** exact IHH_der.
- - (* HD_Ex_Elim *)
+
+  - (* HD_Ex_Elim *)
     assert (H_premissza : hom (prod (@fobj _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (interp_h_ctx I G)) 
                                     (interp_h_ty (b_Prod I A) Phi)) 
                               (@fobj _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (interp_h_ty I Chi))).
@@ -402,7 +403,7 @@ Proof.
 
     assert (H_sigma : hom (interp_h_ty I (Ty_Ex A Phi)) 
                           (exp (interp_h_ty I Chi) (interp_h_ctx I G))).
-    { apply (@left_adj_mor _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (pullback_has_left_adjoint _)). 
+    { apply (@left_adj_mor _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) pullback_has_left_adjoint). 
       exact H_pb. 
     }
 
@@ -410,7 +411,7 @@ Proof.
     + apply (@eval (Fiber (interp_ty I)) _ _ (interp_h_ctx I G) (interp_h_ty I Chi)). 
     + apply prod_map.
       * eapply compose. { exact H_sigma. } { exact IHH_der1. } 
-      * apply id.
+      * apply id. 
 
   - (* HD_Eps_Intro *)
     eapply compose.
@@ -427,7 +428,7 @@ Proof.
            ++ apply (@iso_from _ _ _ (pullback_comp_iso prod_fst (prod_map (id (interp_ty I)) (interp_tm b)) (interp_h_ty I (Ty_Ex A Phi)))). 
            ++ eapply compose.
               ** eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id b))) _ _).
-                 apply (@unit _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (pullback_has_left_adjoint _)). 
+                 apply (@unit _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) pullback_has_left_adjoint). 
               ** eapply compose.
                  --- exact (@iso_to _ _ _ (form_subst_iso I (b_Prod I A) (b_pair b_id f) (BT_Pair BT_Id b) Phi)). 
                  --- exact IHH_der.
@@ -437,7 +438,8 @@ Proof.
     assert (IHD1_ex : hom (interp_h_ctx I G) (interp_h_ty I (Ty_Ex A Phi))).
     { eapply compose.
       + apply (@iso_from _ _ _ (eps_is_left_adj_obj I A Phi)).
-      + exact IHH_der1. }
+      + exact IHH_der1. 
+    }
 
     (* 2. Innentől 100%-ban megegyezik a HD_Ex_Elim levezetésével, csak IHH_der1 helyett IHD1_ex-et használunk! *)
     assert (H_premissza : hom (prod (@fobj _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (interp_h_ctx I G)) 
@@ -473,7 +475,7 @@ Proof.
 
     assert (H_sigma : hom (interp_h_ty I (Ty_Ex A Phi)) 
                           (exp (interp_h_ty I Chi) (interp_h_ctx I G))).
-    { apply (@left_adj_mor _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (pullback_has_left_adjoint _)). 
+    { apply (@left_adj_mor _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) pullback_has_left_adjoint). 
       exact H_pb. 
     }
 
@@ -482,4 +484,5 @@ Proof.
     + apply prod_map.
       * eapply compose. { exact H_sigma. } { exact IHD1_ex. } (* Itt kapja meg a konvertált bizonyítást! *)
       * apply id. 
-Defined. 
+
+Defined.

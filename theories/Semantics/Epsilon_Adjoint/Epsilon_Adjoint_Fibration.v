@@ -80,10 +80,10 @@ Fixpoint interp_h_ty
   | Ty_Arrow A B => exp (interp_h_ty I B) (interp_h_ty I A)
   | Ty_Atom p t => i_atom p t I
   | Ty_All A Body => 
-      @right_adj_obj _ _ _ (pullback_has_right_adjoint (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) 
+      @right_adj_obj _ _ _ pullback_has_right_adjoint 
                            (interp_h_ty (b_Prod I A) Body)
   | Ty_Ex A Body => 
-      @left_adj_obj _ _ _ (pullback_has_left_adjoint (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) 
+      @left_adj_obj _ _ _ pullback_has_left_adjoint 
                           (interp_h_ty (b_Prod I A) Body)
   end.
 
@@ -108,9 +108,8 @@ Class AdjointEpsilonFibration
   {SGF : StrictGoodFibration C GF} 
   {EHM : EpsilonHyperModel SGF} := {
 
-    (* JAVÍTVA: form_pullback -> form_subst *)
     eps_is_left_adj_obj : forall (I A : b_ty) (Phi : @h_ty Sign),
-    @left_adj_obj _ _ _ (pullback_has_left_adjoint (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) 
+    @left_adj_obj _ _ _ pullback_has_left_adjoint 
       (interp_h_ty (b_Prod I A) Phi)
     ≅O 
     interp_h_ty I (form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi) ;

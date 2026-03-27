@@ -1,7 +1,7 @@
 Require Import Coq.Classes.Morphisms.
 Require Import List Arith PeanoNat Lia.
 Import ListNotations. 
-
+ 
 (* Kategóriaelméleti alapok *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
@@ -473,14 +473,14 @@ Proof.
     eapply compose.
     { exact IHD. }
     { exact (@iso_from _ _ _ (ctx_pullback_iso I A G)). } 
-  - (* HD_All_Elim *)
+- (* HD_All_Elim *)
     eapply compose.
     { (* 1. Lépés: Szintaktikus visszahúzás összekötése a Fibrációs Pullback-kel *)
       exact (@iso_from _ _ _ (form_pullback_iso I A f b Phi)). }
     eapply compose.
     { (* 2. Lépés: A Counit (epsilon) alkalmazása az fmap-en belül *)
       eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id b))) _ _).
-      apply (@epsilon _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (pullback_has_right_adjoint _)). }
+      apply (@epsilon _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) pullback_has_right_adjoint). } 
     
     (* 3. Lépés: A bázis kompozíció (pi1 o <id, f> = id) kiszámítása *)
     assert (H_eq : id (interp_ty I) ≅ compose prod_fst (prod_map (id (interp_ty I)) (interp_tm b))).
@@ -504,6 +504,7 @@ Proof.
       apply (@iso_from _ _ _ (pullback_id_iso (interp_h_ty I (Ty_All A Phi)))). }
     { (* 7. Lépés: A bizonyítás (IHD) beillesztése a lánc végére *)
       exact IHD. }
+
   - (* HD_Ex_Intro *)
     eapply compose.
     { (* 1. Lépés: Célpont: Identitás visszahúzás leválasztása (id* X -> X) *)
@@ -531,7 +532,7 @@ Proof.
     eapply compose.
     { (* 5. Lépés: Az Unit (unit) alkalmazása a Pullback funktor fmap-jén belül *)
       eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id b))) _ _).
-      apply (@unit _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (pullback_has_left_adjoint _)). }
+      apply (@unit _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) pullback_has_left_adjoint). } 
       
     eapply compose.
     { (* 6. Lépés: A szintaktikus visszahúzás (Phi.[f]) rákötése a Fibrációs Pullback-re *)
@@ -539,7 +540,8 @@ Proof.
       
     { (* 7. Lépés: A forrás levezetés (IHD) beillesztése a lánc elejére *)
       exact IHD. }
- - (* HD_Ex_Elim *)
+
+  - (* HD_Ex_Elim *)
     (* 1. Előkészítjük IHD2-t (a jobboldali premisszát) pontosan olyan alakra, 
           amit majd be tudunk vinni az exponenciális alá. *)
     assert (H_premissza : hom (prod (@fobj _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (interp_h_ctx I G)) 
@@ -577,7 +579,7 @@ Proof.
     (* 4. Adjungálás alkalmazása (Itt adjuk meg expliciten a funktort a Coq-nak!) *)
     assert (H_sigma : hom (interp_h_ty I (Ty_Ex A Phi)) 
                           (exp (interp_h_ty I Chi) (interp_h_ctx I G))).
-    { apply (@left_adj_mor _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (pullback_has_left_adjoint _)). 
+    { apply (@left_adj_mor _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) pullback_has_left_adjoint). 
       exact H_pb. }
 
     (* 5. A végső morfizmus összeállítása uncurry-vel (eval) és IHD1 behelyettesítésével *)
@@ -587,12 +589,13 @@ Proof.
       apply prod_map.
       { eapply compose. { exact H_sigma. } { exact IHD1. } }
       { apply id. } }
- - (* HD_Eps_Intro *)
+
+  - (* HD_Eps_Intro *)
     eapply compose.
     { (* 1. Epszilon Axióma leképezése Ex A Phi -> Phi.[eps] formára.
           Az eps_unit az I x A szálban él: Phi -> pi1*(Phi.[eps]).
           Ezt az adjungálás (left_adj_mor) lehozza az I szálba: Ex A Phi -> Phi.[eps] *)
-      apply (@left_adj_mor _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (pullback_has_left_adjoint _)).
+      apply (@left_adj_mor _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) pullback_has_left_adjoint). 
       
       eapply compose.
       { (* JAVÍTVA: Itt iso_to kell, mert a szintaktikus form_pullback-ből 
@@ -625,12 +628,13 @@ Proof.
                                 
     eapply compose.
     { eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id b))) _ _).
-      apply (@unit _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (pullback_has_left_adjoint _)). }
+      apply (@unit _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) pullback_has_left_adjoint). } 
       
     eapply compose.
     { exact (@iso_to _ _ _ (form_pullback_iso I A f b Phi)). }
       
     { exact IHD. }
+
   - (* HD_Eps_Elim *)
     (* 1. Lépés: Átalakítjuk a meglévő IHD1-et (ami G -> Phi[eps]) 
        egy egzisztenciális (G -> Ty_Ex A Phi) bizonyítássá. 
@@ -660,7 +664,7 @@ Proof.
                                   
       eapply compose.
       { eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id (@BT_Const Sign I A (skolem_index A Phi))))) _ _).
-        apply (@unit _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (pullback_has_left_adjoint _)). }
+        apply (@unit _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) pullback_has_left_adjoint). } 
         
       eapply compose.
       { exact (@iso_to _ _ _ (form_pullback_iso I A (b_const A (skolem_index A Phi)) (@BT_Const Sign I A (skolem_index A Phi)) Phi)). }
@@ -704,7 +708,7 @@ Proof.
 
     assert (H_sigma : hom (interp_h_ty I (Ty_Ex A Phi)) 
                           (exp (interp_h_ty I Chi) (interp_h_ctx I G))).
-    { apply (@left_adj_mor _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) (pullback_has_left_adjoint _)). 
+    { apply (@left_adj_mor _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) pullback_has_left_adjoint). 
       exact H_pb. }
 
     eapply compose.

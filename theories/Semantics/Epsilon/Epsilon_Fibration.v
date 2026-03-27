@@ -93,12 +93,12 @@ Fixpoint interp_h_ty
   | Ty_Arrow A B => exp (interp_h_ty I B) (interp_h_ty I A)
   | Ty_Atom p t => i_atom p t I
   | Ty_All A Body => 
-      @right_adj_obj _ _ _ (pullback_has_right_adjoint (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) 
+      @right_adj_obj _ _ _ pullback_has_right_adjoint 
                            (interp_h_ty (b_Prod I A) Body)
   | Ty_Ex A Body => 
-      @left_adj_obj _ _ _ (pullback_has_left_adjoint (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) 
+      @left_adj_obj _ _ _ pullback_has_left_adjoint 
                           (interp_h_ty (b_Prod I A) Body)
-  end.
+                          end.
 
 Fixpoint interp_h_ctx 
   {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}

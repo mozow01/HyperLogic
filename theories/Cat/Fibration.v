@@ -64,19 +64,19 @@ Class GoodFibration (B : SetoidCategory) {CB : CartesianCategory B} := mk_GoodFi
       (@fobj _ _ (Pullback f) (@exp _ _ (Fiber_is_Closed J) A B)) ≅O
       (@exp _ _ (Fiber_is_Closed I) (@fobj _ _ (Pullback f) A) (@fobj _ _ (Pullback f) B));
 
-  (** Quantifiers as Adjoints to substitution *)
-  pullback_has_left_adjoint : forall {I J : @obj B} (f : hom I J), IsRightAdjoint (Pullback f);
-  pullback_has_right_adjoint : forall {I J : @obj B} (f : hom I J), IsLeftAdjoint (Pullback f);
-  
+ (** Quantifiers as Adjoints to substitution (Kizárólag a projekciók mentén!) *)
+  pullback_has_left_adjoint : forall {I A : @obj B}, IsRightAdjoint (Pullback (@prod_fst B CB I A));
+  pullback_has_right_adjoint : forall {I A : @obj B}, IsLeftAdjoint (Pullback (@prod_fst B CB I A));
+
   (** Beck-Chevalley conditions for quantifier commutation *)
   beck_chevalley_sigma : forall {I J K : @obj B} (f : hom K I) (A : @obj (Fiber (@prod B CB I J))),
-      (@fobj _ _ (Pullback f) (@left_adj_obj _ _ _ (pullback_has_left_adjoint (@prod_fst B CB I J)) A)) ≅O
-      (@left_adj_obj _ _ _ (pullback_has_left_adjoint (@prod_fst B CB K J))
+      (@fobj _ _ (Pullback f) (@left_adj_obj _ _ _ pullback_has_left_adjoint A)) ≅O
+      (@left_adj_obj _ _ _ pullback_has_left_adjoint
           (@fobj _ _ (Pullback (@prod_map B CB (prod K J) I J (compose f (@prod_fst B CB K J)) (@prod_snd B CB K J))) A));
           
   beck_chevalley_pi : forall {I J K : @obj B} (f : hom K I) (A : @obj (Fiber (@prod B CB I J))),
-      (@fobj _ _ (Pullback f) (@right_adj_obj _ _ _ (pullback_has_right_adjoint (@prod_fst B CB I J)) A)) ≅O
-      (@right_adj_obj _ _ _ (pullback_has_right_adjoint (@prod_fst B CB K J))
+      (@fobj _ _ (Pullback f) (@right_adj_obj _ _ _ pullback_has_right_adjoint A)) ≅O
+      (@right_adj_obj _ _ _ pullback_has_right_adjoint
           (@fobj _ _ (Pullback (@prod_map B CB (prod K J) I J (compose f (@prod_fst B CB K J)) (@prod_snd B CB K J))) A));
 
   (** Congruence of base morphisms over substitution *)
@@ -237,26 +237,6 @@ Defined.
 
 (** * 5. Logical Quantifiers and the Base Individual Type *)
 
-(** WHAT IT IS:
-  Extracting the explicit Left and Right Adjoint Functors (Sigma and Pi) from 
-  the adjunctions provided by the hyperdoctrine, and defining the domain of 
-  individuals (S).
-
-  WHY WE CHOSE THIS SOLUTION:
-  Instead of utilizing Coq's tactics ('pose proof', 'exact') inside a 
-  'Proof...Defined' block, we define them purely as terms. This is computationally 
-  transparent and guarantees that Coq treats them strictly as Functors without 
-  obscuring them behind proof objects.
-*)
-
-Definition Sigma_f {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B} {I J : @obj B} (f : hom I J)
-  : Functor (Fiber I) (Fiber J) :=
-  LeftAdjointFunctor (Pullback f) (@pullback_has_left_adjoint B CB GF I J f).
-
-Definition Pi_f {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B} {I J : @obj B} (f : hom I J)
-  : Functor (Fiber I) (Fiber J) :=
-  RightAdjointFunctor (Pullback f) (@pullback_has_right_adjoint B CB GF I J f).
-
 (** The Category representing two sorts: the standard terminal object and 
   the sort of individuals (S).
 *)
@@ -264,56 +244,44 @@ Class TwoSortCategory (B : SetoidCategory) {CB : CartesianCategory B} := mk_TwoS
   S : @obj B;
   S_is_not_Terminal : S <> terminal 
 }.
-(* Itt a változtatás: a kapcsos zárójelbe tett utolsó argumentum 
-   mondja meg a Coq-nak, hogy keresse meg a példányt a környezetben. *)
 Arguments S {B CB}.
 
 (** The 'bang' morphism mapping the individual sort to the terminal object. *)
 Definition bang (B : SetoidCategory) {CB : CartesianCategory B} {TSC : TwoSortCategory B} : hom (@S B CB TSC) terminal :=
   terminal_map.
 
-(** Exists = Sigma along the bang morphism *)
-Definition ExistsQuantifier (B : SetoidCategory) {CB : CartesianCategory B} {GF : GoodFibration B} {TSC : TwoSortCategory B}
-  : Functor (Fiber (@S B CB TSC)) (Fiber terminal) :=
-  @Sigma_f B CB GF (@S B CB TSC) terminal (bang B).
-
-(** Forall = Pi along the bang morphism *)
-Definition ForallQuantifier (B : SetoidCategory) {CB : CartesianCategory B} {GF : GoodFibration B} {TSC : TwoSortCategory B}
-  : Functor (Fiber (@S B CB TSC)) (Fiber terminal) :=
-  @Pi_f B CB GF (@S B CB TSC) terminal (bang B).
-  
 Lemma pi_iso_cong :
   forall {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B}
-         {I J : @obj B} (f : hom I J) (X Y : @obj (Fiber I)),
+         {I A : @obj B} (X Y : @obj (Fiber (@prod B CB I A))),
   X ≅O Y ->
-  @right_adj_obj _ _ _ (pullback_has_right_adjoint f) X ≅O
-  @right_adj_obj _ _ _ (pullback_has_right_adjoint f) Y.
+  @right_adj_obj _ _ _ (@pullback_has_right_adjoint B CB GF I A) X ≅O
+  @right_adj_obj _ _ _ (@pullback_has_right_adjoint B CB GF I A) Y.
 Proof.
-  intros B CB GF I J f X Y H.
+  intros B CB GF I A X Y H.
   refine {|
-    iso_to := @right_adj_mor _ _ _ (pullback_has_right_adjoint f) _ _
-                (@compose (Fiber I) _ _ _ (@iso_to _ _ _ H) (@epsilon _ _ _ (pullback_has_right_adjoint f) X));
-    iso_from := @right_adj_mor _ _ _ (pullback_has_right_adjoint f) _ _
-                  (@compose (Fiber I) _ _ _ (@iso_from _ _ _ H) (@epsilon _ _ _ (pullback_has_right_adjoint f) Y))
+    iso_to := @right_adj_mor _ _ _ (@pullback_has_right_adjoint B CB GF I A) _ _
+                (@compose (Fiber (@prod B CB I A)) _ _ _ (@iso_to _ _ _ H) (@epsilon _ _ _ (@pullback_has_right_adjoint B CB GF I A) X));
+    iso_from := @right_adj_mor _ _ _ (@pullback_has_right_adjoint B CB GF I A) _ _
+                  (@compose (Fiber (@prod B CB I A)) _ _ _ (@iso_from _ _ _ H) (@epsilon _ _ _ (@pullback_has_right_adjoint B CB GF I A) Y))
   |}.
-  - apply (fiber_is_thin J).
-  - apply (fiber_is_thin J).
+  - apply (fiber_is_thin I).
+  - apply (fiber_is_thin I).
 Defined.
 
 Lemma sigma_iso_cong :
   forall {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B}
-         {I J : @obj B} (f : hom I J) (X Y : @obj (Fiber I)),
+         {I A : @obj B} (X Y : @obj (Fiber (@prod B CB I A))),
   X ≅O Y ->
-  @left_adj_obj _ _ _ (pullback_has_left_adjoint f) X ≅O
-  @left_adj_obj _ _ _ (pullback_has_left_adjoint f) Y.
+  @left_adj_obj _ _ _ (@pullback_has_left_adjoint B CB GF I A) X ≅O
+  @left_adj_obj _ _ _ (@pullback_has_left_adjoint B CB GF I A) Y.
 Proof.
-  intros B CB GF I J f X Y H.
+  intros B CB GF I A X Y H.
   refine {|
-    iso_to := @left_adj_mor _ _ _ (pullback_has_left_adjoint f) _ _
-                (@compose (Fiber I) _ _ _ (@unit _ _ _ (pullback_has_left_adjoint f) Y) (@iso_to _ _ _ H));
-    iso_from := @left_adj_mor _ _ _ (pullback_has_left_adjoint f) _ _
-                  (@compose (Fiber I) _ _ _ (@unit _ _ _ (pullback_has_left_adjoint f) X) (@iso_from _ _ _ H))
+    iso_to := @left_adj_mor _ _ _ (@pullback_has_left_adjoint B CB GF I A) _ _
+                (@compose (Fiber (@prod B CB I A)) _ _ _ (@unit _ _ _ (@pullback_has_left_adjoint B CB GF I A) Y) (@iso_to _ _ _ H));
+    iso_from := @left_adj_mor _ _ _ (@pullback_has_left_adjoint B CB GF I A) _ _
+                  (@compose (Fiber (@prod B CB I A)) _ _ _ (@unit _ _ _ (@pullback_has_left_adjoint B CB GF I A) X) (@iso_from _ _ _ H))
   |}.
-  - apply (fiber_is_thin J).
-  - apply (fiber_is_thin J).
+  - apply (fiber_is_thin I).
+  - apply (fiber_is_thin I).
 Defined.
