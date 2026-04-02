@@ -15,8 +15,9 @@ Require Import HyperLogic.Cat.Fibration.
 Require Import HyperLogic.Logic.Base.Simple.Base_Syntax.
 Require Import HyperLogic.Semantics.Simple.Base_Simple_Soundness.
 Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
-Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Syntax.
-Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Lemmas.
+(*Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Syntax.*)
+Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Syntax_Conv.
+Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Lemmas_Conv.
 
 (* ================================================================= *)
 (* 1. HYPER MODEL ÉS INTERPRETÁCIÓ                                   *)
@@ -29,7 +30,18 @@ Class HyperModel {C : SetoidCategory} {CC : CartesianCategory C}
   i_atom : forall (p : nat) (t : b_tm) (I : b_ty), @obj (Fiber (interp_ty I)) ;
 
   i_atom_pb : forall (p : nat) (t : b_tm) (I A : b_ty) (f : b_tm) (df : base_typing I f A),
-    @fobj _ _ (Pullback (interp_tm df)) (i_atom p t A) ≅O i_atom p (b_comp t f) I
+      @fobj _ _ (Pullback (interp_tm df)) (i_atom p t A) ≅O i_atom p (b_comp t f) I ;
+
+  (* NEW 1: The Base Category Model MUST respect the Base Syntax Equations (Proof Irrelevance) *)
+  base_model_sound : forall (I J : b_ty) (f g : b_tm) (df : base_typing I f J) (dg : base_typing I g J),
+      base_equiv_untyped f g ->
+      interp_tm df ≅ interp_tm dg ;
+
+  (* NEW 2: The Atomic Predicates MUST respect Base Category Equivalence *)
+  i_atom_cong : forall (p : nat) (t1 t2 : b_tm) (I A : b_ty)
+                       (d1 : base_typing I t1 A) (d2 : base_typing I t2 A),
+      base_equiv_untyped t1 t2 ->
+      i_atom p t1 I ≅O i_atom p t2 I
 }.
 
 Fixpoint interp_h_ty {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
@@ -275,6 +287,113 @@ Proof.
       apply prod_fst.
 Defined.
 
+Lemma pullback_fmap_iso : 
+  forall {C : SetoidCategory} {CC : CartesianCategory C} {GF : GoodFibration C} {X Y : obj} (f : hom X Y)
+         (A B : @obj (Fiber Y)),
+  A ≅O B -> @fobj _ _ (Pullback f) A ≅O @fobj _ _ (Pullback f) B.
+Proof.
+  intros C CC GF X Y f A B H.
+  
+  (* We use the Pullback functor's 'fmap' to map the isomorphism arrows over to the new fiber *)
+  refine {|
+    iso_to   := @fmap _ _ (Pullback f) A B (@iso_to _ _ _ H) ;
+    iso_from := @fmap _ _ (Pullback f) B A (@iso_from _ _ _ H)
+  |}.
+  
+  (* Because the target category (Fiber X) is a Thin category, 
+     the isomorphism laws (iso_to o iso_from == id) are trivially true! *)
+  - apply (fiber_is_thin X).
+  - apply (fiber_is_thin X).
+Defined.
+
+(* ================================================================= *)
+(* 2.5 SOUNDNESS OF STRUCTURAL EQUIVALENCE                           *)
+(* ================================================================= *)
+
+Lemma interp_form_equiv : 
+  forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
+         {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} {HM : HyperModel SGF} 
+         (I : b_ty) (Phi Psi : h_ty),
+  form_equiv I Phi Psi -> interp_h_ty I Phi ≅O interp_h_ty I Psi.
+Proof.
+  intros C CC TSC GF SGF HM I Phi Psi H.
+  induction H; simpl.
+
+  - (* FEQ_Atom *)
+    apply (i_atom_cong p t1 t2 I A d1 d2 b).
+
+  - (* FEQ_Refl *)
+    apply iso_refl.
+
+  - (* FEQ_Sym *)
+    symmetry. exact IHform_equiv.
+
+  - (* FEQ_Trans *)
+    eapply iso_trans. exact IHform_equiv1. exact IHform_equiv2.
+
+  - (* FEQ_Prod *)
+    apply prod_iso_cong; assumption.
+
+  - (* FEQ_Sum *)
+    apply coprod_iso_cong; assumption.
+
+  - (* FEQ_Arrow *)
+    apply exp_iso_cong; assumption.
+
+  - (* FEQ_All *)
+    apply pi_iso_cong; assumption.
+
+  - (* FEQ_Ex *)
+    apply sigma_iso_cong; assumption.
+
+  - (* FEQ_Pullback_Id *)
+    eapply iso_trans.
+    { apply (form_pullback_general_iso Phi I I b_id BT_Id). }
+    { assert (H_id : interp_tm BT_Id ≅ id (interp_ty I)). { reflexivity. }
+      eapply iso_trans.
+      { apply (@pb_iso _ _ _ _ _ _ _ H_id). }
+      { apply pullback_id_iso. } }
+
+  - (* FEQ_Pullback_Comp *)
+    eapply iso_trans.
+    { apply (form_pullback_general_iso (form_pullback f Phi) I J g dg). }
+    eapply iso_trans.
+    { apply pullback_fmap_iso. apply (form_pullback_general_iso Phi J K f df). }
+    eapply iso_trans.
+    { symmetry. apply pullback_comp_iso. }
+    eapply iso_trans.
+    { assert (H_comp : compose (interp_tm df) (interp_tm dg) ≅ interp_tm (BT_Comp df dg)).
+      { reflexivity. }
+      apply (@pb_iso _ _ _ _ _ _ _ H_comp). }
+    { symmetry. apply (form_pullback_general_iso Phi I K (b_comp f g) (BT_Comp df dg)). }
+
+  - (* FEQ_Pullback_Cong *)
+    eapply iso_trans.
+    { apply (form_pullback_general_iso Phi I J f df). }
+    eapply iso_trans.
+    { assert (H_cong : interp_tm df ≅ interp_tm dg).
+      { apply (base_model_sound I J f g df dg b). }
+      apply (@pb_iso _ _ _ _ _ _ _ H_cong). }
+    { symmetry. apply (form_pullback_general_iso Phi I J g dg). }
+Qed.
+
+Lemma interp_ctx_equiv : 
+  forall {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
+         {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} {HM : HyperModel SGF} 
+         (I : b_ty) (G1 G2 : h_context),
+  ctx_equiv I G1 G2 -> interp_h_ctx I G1 ≅O interp_h_ctx I G2.
+Proof.
+  intros C CC TSC GF SGF HM I G1 G2 H.
+  induction H; simpl.
+  - (* CEQ_nil *)
+    apply iso_refl.
+  - (* CEQ_cons *)
+    apply prod_iso_cong.
+    + exact IHctx_equiv.
+    + apply interp_form_equiv. exact f.
+Defined.
+
+
 (* ================================================================= *)
 (* 3. INHABITED SOUNDNESS TÉTEL                                      *)
 (* ================================================================= *)
@@ -381,4 +500,14 @@ Proof.
         
     (* 4. Lépés: A kontextus megkettőzése és az Egzisztenciális Tanú behelyettesítése *)
     { apply (prod_map (id _) IHD1). }
+- (* HD_Conv: Soundness of Conversion *)
+    eapply compose.
+    { (* 1. Push the formula from Phi to Psi (Outer morphism: Phi -> Psi) *)
+      apply (@iso_to _ _ _ (interp_form_equiv I Phi Psi f)). }
+    eapply compose.
+    { (* 2. Apply the valid semantic derivation (Middle morphism: G1 -> Phi) *)
+      exact IHD. }
+    { (* 3. Pull the context from G2 back to G1 (Inner morphism: G2 -> G1) *)
+      apply (@iso_from _ _ _ (interp_ctx_equiv I G1 G2 c)). }
 Defined.
+
