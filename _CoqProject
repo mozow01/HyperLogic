@@ -11,6 +11,8 @@ theories/Cat/Monad.v
 
 theories/Logic/Base/Simple/Base_Syntax.v
 theories/Logic/Hyper/Simple/Hyper_Syntax.v
+theories/Logic/Hyper/Simple/Hyper_Syntax_Conv.v
+theories/Logic/Hyper/Simple/Hyper_Lemmas_Conv.v
 theories/Logic/Hyper/Simple/Hyper_Lemmas.v
 theories/Logic/Base/Epsilon/Base_Syntax.v
 theories/Logic/Hyper/Epsilon/Hyper_Syntax.v
@@ -52,5 +54,6 @@ theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Soundness.v
 theories/Logic/Base/Epsilon_Adjoint/Base_Syntax.v
 theories/Logic/Hyper/Epsilon_Adjoint/Hyper_Syntax.v
 theories/Logic/Hyper/Epsilon_Adjoint/Hyper_Syntax_Lemmas.v
+theories/Semantics/Epsilon_Adjoint/Base_Epsilon_Soundness.v
 theories/Semantics/Epsilon_Adjoint/Base_Epsilon_Completeness.v
 theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Completeness.v
