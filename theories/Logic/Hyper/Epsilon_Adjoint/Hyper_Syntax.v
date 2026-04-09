@@ -218,3 +218,31 @@ Inductive h_derivation {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_conte
       h_derivation I G p (form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi) ->
       h_derivation (b_Prod I A) (Phi :: ctx_subst b_fst G) p2 (form_subst b_fst Chi) ->
       h_derivation I G (tm_eps_elim p p2) Chi.
+
+Fixpoint tm_subst {Sign : Type} (f : @b_tm Sign) (p : @h_tm Sign) : @h_tm Sign :=
+  match p with
+  | tm_unit => tm_unit
+  | tm_var i => tm_var i
+  | tm_lam Phi p' => tm_lam (form_subst f Phi) (tm_subst f p')
+  | tm_app p1 p2 => tm_app (tm_subst f p1) (tm_subst f p2)
+  | tm_pair p1 p2 => tm_pair (tm_subst f p1) (tm_subst f p2)
+  | tm_fst p' => tm_fst (tm_subst f p')
+  | tm_snd p' => tm_snd (tm_subst f p')
+  | tm_inl Psi p' => tm_inl (form_subst f Psi) (tm_subst f p')
+  | tm_inr Phi p' => tm_inr (form_subst f Phi) (tm_subst f p')
+  | tm_case p' p1 p2 => tm_case (tm_subst f p') (tm_subst f p1) (tm_subst f p2)
+  | tm_absurd Phi p' => tm_absurd (form_subst f Phi) (tm_subst f p')
+  
+  (* Kvantorok és Bázis-interakciók *)
+  | tm_all_intro p' => tm_all_intro (tm_subst (b_subst_ext f) p')
+  | tm_all_elim p' t => tm_all_elim (tm_subst f p') (b_comp t f)
+  
+  | tm_ex_intro t p' => tm_ex_intro (b_comp t f) (tm_subst f p')
+  | tm_ex_elim p1 p2 => tm_ex_elim (tm_subst f p1) (tm_subst (b_subst_ext f) p2)
+  
+  (* Intenzionális Epsilon szabályok *)
+  | tm_eps_intro t p' => tm_eps_intro (b_comp t f) (tm_subst f p')
+  | tm_eps_elim p1 p2 => tm_eps_elim (tm_subst f p1) (tm_subst (b_subst_ext f) p2)
+  end.
+  
+
