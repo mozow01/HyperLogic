@@ -6,6 +6,127 @@ Require Import HyperLogic.Logic.Base.Epsilon_Adjoint.Base_Syntax.
 Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
 Require Import HyperLogic.Logic.Hyper.Epsilon_Adjoint.Hyper_Syntax.
 
+Lemma wf_subst : forall {Sign : Type} {I J : b_ty} (t : @b_tm Sign) (dt : base_typing I t J) (Phi : @h_ty Sign),
+  WellFormed J Phi ->
+  WellFormed I (form_subst t Phi).
+Proof.
+  intros Sign I J t dt Phi H.
+  revert I t dt.
+  induction H; intros I0 t0 dt.
+  - simpl. apply WF_Unit.
+  - simpl. apply WF_Void.
+  - simpl. apply WF_Prod.
+    + apply IHWellFormed1. exact dt.
+    + apply IHWellFormed2. exact dt.
+  - simpl. apply WF_Sum.
+    + apply IHWellFormed1. exact dt.
+    + apply IHWellFormed2. exact dt.
+  - simpl. apply WF_Arrow.
+    + apply IHWellFormed1. exact dt.
+    + apply IHWellFormed2. exact dt.
+  - simpl. eapply WF_Atom.
+    eapply BT_Comp.
+    + eassumption.
+    + exact dt.
+  - (* WF_All *)
+    simpl. apply WF_All.
+    apply IHWellFormed.
+    (* Kibontjuk a bázis-kiterjesztést és bebizonyítjuk a típusosságát: *)
+    unfold b_subst_ext. apply BT_Pair.
+    + eapply BT_Comp. exact dt. apply BT_Fst.
+    + apply BT_Snd.
+  - (* WF_Ex *)
+    simpl. apply WF_Ex.
+    apply IHWellFormed.
+    unfold b_subst_ext. apply BT_Pair.
+    + eapply BT_Comp. exact dt. apply BT_Fst.
+    + apply BT_Snd.
+Defined.
+
+Lemma typing_subst_ext : forall {Sign : Type} {I J A : b_ty} {f : @b_tm Sign},
+  base_typing I f J ->
+  base_typing (b_Prod I A) (b_subst_ext f) (b_Prod J A).
+Proof.
+  intros SM I J A f.
+  intros Hf.
+  unfold b_subst_ext.
+  apply BT_Pair.
+  - eapply BT_Comp.
+    + exact Hf.
+    + apply BT_Fst.
+  - apply BT_Snd.
+Defined.
+
+Lemma form_equiv_subst : forall {Sign : Type} `{SkolemMapping Sign}
+  {I J : b_ty} (t : @b_tm Sign) (dt : base_typing I t J) (Phi Psi : @h_ty Sign),
+  form_equiv J Phi Psi ->
+  form_equiv I (form_subst t Phi) (form_subst t Psi).
+Proof.
+  intros Sign SM I J t dt Phi Psi H.
+  revert I t dt.
+  induction H; intros I0 t0 dt.
+  - (* FE_Atom *)
+    simpl. eapply FE_Atom.
+    apply BE_CongComp.
+    + apply BE_Refl. (* A helyettesítés (t0) önmagával ekvivalens *)
+    + exact b.       (* Az atomok bázis-termjei (t1, t2) ekvivalensek *)
+  - (* FE_Refl *)
+    apply FE_Refl.
+    eapply wf_subst.
+    + exact dt.
+    + exact w.
+  - (* FE_Sym *)
+    apply FE_Sym.
+    apply IHform_equiv. exact dt.
+  - (* FE_Trans *)
+    eapply FE_Trans.
+    + apply IHform_equiv1. exact dt.
+    + apply IHform_equiv2. exact dt.
+  - (* FE_Prod *)
+    simpl. apply FE_Prod.
+    + apply IHform_equiv1. exact dt.
+    + apply IHform_equiv2. exact dt.
+  - (* FE_Sum *)
+    simpl. apply FE_Sum. 
+    + apply IHform_equiv1. exact dt.
+    + apply IHform_equiv2. exact dt.
+  - (* FE_Arrow *)
+    simpl. apply FE_Arrow.
+    + apply IHform_equiv1. exact dt.
+    + apply IHform_equiv2. exact dt.
+  - (* FE_All *)
+    simpl. apply FE_All.
+    (* Itt használjuk fel az imént bizonyított lemmát! *)
+    apply IHform_equiv. apply typing_subst_ext. exact dt.
+  - (* FE_Ex *)
+    simpl. apply FE_Ex.
+    apply IHform_equiv. apply typing_subst_ext. exact dt.
+  - (* FE_Eps_Adjoint_Iso *)
+    admit. (* HIÁNYZÓ AXIÓMA: Szintaktikus Beck-Chevalley a Skolem konstansokra *)
+  - (* FE_Eps_Functorial *)
+    admit.
+  - (* FE_Pullback_Id *)
+    admit.
+  - (* FE_Pullback_Comp *)
+    admit.
+  - (* FE_Pullback_Cong *)
+    admit.
+Admitted.
+
+Lemma ctx_equiv_subst : forall {Sign : Type} `{SkolemMapping Sign}
+  {I J : b_ty} (t : @b_tm Sign) (dt : base_typing I t J) (G1 G2 : @h_context Sign),
+  ctx_equiv J G1 G2 ->
+  ctx_equiv I (ctx_subst t G1) (ctx_subst t G2).
+Proof.
+  intros Sign SM I J t dt G1 G2 H.
+  induction H.
+  - simpl. apply CEq_Nil.
+  - simpl. apply CEq_Cons.
+    + eapply form_equiv_subst. exact dt. exact f.
+    + exact IHctx_equiv.
+Defined.
+
+
 Lemma phi_iso_phi_id_snd : forall {Sign : Type} `{SkolemMapping Sign} (I A : b_ty) (Phi : @h_ty Sign) 
   (wf : WellFormed (b_Prod I A) Phi),
   form_equiv (b_Prod I A) Phi (form_subst (b_pair b_id b_snd) (form_subst b_fst Phi)).
@@ -100,4 +221,3 @@ Proof.
          Tehát: (Phi[eps])[b_fst] == Phi[b_snd][eps_b_snd] *)
       admit.
 Admitted.
-

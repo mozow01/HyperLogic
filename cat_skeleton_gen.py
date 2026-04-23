@@ -7,7 +7,7 @@ CAT_FOLDER = "./theories/Cat"
 OUTPUT_FILE = "cat_skeleton.txt"
 
 # Regex a bizonyítások felismeréséhez
-proof_pattern = re.compile(r'Proof\b.*?\.(?:(?:\s+)|(?:\n))+(?:.*?\b(?:Qed|Defined|Admitted)\.)', re.DOTALL)
+proof_pattern = re.compile(r'^\s*Proof\b.*?\.(?:(?:\s+)|(?:\n))+(?:.*?\b(?:Qed|Defined|Admitted)\.)', re.DOTALL | re.MULTILINE)
 
 def clean_coq_proofs(content):
     # Bizonyítások lecserélése
