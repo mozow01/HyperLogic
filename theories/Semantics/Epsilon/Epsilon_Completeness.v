@@ -1,0 +1,481 @@
+Require Import Coq.Classes.Morphisms.
+Require Import List Arith PeanoNat Lia.
+Import ListNotations. 
+
+Require Import Coq.Classes.Morphisms.
+Require Import Coq.Program.Equality.
+
+
+Require Import HyperLogic.Cat.Core.
+Require Import HyperLogic.Cat.CC.
+Require Import HyperLogic.Cat.CCC. 
+Require Import HyperLogic.Cat.BCCC.
+Require Import HyperLogic.Cat.Functor.
+Require Import HyperLogic.Cat.Adjoint.
+Require Import HyperLogic.Cat.Fibration.
+
+Require Import HyperLogic.Logic.Base.Epsilon.Base_Syntax.
+Require Import HyperLogic.Semantics.Epsilon.Epsilon_Fibration.
+Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
+Require Import HyperLogic.Logic.Hyper.Epsilon.Hyper_Syntax.
+
+(* You will also need your Base Completeness instances here *)
+Require Import HyperLogic.Semantics.Simple.Base_Simple_Completeness.
+
+(* ================================================================= *)
+(* 1. MORPHISMS OF THE SYNTACTIC FIBER                               *)
+(* ================================================================= *)
+
+(** In the fiber over base context 'I', a morphism from Phi to Psi 
+    is a valid derivation from the singleton context [Phi] to Psi. *)
+Record hom_hyper {Sign : Type} {SM : SkolemMapping Sign} (I : b_ty) (Phi Psi : @h_ty Sign) : Type := mk_hom_hyper {
+  h_tm_of : @h_tm Sign;
+  h_deriv_of : h_derivation I (Phi :: nil) h_tm_of Psi
+}.
+
+Arguments h_tm_of {Sign SM I Phi Psi} _.
+Arguments h_deriv_of {Sign SM I Phi Psi} _.
+
+
+(* ================================================================= *)
+(* 1.5 SYNTACTIC FIBER INFRASTRUCTURE                                *)
+(* ================================================================= *)
+
+(* --- Helper 1: Context Append for Pullbacks --- *)
+Lemma ctx_pullback_app : forall {Sign : Type} f (G Delta : @h_context Sign),
+  ctx_pullback f (G ++ Delta) = ctx_pullback f G ++ ctx_pullback f Delta.
+Proof.
+  intros. unfold ctx_pullback. apply map_app.
+Qed.
+
+(* --- Helper 2: Structural Weakening for Derivations --- *)
+(* Appending to the end of the context preserves De Bruijn indices! *)
+Lemma h_weakening_append : forall {Sign : Type} {SM : SkolemMapping Sign} I G Delta p A,
+  h_derivation I G p A -> h_derivation I (G ++ Delta) p A.
+Proof.
+  intros Sign SM I G Delta p A H.
+  generalize dependent Delta.
+  induction H; simpl; intros Delta.
+  - apply HD_Var0.
+  - apply HD_VarS. apply IHh_derivation.
+  - eapply HD_Conv. apply IHh_derivation. eassumption.
+  - apply HD_Unit.
+  - apply HD_Lam. apply IHh_derivation.
+  - eapply HD_App. apply IHh_derivation1. apply IHh_derivation2.
+  - apply HD_Pair. apply IHh_derivation1. apply IHh_derivation2.
+  - eapply HD_Fst. apply IHh_derivation.
+  - eapply HD_Snd. apply IHh_derivation.
+  - apply HD_Inl. apply IHh_derivation.
+  - apply HD_Inr. apply IHh_derivation.
+  - eapply HD_Case. apply IHh_derivation1. apply IHh_derivation2. apply IHh_derivation3.
+  - apply HD_Absurd. apply IHh_derivation.
+  - apply HD_All_Intro. rewrite ctx_pullback_app. apply IHh_derivation.
+  - eapply HD_All_Elim. apply IHh_derivation. eassumption.
+  - eapply HD_Ex_Intro. eassumption. apply IHh_derivation.
+  - eapply HD_Ex_Elim. apply IHh_derivation1. rewrite ctx_pullback_app. apply IHh_derivation2.
+  - eapply HD_Eps_Intro. eassumption. apply IHh_derivation.
+  - eapply HD_Eps_Elim. apply IHh_derivation1. rewrite ctx_pullback_app. apply IHh_derivation2.
+Defined.
+
+(* --- Helper 3: Erasure to Typing Prop --- *)
+Fixpoint derivation_to_typing {Sign : Type} {SM : SkolemMapping Sign} {I G p A} 
+  (d : h_derivation I G p A) : h_typing I G p A.
+Proof.
+  induction d.
+  - apply HT_Var0.
+  - apply HT_VarS; assumption.
+  - eapply HT_Conv; eassumption.
+  - apply HT_Unit.
+  - apply HT_Lam; assumption.
+  - eapply HT_App; eassumption.
+  - apply HT_Pair; assumption.
+  - eapply HT_Fst; eassumption.
+  - eapply HT_Snd; eassumption.
+  - apply HT_Inl; assumption.
+  - apply HT_Inr; assumption.
+  - eapply HT_Case; eassumption.
+  - apply HT_Absurd; assumption.
+  - apply HT_All_Intro; assumption.
+  - eapply HT_All_Elim; eassumption.
+  - eapply HT_Ex_Intro; eassumption.
+  - eapply HT_Ex_Elim; eassumption.
+  - eapply HT_Eps_Intro; eassumption.
+  - eapply HT_Eps_Elim; eassumption.
+Defined.
+
+(* --- Helper 4: Global Proof Irrelevance --- *)
+(* Using PI_rule, ANY two derivations of the same formula are equivalent! *)
+Lemma hyper_pi : forall {Sign : Type} {SM : SkolemMapping Sign} I G p q A 
+  (dp : h_derivation I G p A) (dq : h_derivation I G q A), 
+  h_equiv_rel I p q.
+Proof.
+  intros. eapply PI_rule.
+  - apply derivation_to_typing; exact dp.
+  - apply derivation_to_typing; exact dq.
+Qed.
+
+
+
+(* ================================================================= *)
+(* 2. IDENTITY AND COMPOSITION OF THE SYNTACTIC FIBER                *)
+(* ================================================================= *)
+
+Definition hyper_id_term {Sign : Type} {SM : SkolemMapping Sign} (Phi : @h_ty Sign) : @h_tm Sign :=
+  tm_var 0.
+
+Definition hyper_id_deriv {Sign : Type} {SM : SkolemMapping Sign} (I : b_ty) (Phi : @h_ty Sign) 
+  : h_derivation I (Phi :: nil) (hyper_id_term Phi) Phi :=
+  HD_Var0 I nil Phi.
+
+Definition hyper_id {Sign : Type} {SM : SkolemMapping Sign} (I : b_ty) (Phi : @h_ty Sign) : hom_hyper I Phi Phi :=
+  mk_hom_hyper Sign SM I Phi Phi (hyper_id_term Phi) (hyper_id_deriv I Phi).
+
+(* To compose g o f without explicit substitution, we construct: App (Lam Psi g) f *)
+Definition hyper_comp_term {Sign : Type} {SM : SkolemMapping Sign} (Psi : @h_ty Sign) (tf tg : @h_tm Sign) : @h_tm Sign :=
+  tm_app (tm_lam Psi tg) tf.
+
+Definition hyper_comp_deriv {Sign : Type} {SM : SkolemMapping Sign} (I : b_ty) (Phi Psi Chi : @h_ty Sign)
+  (tf tg : @h_tm Sign)
+  (df : h_derivation I (Phi :: nil) tf Psi)
+  (dg : h_derivation I (Psi :: nil) tg Chi) :
+  h_derivation I (Phi :: nil) (hyper_comp_term Psi tf tg) Chi.
+Proof.
+  unfold hyper_comp_term.
+  eapply HD_App.
+  - (* Lam Psi tg is typed in 'nil'. We weaken it to '[Phi]'. *)
+    apply (h_weakening_append I nil (Phi :: nil)).
+    apply HD_Lam.
+    exact dg.
+  - (* tf is already typed in '[Phi]'. *)
+    exact df.
+Defined.
+
+Definition hyper_comp {Sign : Type} {SM : SkolemMapping Sign} (I : b_ty) (Phi Psi Chi : @h_ty Sign)
+  (g : hom_hyper I Psi Chi) (f : hom_hyper I Phi Psi) : hom_hyper I Phi Chi :=
+  mk_hom_hyper Sign SM I Phi Chi 
+    (hyper_comp_term Psi (h_tm_of f) (h_tm_of g)) 
+    (hyper_comp_deriv I Phi Psi Chi (h_tm_of f) (h_tm_of g) (h_deriv_of f) (h_deriv_of g)).
+
+Definition hyper_hom_equiv {Sign : Type} {SM : SkolemMapping Sign} (I : b_ty) (Phi Psi : @h_ty Sign)
+  (f g : hom_hyper I Phi Psi) : Prop :=
+  h_equiv_rel I (h_tm_of f) (h_tm_of g).
+
+(* ================================================================= *)
+(* 3. THE SYNTACTIC FIBER CATEGORY                                   *)
+(* ================================================================= *)
+
+Lemma hyper_hom_equiv_pi : forall {Sign : Type} {SM : SkolemMapping Sign} 
+  (I : b_ty) (Phi Psi : @h_ty Sign) (f g : hom_hyper I Phi Psi),
+  hyper_hom_equiv I Phi Psi f g.
+Proof.
+  intros Sign SM I Phi Psi f g.
+  unfold hyper_hom_equiv.
+  
+  (* We use eapply to leave the context and formula as holes *)
+  eapply hyper_pi.
+  
+  (* We fill the holes precisely using the derivations hidden inside f and g *)
+  - exact (h_deriv_of f).
+  - exact (h_deriv_of g).
+Qed.
+
+Instance Syntactic_Fiber {Sign : Type} {SM : SkolemMapping Sign} (I : b_ty) : SetoidCategory.
+Proof.
+  refine (mk_SetoidCategory 
+    (@h_ty Sign)
+    (hom_hyper I)
+    (hyper_id I)
+    (hyper_comp I)
+    (hyper_hom_equiv I)
+    _ _ _ _ _).
+  
+  - (* Equivalence *)
+    intros A B. split.
+    + intros f. apply hyper_hom_equiv_pi.
+    + intros f g H. apply hyper_hom_equiv_pi.
+    + intros f g h H1 H2. apply hyper_hom_equiv_pi.
+  
+  (* We just apply our universal helper lemma to satisfy all category axioms! *)
+  - (* Assoc *) intros A B C D f g h. apply hyper_hom_equiv_pi.
+  - (* IdR *) intros A B f. apply hyper_hom_equiv_pi.
+  - (* IdL *) intros A B f. apply hyper_hom_equiv_pi.
+  - (* Proper *) unfold Proper, respectful. intros A B C f f' Hf g g' Hg. apply hyper_hom_equiv_pi.
+Defined.
+
+
+(* ================================================================= *)
+(* 3. THE SYNTACTIC HYPERDOCTRINE                                    *)
+(* ================================================================= *)
+
+(** Since the fiber is a Thin Category, we only need to provide the raw 
+    derivations (using HD_Pair, HD_Lam, etc.). All Category laws (Beta/Eta) 
+    are instantly solved by our 'hyper_hom_equiv_pi' lemma! *)
+
+Instance Syntactic_Cartesian {Sign : Type} {SM : SkolemMapping Sign} (I : b_ty) 
+  : CartesianCategory (Syntactic_Fiber I).
+Proof.
+  refine (mk_CartesianCategory (Syntactic_Fiber I)
+    Ty_Unit
+    (fun Phi => @mk_hom_hyper Sign SM I Phi Ty_Unit tm_unit (HD_Unit I (Phi :: nil)))
+    
+    _ (* terminal_map_unique law *)
+    
+    Ty_Prod
+    
+    (* Using ltac:(...) solves the derivation exactly in place! *)
+    (fun Phi Psi Chi f g => @mk_hom_hyper Sign SM I Phi (Ty_Prod Psi Chi) (tm_pair (h_tm_of f) (h_tm_of g)) 
+       ltac:(apply HD_Pair; [ exact (h_deriv_of f) | exact (h_deriv_of g) ]))
+       
+    (fun Phi Psi => @mk_hom_hyper Sign SM I (Ty_Prod Phi Psi) Phi (tm_fst (tm_var 0)) 
+       ltac:(eapply HD_Fst; apply HD_Var0))
+       
+    (fun Phi Psi => @mk_hom_hyper Sign SM I (Ty_Prod Phi Psi) Psi (tm_snd (tm_var 0)) 
+       ltac:(eapply HD_Snd; apply HD_Var0))
+    
+    _ _ _ _ (* The 4 remaining categorical laws *)
+  ).
+  
+  (* Now we are GUARANTEED that the only remaining goals are the 5 categorical laws! *)
+  
+  (* terminal_map_unique *)
+  - intros x f. apply hyper_hom_equiv_pi.
+  
+  (* prod_beta_fst *)
+  - intros A B C f g. apply hyper_hom_equiv_pi.
+  
+  (* prod_beta_snd *)
+  - intros A B C f g. apply hyper_hom_equiv_pi.
+  
+  (* prod_eta *)
+  - intros A B C h. apply hyper_hom_equiv_pi.
+  
+  (* prod_map_proper *)
+  - unfold Proper, respectful. intros A B C f f' Hf g g' Hg. apply hyper_hom_equiv_pi.
+Defined.
+
+
+Instance Syntactic_Closed {Sign : Type} {SM : SkolemMapping Sign} (I : b_ty) 
+  : CartesianClosedCategory (Syntactic_Fiber I).
+Proof.
+  refine (mk_CartesianClosedCategory (Syntactic_Fiber I) (Syntactic_Cartesian I)
+    
+    (* 1. exp mapping: First arg is Target, second is Source.
+          We map it to (Source -> Target). *)
+    (fun (T S : @h_ty Sign) => Ty_Arrow S T) 
+
+    (* 2. Curry: hom (C × A) B -> hom C (exp B A)
+          Coq passes: C (Ctx), A (Src), B (Tgt).
+          exp B A evaluates to Ty_Arrow A B. *)
+    (fun (C A B : @h_ty Sign) f => @mk_hom_hyper Sign SM I C (Ty_Arrow A B) 
+       (tm_lam A (tm_app (tm_lam (Ty_Prod C A) (h_tm_of f)) (tm_pair (tm_var 1) (tm_var 0)))) 
+       
+       ltac:(apply HD_Lam; eapply HD_App; 
+             [ apply HD_Lam; apply (h_weakening_append I (Ty_Prod C A :: nil) (A :: C :: nil)); exact (h_deriv_of f)
+             | apply HD_Pair; [ apply HD_VarS; apply HD_Var0 | apply HD_Var0 ] ]))
+
+    (* 3. Eval: (exp B A) × A -> B
+          Coq passes: B (Tgt), A (Src).
+          exp B A evaluates to Ty_Arrow A B. *)
+    (fun (A B : @h_ty Sign) => @mk_hom_hyper Sign SM I (Ty_Prod (Ty_Arrow A B) A) B 
+       (tm_app (tm_fst (tm_var 0)) (tm_snd (tm_var 0))) 
+       
+       ltac:(eapply HD_App; [ eapply HD_Fst; apply HD_Var0 | eapply HD_Snd; apply HD_Var0 ]))
+           
+    _ _ _ (* Category laws *)
+  ).
+  
+  - intros A B C f. apply hyper_hom_equiv_pi.
+  - intros A B C h. apply hyper_hom_equiv_pi.
+  - unfold Proper, respectful. intros A B C f f' Hf. apply hyper_hom_equiv_pi.
+Defined.
+
+Instance Syntactic_BiClosed {Sign : Type} {SM : SkolemMapping Sign} (I : b_ty) 
+  : BiCartesianClosedCategory (Syntactic_Closed I).
+Proof.
+  refine (mk_BiCartesianClosedCategory (Syntactic_Fiber I) (Syntactic_Cartesian I) (Syntactic_Closed I)
+    
+    (* 1. Initial Object: Void *)
+    Ty_Void
+    
+    (* 2. Initial Map: Void -> Phi *)
+    (fun (Phi : @h_ty Sign) => @mk_hom_hyper Sign SM I Ty_Void Phi (tm_absurd Phi (tm_var 0)) 
+       ltac:(apply HD_Absurd; apply HD_Var0))
+       
+    _ (* initial_map_unique law *)
+    
+    (* 3. Coproduct: Sum *)
+    Ty_Sum
+    
+    (* 4. Inl: Phi -> Phi + Psi *)
+    (fun (Phi Psi : @h_ty Sign) => @mk_hom_hyper Sign SM I Phi (Ty_Sum Phi Psi) (tm_inl Psi (tm_var 0)) 
+       ltac:(apply HD_Inl; apply HD_Var0))
+       
+    (* 5. Inr: Psi -> Phi + Psi *)
+    (fun (Phi Psi : @h_ty Sign) => @mk_hom_hyper Sign SM I Psi (Ty_Sum Phi Psi) (tm_inr Phi (tm_var 0)) 
+       ltac:(apply HD_Inr; apply HD_Var0))
+       
+    (* 6. Case: (Phi -> Chi) -> (Psi -> Chi) -> (Phi + Psi -> Chi) *)
+    (fun (Phi Psi Chi : @h_ty Sign) f g => @mk_hom_hyper Sign SM I (Ty_Sum Phi Psi) Chi 
+       (tm_case (tm_var 0) (h_tm_of f) (h_tm_of g)) 
+       ltac:(eapply HD_Case; 
+             [ apply HD_Var0 
+             | apply (h_weakening_append I (Phi :: nil) (Ty_Sum Phi Psi :: nil)); exact (h_deriv_of f) 
+             | apply (h_weakening_append I (Psi :: nil) (Ty_Sum Phi Psi :: nil)); exact (h_deriv_of g) ]))
+             
+    _ _ _ (* Category laws: coprod_beta_inl, coprod_beta_inr, coprod_eta *)
+  ).
+  
+  (* Laws are trivial due to thinness/proof irrelevance *)
+  - intros x f. apply hyper_hom_equiv_pi.
+  - intros A B C f g. apply hyper_hom_equiv_pi.
+  - intros A B C f g. apply hyper_hom_equiv_pi.
+  - intros A B C h. apply hyper_hom_equiv_pi.
+Defined.
+
+
+(* ================================================================= *)
+(* 5. THE SYNTACTIC SUBSTITUTION FUNCTOR (PULLBACK)                  *)
+(* ================================================================= *)
+
+(** Pulling back a derivation requires a massive induction over the syntax tree.
+    We axiomatically assert it here to focus on the Fibration architecture. *)
+Axiom hyper_pullback_map : forall {Sign : Type} {SM : SkolemMapping Sign} 
+  (I J : b_ty) (f : hom_base I J) (Phi Psi : @h_ty Sign),
+  hom_hyper J Phi Psi -> 
+  hom_hyper I (form_pullback (tm_of f) Phi) (form_pullback (tm_of f) Psi).
+
+Instance Syntactic_Pullback {Sign : Type} {SM : SkolemMapping Sign} {I J : b_ty} (f : hom_base I J) 
+  : Functor (Syntactic_Fiber J) (Syntactic_Fiber I).
+Proof.
+  refine (mk_Functor 
+    (Syntactic_Fiber J) (Syntactic_Fiber I)
+    (fun Phi => form_pullback (tm_of f) Phi)
+    (fun Phi Psi => hyper_pullback_map I J f Phi Psi)
+    _ _
+  ).
+  - intros. apply hyper_hom_equiv_pi.
+  - intros. apply hyper_hom_equiv_pi.
+Defined.
+
+
+(* ================================================================= *)
+(* 6. THE SYNTACTIC GOODFIBRATION                                    *)
+(* ================================================================= *)
+
+(** HELPER: Converts any valid `form_equiv` into a categorical Isomorphism 
+    by leveraging the HD_Conv rule! This is the magic bridge! *)
+Lemma syn_iso_from_equiv : forall {Sign : Type} {SM : SkolemMapping Sign} I Phi Psi, 
+  form_equiv I Phi Psi -> @Isomorphism (Syntactic_Fiber I) Phi Psi.
+Proof.
+  intros Sign SM I Phi Psi Heq.
+  refine (mk_Isomorphism (Syntactic_Fiber I) Phi Psi 
+    (* Forward: Phi -> Psi via HD_Conv *)
+    (mk_hom_hyper I Phi Psi (tm_var 0) 
+       (HD_Conv I (Phi :: nil) (tm_var 0) Phi Psi (HD_Var0 I nil Phi) Heq))
+    (* Backward: Psi -> Phi via FE_Sym and HD_Conv *)
+    (mk_hom_hyper I Psi Phi (tm_var 0) 
+       (HD_Conv I (Psi :: nil) (tm_var 0) Psi Phi (HD_Var0 I nil Psi) (FE_Sym I Phi Psi Heq)))
+    _ _).
+  - apply hyper_hom_equiv_pi.
+  - apply hyper_hom_equiv_pi.
+Defined.
+
+(** HELPER: Trivial isomorphism for definitionally equal types *)
+Lemma syn_iso_refl : forall {Sign : Type} {SM : SkolemMapping Sign} I Phi, 
+  @Isomorphism (Syntactic_Fiber I) Phi Phi.
+Proof.
+  intros. refine (mk_Isomorphism _ _ _ (hyper_id I Phi) (hyper_id I Phi) _ _); apply hyper_hom_equiv_pi.
+Defined.
+
+Instance Syntactic_GoodFibration {Sign : Type} {SM : SkolemMapping Sign} 
+  : GoodFibration Base_SetoidCategory.
+Proof.
+  refine (mk_GoodFibration Base_SetoidCategory
+    Syntactic_Fiber
+    (fun I => _) (* Thin *)
+    Syntactic_Cartesian
+    Syntactic_Closed
+    Syntactic_BiClosed
+    (fun I J f => Syntactic_Pullback f)
+    
+    (* Pullback Identity: Solved beautifully by your FE_Pullback_Id rule! *)
+    (fun I Phi => syn_iso_from_equiv I (form_pullback b_id Phi) Phi _)
+    
+    (* Pullback Composition: Solved beautifully by your FE_Pullback_Comp rule! *)
+    (fun I J K g f Phi => syn_iso_from_equiv I (form_pullback (tm_of (compose g f)) Phi) 
+                                               (form_pullback (tm_of g) (form_pullback (tm_of f) Phi)) _)
+                                               
+    (* Logical Preservations: form_pullback computes these definitionally! *)
+    _ _ _ _ _ 
+    
+    (* Quantifier Adjunctions & Beck-Chevalley (Admitted for architecture) *)
+    _ _ _ _
+    
+    (* Pullback Congruence: Solved beautifully by your FE_Pullback_Cong rule! *)
+    _
+  ).
+  
+  (* 1. Thin Category *)
+  - intros A B f g. apply hyper_hom_equiv_pi.
+  
+  (* 2. Identity Iso Proof *)
+  - apply FE_Pullback_Id. 
+    admit. (* Requires WellFormed proof *)
+    
+  (* 3. Composition Iso Proof *)
+  - apply FE_Sym. apply FE_Pullback_Comp. 
+    + exact (deriv_of f). 
+    + exact (deriv_of g). 
+    + admit. (* Requires WellFormed proof *)
+    
+  (* 4. Logical Preservations (Definitional Equality!) *)
+  - intros I J f. apply syn_iso_refl. (* Term *)
+  - intros I J f A B. apply syn_iso_refl. (* Prod *)
+  - intros I J f. apply syn_iso_refl. (* Init *)
+  - intros I J f A B. apply syn_iso_refl. (* Coprod *)
+  - intros I J f A B. apply syn_iso_refl. (* Exp *)
+  
+  (* 5. Quantifiers and Beck Chevalley *)
+  - admit. - admit. - admit. - admit.
+  
+  (* 6. Congruence Iso Proof *)
+  - intros I J f g H_eq Phi.
+    apply syn_iso_from_equiv. apply FE_Pullback_Cong.
+    + exact (deriv_of f).
+    + exact (deriv_of g).
+    + exact H_eq.
+    + admit. (* Requires WellFormed proof *)
+Admitted.
+
+
+Instance Syntactic_EpsilonModel : EpsilonHyperModel Syntactic_StrictGoodFibration.
+Proof.
+  (* This will provide the epsilon left-inverse to the Sigma functor *)
+Admitted.
+*)
+
+(* ================================================================= *)
+(* 4. INHABITATIONAL COMPLETENESS THEOREM                            *)
+(* ================================================================= *)
+
+(** If a semantic morphism exists between two formulas in ALL epsilon-hyperdoctrines, 
+    then there exists a syntactic proof in our logic. *)
+Theorem hyper_completeness_inhabitational : 
+  forall {Sign : Type} {SM : SkolemMapping Sign} (I : b_ty) (Phi Psi : @h_ty Sign), 
+  
+  (* PREMISE: Inhabited in all models *)
+  (forall (C : SetoidCategory) (CC : CartesianCategory C) (BCCC : CartesianClosedCategory C) 
+          (BiCCC : BiCartesianClosedCategory BCCC) (TSC : TwoSortCategory C) 
+          (BEM : BaseEpsilonModel) (GF : GoodFibration C) (SGF : StrictGoodFibration C GF) 
+          (EHM : EpsilonHyperModel SGF) (EGF : EpsilonGoodFibration),
+          
+     (* We drop the '@' and let Coq infer the implicits! *)
+     inhabited (hom (interp_h_ty I Phi) (interp_h_ty I Psi))) -> 
+  
+  (* CONCLUSION: A syntactic derivation exists *)
+  (exists (p : @h_tm Sign), inhabited (h_derivation I (Phi :: nil) p Psi)).
+Proof.
+  intros Sign SM I Phi Psi H_sem.
+  
+  (* Proof strategy to come next... *)
+Admitted.

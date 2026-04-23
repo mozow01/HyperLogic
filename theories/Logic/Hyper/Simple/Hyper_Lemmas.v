@@ -4,6 +4,8 @@ Import ListNotations.
 Require Import HyperLogic.Logic.Base.Simple.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Syntax.
 
+
+
 (* ================================================================= *)
 (* 1. SZINTAKTIKUS MŰVELETEK (LOGIKAI VÁLTOZÓK)                      *)
 (* ================================================================= *)

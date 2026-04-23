@@ -119,7 +119,7 @@ Proof.
   - apply WFC_cons.
     + eapply wf_pullback. exact Hf. exact w.
     + exact IHHwf.
-Qed.
+Defined.
 
 (* ================================================================= *)
 (* META-THEOREMS: EXTRACTING WELL-FORMEDNESS FROM DERIVATIONS        *)
@@ -151,7 +151,7 @@ Proof.
   - split.
     + eapply wf_pullback. exact df. exact w.
     + eapply wf_pullback. exact dg. exact w.
-Qed.
+Defined.
 
 (* Meta-Theorem: A valid derivation implies a well-formed context *)
 Lemma well_formed_ctx : forall I G p Phi,
@@ -238,7 +238,7 @@ Defined.
 Lemma form_equiv_refl : forall I Phi, WellFormed I Phi -> form_equiv I Phi Phi.
 Proof.
   intros I Phi H. apply FEQ_Refl. exact H.
-Qed.
+Defined.
 
 Lemma ctx_equiv_refl : forall I G, wf_ctx I G -> ctx_equiv I G G.
 Proof.
@@ -247,7 +247,7 @@ Proof.
   - apply CEQ_cons. 
     + apply FEQ_Refl. exact w. 
     + exact IHwf_ctx.
-Qed.
+Defined.
 
 Lemma ctx_equiv_sym : forall I G Delta,
   ctx_equiv I G Delta -> ctx_equiv I Delta G.
@@ -257,7 +257,7 @@ Proof.
   - apply CEQ_cons.
     + apply FEQ_Sym. exact f.
     + exact IHctx_equiv.
-Qed.
+Defined.
 
 Lemma ctx_equiv_insert : forall I n Psi G1 G2,
   WellFormed I Psi ->
@@ -271,7 +271,7 @@ Proof.
   - apply CEQ_nil.
   - apply CEQ_cons. apply FEQ_Refl. exact Hwf. apply CEQ_cons; assumption.
   - apply CEQ_cons. assumption. apply IHctx_equiv.
-Qed.
+Defined.
 
 Lemma ctx_equiv_app : forall I G1 G2 Delta,
   ctx_equiv I G1 G2 -> 
@@ -282,7 +282,7 @@ Proof.
   induction H; simpl.
   - apply ctx_equiv_refl. exact Hwf.
   - apply CEQ_cons; assumption.
-Qed.
+Defined.
 
 (* ================================================================= *)
 (* 3. WEAKENING TÉTELEK                                              *)
@@ -297,7 +297,8 @@ Proof.
   - apply WFC_nil.
   - apply WFC_cons; [assumption | apply WFC_cons; assumption].
   - apply WFC_cons; [assumption | apply IHHG].
-Qed.
+Defined.
+
 
 Lemma wf_ctx_app : forall I G Delta,
   wf_ctx I G -> wf_ctx I Delta -> wf_ctx I (G ++ Delta).
@@ -305,14 +306,16 @@ Proof.
   intros I G Delta HG HDelta.
   induction HG; simpl; auto.
   - apply WFC_cons; auto.
-Qed.
+Defined.
+
 
 Lemma ctx_pullback_insert : forall f n Psi G,
   ctx_pullback f (h_insert_at n Psi G) = h_insert_at n (form_pullback f Psi) (ctx_pullback f G).
 Proof.
   intros f n Psi G. revert n. induction G; intros n; destruct n; simpl; auto.
   rewrite IHG. reflexivity.
-Qed.
+Defined.
+
 
 Theorem h_weakening_general : forall I G p Phi Psi n,
   WellFormed I Psi ->

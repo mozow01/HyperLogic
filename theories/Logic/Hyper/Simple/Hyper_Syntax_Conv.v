@@ -13,6 +13,7 @@ Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
 (* 1. FORMULÁK (HYPER TYPES)                                         *)
 (* ================================================================= *)
 
+
 Inductive h_ty : Type :=
   (* --- A) Propozicionális Modul (A BiCCC / STLC réteg másolata) --- *)
   | Ty_Unit   : h_ty
@@ -128,7 +129,7 @@ Proof.
     eapply BT_Pair.
     + eapply BT_Comp. exact Hf'. apply BT_Fst.
     + apply BT_Snd.
-Qed.
+Defined.
 
 (* ================================================================= *)
 (* 3. BIZONYÍTÁSTERMEK (HYPER TERMS)                                 *)
@@ -154,16 +155,10 @@ Inductive h_tm : Type :=
   | tm_ex_intro  : b_tm -> h_tm -> h_tm   
   | tm_ex_elim   : h_tm -> h_tm -> h_tm.
 
-(* ================================================================= *)
-(* 3.4 BASE EQUIVALENCE (Proof Irrelevance for Base Terms)           *)
-(* ================================================================= *)
 
-Inductive base_equiv_untyped : b_tm -> b_tm -> Prop :=
-  | Base_PI : forall I J t1 t2,
-      base_typing I t1 J -> 
-      base_typing I t2 J -> 
-      base_equiv_untyped t1 t2
-  | Base_Refl : forall t, base_equiv_untyped t t.
+(* ================================================================= *)
+(* 3.5 FORMULA EKVIVALENCIA (Már a WFF és a Bázis kontextus védelmében!) *)
+(* ================================================================= *)
 
 (* ================================================================= *)
 (* 3.5 FORMULA EKVIVALENCIA (Már a WFF és a Bázis kontextus védelmében!) *)
@@ -172,8 +167,8 @@ Inductive base_equiv_untyped : b_tm -> b_tm -> Prop :=
 Inductive form_equiv (I : b_ty) : h_ty -> h_ty -> Type :=
   
   | FEQ_Atom : forall p t1 t2 A (d1 : base_typing I t1 A) (d2 : base_typing I t2 A),
-      base_equiv_untyped t1 t2 ->
-      form_equiv I (Ty_Atom p t1) (Ty_Atom p t2)
+        base_equiv I A t1 t2 ->   (* <--- NEW NON-DEPENDENT CALL *)
+        form_equiv I (Ty_Atom p t1) (Ty_Atom p t2)
       
   (* Strukturális szabályok (Alapeseteknél megköveteljük a WFF-et!) *)
   | FEQ_Refl : forall Phi, 
@@ -215,8 +210,8 @@ Inductive form_equiv (I : b_ty) : h_ty -> h_ty -> Type :=
       form_equiv I (form_pullback g (form_pullback f Phi)) (form_pullback (b_comp f g) Phi)
       
   | FEQ_Pullback_Cong : forall J (f g : b_tm) Phi 
-                              (df : base_typing I f J) (dg : base_typing I g J), 
-      base_equiv_untyped f g -> 
+      (df : base_typing I f J) (dg : base_typing I g J), 
+      base_equiv I J f g ->   (* <--- NEW NON-DEPENDENT CALL *)
       WellFormed J Phi ->
       form_equiv I (form_pullback f Phi) (form_pullback g Phi).
 
@@ -445,7 +440,7 @@ Proof.
   - apply WF_Arrow; auto.
   - apply WF_Prod; auto.
   - apply WF_Sum; auto.
-Qed.
+Defined.
 
 (* Automatically proves that any embedded STLC context is strictly Well-Formed *)
 Lemma embed_ctx_wf : forall I G, wf_ctx I (embed_ctx G).
@@ -455,7 +450,7 @@ Proof.
   - apply WFC_cons.
     + apply embed_ty_wf.
     + apply IHG.
-Qed.
+Defined.
 
 (* ================================================================= *)
 (* 6. BIZONYÍTÁSTERMEK BEÁGYAZÁSA                                    *)
