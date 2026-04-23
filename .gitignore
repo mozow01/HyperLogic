@@ -16,3 +16,9 @@ Makefile.conf
 *~
 #*#
 .#*
+
+# Helyi AI skeleton generáló scriptek és mappák
+skeleton/
+cat_skeleton_gen.py
+cat_skeleton.txt
+generate_skeleton.py
