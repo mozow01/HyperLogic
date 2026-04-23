@@ -3,6 +3,7 @@
 *.vos
 *.vok
 *.glob
+*.aux
 
 # Make és függőségi fájlok (Gépfüggő)
 Makefile
