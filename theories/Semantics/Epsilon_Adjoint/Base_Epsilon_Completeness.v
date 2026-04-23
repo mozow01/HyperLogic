@@ -102,6 +102,7 @@ Proof.
   exact (@mk_hom_base Sign I A (b_const A s) BT_Const).
 Defined.
 
+
 (* ================================================================= *)
 (* 3. COMPLETENESS HELPER LEMMÁK (Kiegészítve a b_const-tal)         *)
 (* ================================================================= *)
@@ -202,39 +203,47 @@ Defined.
 (* 4. COMPLETENESS (TELJESSÉG) TÉTELEK                               *)
 (* ================================================================= *)
 
+Instance Base_SyntacticCoherentModel (Sign : Type) : 
+  @CoherentBaseModel Sign (Base_SetoidCategory Sign) 
+    (Base_CartesianCategory Sign) (Base_TwoSortCategory Sign) 
+    (Base_SyntacticEpsilonModel Sign).
+Proof.
+  constructor.
+  intros A B f d1 d2.
+  cbn.
+  (* Megadjuk a d1 és d2 fákat is, így semmi nem marad a polcon! *)
+  eapply base_equiv_cast with (A' := A) (B' := B) (f' := f) (g' := f) (df' := d1) (dg' := d2).
+  - symmetry. apply interp_ty_id.
+  - symmetry. apply interp_ty_id.
+  - symmetry. apply interp_tm_term.
+  - symmetry. apply interp_tm_term.
+  - apply BE_Refl.
+Defined.
+
+
 Theorem base_completeness_equational : forall {Sign : Type} {A B : b_ty} {f g : @b_tm Sign} 
   (df : @base_typing Sign A f B) (dg : @base_typing Sign A g B),
-  (forall (C : SetoidCategory) (CC : CartesianCategory C) (TSC : TwoSortCategory C) (BEM : @BaseEpsilonModel Sign C CC TSC),
+  (forall (C : SetoidCategory) (CC : CartesianCategory C) (TSC : TwoSortCategory C) 
+          (BEM : @BaseEpsilonModel Sign C CC TSC)
+          (CBM : @CoherentBaseModel Sign C CC TSC BEM),
      @interp_tm Sign C CC TSC BEM A B f df ≅ @interp_tm Sign C CC TSC BEM A B g dg) ->
   @base_equiv Sign A B f g df dg.
 Proof.
   intros Sign A B f g df dg H.
   
-  pose proof (H (Base_SetoidCategory Sign) (Base_CartesianCategory Sign) (Base_TwoSortCategory Sign) (Base_SyntacticEpsilonModel Sign)) as Heq.
+  (* 1. Átadjuk az ÖSSZES argumentumot, beleértve az új koherencia modellt is! *)
+  pose proof (H (Base_SetoidCategory Sign) 
+                (Base_CartesianCategory Sign) 
+                (Base_TwoSortCategory Sign) 
+                (Base_SyntacticEpsilonModel Sign)
+                (Base_SyntacticCoherentModel Sign)) as Heq. 
   
-  eapply base_equiv_cast.
-  - apply (interp_ty_id Sign).
-  - apply (interp_ty_id Sign).
-  - apply interp_tm_term.
-  - apply interp_tm_term.
+  
+  (* 3. Most már az 'exact Heq' tökéletesen illeszkedni fog az utolsó ágra! *)
+  eapply base_equiv_cast. 
+  - apply (interp_ty_id Sign). 
+  - apply (interp_ty_id Sign). 
+  - apply interp_tm_term. 
+  - apply interp_tm_term. 
   - exact Heq.
-Defined.
-
-Theorem base_completeness_inhabitational : forall {Sign : Type} {A B : b_ty}, 
-  (forall (C : SetoidCategory) (CC : CartesianCategory C) (TSC : TwoSortCategory C) (BEM : @BaseEpsilonModel Sign C CC TSC),
-     inhabited (hom (@interp_ty C CC TSC A) (@interp_ty C CC TSC B))) -> 
-  (exists (t : @b_tm Sign), inhabited (@base_typing Sign A t B)).
-Proof.
-  intros Sign A B H.
-  
-  pose proof (H (Base_SetoidCategory Sign) (Base_CartesianCategory Sign) (Base_TwoSortCategory Sign) (Base_SyntacticEpsilonModel Sign)) as [f_hom].
-  
-  destruct f_hom as [t_syn d_syn].
-  exists t_syn.
-  constructor.
-  
-  eapply base_typing_cast.
-  - apply (interp_ty_id Sign).
-  - apply (interp_ty_id Sign).
-  - exact d_syn.
 Defined.

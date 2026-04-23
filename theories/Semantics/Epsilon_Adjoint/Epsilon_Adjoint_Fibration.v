@@ -46,6 +46,15 @@ Fixpoint interp_tm {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C}
   | @BT_Snd _ A' B' => @prod_snd C CC (interp_ty A') (interp_ty B')
   | @BT_Const _ I' A' s => i_const I' A' s
   end.
+  
+(* --- A KOHERENCIA KÖVETELMÉNY (TÖRVÉNY) --- *)
+Class CoherentBaseModel 
+  {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C} 
+  {TSC : TwoSortCategory C} {BEM : @BaseEpsilonModel Sign C CC TSC} := {
+  
+  interp_coh : forall {A B : b_ty} {f : @b_tm Sign} (d1 d2 : base_typing A f B), 
+    interp_tm d1 ≅ interp_tm d2
+}.
 
 (* ================================================================= *)
 (* 2. HYPER SZEMANTIKA (Atomok és Kvantorok)                         *)

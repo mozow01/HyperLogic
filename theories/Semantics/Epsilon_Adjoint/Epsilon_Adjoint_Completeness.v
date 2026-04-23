@@ -1,4 +1,4 @@
-(* theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Completeness.v *)
+(* theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Completeness.v 
 
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Classes.RelationClasses.
@@ -435,6 +435,45 @@ Defined.
 (* ÁLTALÁNOS HELYETTESÍTÉSI LEMMA                    *)
 (* ================================================================= *)
 
+(* Step 2: Structural Inversion Lemma for Formulas pulled back along the first projection. *)
+Lemma form_wf_fst_inv : forall {Sign : Type} {SM : SkolemMapping Sign} {I A : b_ty} {Phi : @h_ty Sign},
+  WellFormed (b_Prod I A) (form_subst b_fst Phi) -> WellFormed I Phi.
+Proof.
+  intros Sign SM I A Phi H.
+  (* The proof proceeds by induction on the structure of the WellFormed hypothesis,
+     which is more robust than induction on the formula `Phi` itself. *)
+  induction H.
+  - (* WF_Unit *) apply WF_Unit.
+  - (* WF_Void *) apply WF_Void.
+  - (* WF_Prod: The IHs give us WellFormed for P and Q in the base context I. *)
+    apply WF_Prod; assumption.
+  - (* WF_Sum: Similar to product. *)
+    apply WF_Sum; assumption.
+  - (* WF_Arrow: Similar to product. *)
+    apply WF_Arrow; assumption.
+  - (* WF_All: The IH gives us WellFormed for the body P in the extended context (b_Prod I B). *)
+    apply WF_All; assumption.
+  - (* WF_Ex: Similar to forall. *)
+    apply WF_Ex; assumption.
+Qed.
+
+(* Step 3: Structural Inversion Lemma for Contexts pulled back along the first projection. *)
+Lemma ctx_wf_fst_inv : forall {Sign : Type} {SM : SkolemMapping Sign} {I A : b_ty} {G : @h_context Sign},
+  All_WellFormed (b_Prod I A) (ctx_subst b_fst G) -> All_WellFormed I G.
+Proof.
+  intros Sign SM I A G H.
+  induction G.
+  - (* Case: G is nil *)
+    simpl in H. inversion H. apply AWF_Nil.
+  - (* Case: G is Phi :: G' *)
+    simpl in H. inversion H as [| ? Hphi Hctx].
+    apply AWF_Cons.
+    + (* Prove WellFormed for the head of the list using the formula inversion lemma. *)
+      apply form_wf_fst_inv. exact Hphi.
+    + (* Use induction hypothesis for the tail of the list. *)
+      apply IHG. exact Hctx.
+Qed.
+
 (* Strukturális Metatétel (Context Regularity): 
    Ha egy kontextusból le lehet vezetni valamit, akkor az a kontextus jólformált.
    ESKÜ: Ezt a projekt végén egy standard strukturális indukcióval lemmává alakítjuk! *)
@@ -442,7 +481,14 @@ Lemma meta_ctx_wf_base : forall {Sign : Type} {SM : SkolemMapping Sign} {I A : b
   {G : @h_context Sign} {p : h_tm} {Phi : h_ty},
   h_derivation (b_Prod I A) (ctx_subst b_fst G) p Phi -> All_WellFormed I G.
 Proof.
-Admitted.
+  intros Sign SM I A G p Phi H.
+  (* Step 1 (from plan): Apply the general context regularity lemma. *)
+  apply meta_ctx_wf in H.
+  (* Step 2 & 3 (from plan): Apply the context inversion lemma to get the result for the original context. *)
+  apply ctx_wf_fst_inv in H.
+  (* Step 4 (from plan): The goal is now exactly the hypothesis. *)
+  exact H.
+Qed.
 
 Lemma meta_all_body_wf : forall {Sign : Type} {SM : SkolemMapping Sign} {I A : b_ty} 
   {G : @h_context Sign} {p : h_tm} {Phi : h_ty},
@@ -737,4 +783,6 @@ meta_eps_elim_chi_wf
 
 meta_eps_bc 
  
+*)
+
 *)

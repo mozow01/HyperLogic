@@ -1,0 +1,189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>STLC_PI_Sum_Soundness</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library STLC_PI_Sum_Soundness</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">List</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">ListNotations</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Coq.Classes.Morphisms</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.Core</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.CC</span>. <span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.CCC</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.BCCC</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum_Lemmas</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Open</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">stlc_scope_sum</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Class</span> <span class="id" title="var">Model</span> (<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>) := {<br/>
+&nbsp;&nbsp;<span class="id" title="var">interp_base</span> : <span class="id" title="var">nat</span> -&gt; @<span class="id" title="var">obj</span> <span class="id" title="var">C</span><br/>
+}.<br/>
+
+<br/>
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">interp_ty</span> (<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>) {<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">BCC</span> : <span class="id" title="var">BiCartesianClosedCategory</span> <span class="id" title="var">CC</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>) (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>) : @<span class="id" title="var">obj</span> <span class="id" title="var">C</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">A</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Atomic</span> <span class="id" title="var">n</span>  =&gt; <span class="id" title="var">interp_base</span> <span class="id" title="var">n</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Unit</span>      =&gt; <span class="id" title="var">terminal</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Void</span>      =&gt; <span class="id" title="var">initial</span><br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Prod</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span>  =&gt; <span class="id" title="var">prod</span> (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">B</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Arrow</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span> =&gt; <span class="id" title="var">exp</span> (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">B</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Sum</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span>   =&gt; <span class="id" title="var">coprod</span> (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">B</span>)<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">interp_ctx</span> (<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>) {<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">BCC</span> : <span class="id" title="var">BiCartesianClosedCategory</span> <span class="id" title="var">CC</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>) (<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>) : @<span class="id" title="var">obj</span> <span class="id" title="var">C</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">Gamma</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">nil</span>       =&gt; <span class="id" title="var">terminal</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">A</span> :: <span class="id" title="var">Gamma'</span> =&gt; <span class="id" title="var">prod</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">Gamma'</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>)<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">swap_map</span> {<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>} {<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>} <br/>
+&nbsp;&nbsp;{<span class="id" title="var">x</span> <span class="id" title="var">y</span> : @<span class="id" title="var">obj</span> <span class="id" title="var">C</span>} : <span class="id" title="var">hom</span> (<span class="id" title="var">prod</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) (<span class="id" title="var">prod</span> <span class="id" title="var">y</span> <span class="id" title="var">x</span>) :=<br/>
+&nbsp;&nbsp;<span class="id" title="var">prod_map</span> <span class="id" title="var">prod_snd</span> <span class="id" title="var">prod_fst</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">interp_derivation</span> {<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>} {<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">BCC</span> : <span class="id" title="var">BiCartesianClosedCategory</span> <span class="id" title="var">CC</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>} <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>} {<span class="id" title="var">t</span> : <span class="id" title="var">tm</span>} {<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>} <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">D</span> : <span class="id" title="var">derivation</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">t</span> <span class="id" title="var">A</span>) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span class="id" title="var">hom</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">Gamma</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>) :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">D</span> <span class="id" title="tactic">in</span> (<span class="id" title="var">derivation</span> <span class="id" title="var">G</span> <span class="id" title="var">t0</span> <span class="id" title="var">A0</span>) <span class="id" title="keyword">return</span> (<span class="id" title="var">hom</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">G</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A0</span>)) <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_Unit</span> <span class="id" title="var">_</span>               =&gt; <span class="id" title="var">terminal_map</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_Var0</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span>             =&gt; <span class="id" title="var">prod_snd</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_VarS</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">D_prev</span>  =&gt; <span class="id" title="var">compose</span> (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_prev</span>) <span class="id" title="var">prod_fst</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_Lam</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">D_body</span>   =&gt; <span class="id" title="var">exp_map</span> (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_body</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_App</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">D_f</span> <span class="id" title="var">D_x</span> =&gt; <span class="id" title="var">compose</span> <span class="id" title="tactic">eval</span> (<span class="id" title="var">prod_map</span> (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_f</span>) (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_x</span>))<br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_Pair</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">D_l</span> <span class="id" title="var">D_r</span> =&gt; <span class="id" title="var">prod_map</span> (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_l</span>) (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_r</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_Fst</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">D_pair</span>   =&gt; <span class="id" title="var">compose</span> <span class="id" title="var">prod_fst</span> (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_pair</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_Snd</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">D_pair</span>   =&gt; <span class="id" title="var">compose</span> <span class="id" title="var">prod_snd</span> (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_pair</span>)<br/>
+<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_Inl</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">D_t</span> =&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">compose</span> <span class="id" title="var">coprod_inl</span> (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_t</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_Inr</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">D_t</span> =&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">compose</span> <span class="id" title="var">coprod_inr</span> (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_t</span>)<br/>
+<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_Case</span> <span class="id" title="var">Gamma0</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">A0</span> <span class="id" title="var">B</span> <span class="id" title="var">t3</span> <span class="id" title="var">D_t</span> <span class="id" title="var">D_l</span> <span class="id" title="var">D_r</span> =&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">compose</span> <span class="id" title="tactic">eval</span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">prod_map</span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">compose</span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">coprod_map</span> <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">exp_map</span> (<span class="id" title="var">compose</span> (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_l</span>) <span class="id" title="var">swap_map</span>)) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">exp_map</span> (<span class="id" title="var">compose</span> (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_r</span>) <span class="id" title="var">swap_map</span>)))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_t</span>)) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">id</span> <span class="id" title="var">_</span>))<br/>
+<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">D_Absurd</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">D_t</span> =&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">compose</span> <span class="id" title="var">initial_map</span> (<span class="id" title="var">interp_derivation</span> <span class="id" title="var">D_t</span>)<br/>
+<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">interp_term_ver</span> {<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>} {<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">BCC</span> : <span class="id" title="var">BiCartesianClosedCategory</span> <span class="id" title="var">CC</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>} (<span class="id" title="var">t</span> : <span class="id" title="var">tm</span>) {<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>} {<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>} (<span class="id" title="var">d</span> : <span class="id" title="var">derivation</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">t</span> <span class="id" title="var">A</span>) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: <span class="id" title="var">hom</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">Gamma</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>) :=<br/>
+&nbsp;&nbsp;<span class="id" title="var">interp_derivation</span> <span class="id" title="var">d</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">Soundness_explicit</span> : <span class="id" title="keyword">forall</span> (<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>) (<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">BCC</span> : <span class="id" title="var">BiCartesianClosedCategory</span> <span class="id" title="var">CC</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>) (<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>) (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>) (<span class="id" title="var">t</span> : <span class="id" title="var">tm</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">D</span> : <span class="id" title="var">derivation</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">t</span> <span class="id" title="var">A</span>),<br/>
+&nbsp;&nbsp;<span class="id" title="var">hom</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">Gamma</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">Soundness</span> : <span class="id" title="keyword">forall</span> (<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>) (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>),<br/>
+&nbsp;&nbsp;(<span class="id" title="tactic">exists</span> (<span class="id" title="var">t</span> : <span class="id" title="var">tm</span>) (<span class="id" title="var">d</span> : <span class="id" title="var">derivation</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">t</span> <span class="id" title="var">A</span>), <span class="id" title="var">True</span>) -&gt; <br/>
+&nbsp;&nbsp;(<span class="id" title="keyword">forall</span> (<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>) (<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">BCC</span> : <span class="id" title="var">BiCartesianClosedCategory</span> <span class="id" title="var">CC</span>) (<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">inhabited</span> (<span class="id" title="var">hom</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">Gamma</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>))).<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">soundness_equiv</span> {<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>} {<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">BCC</span> : <span class="id" title="var">BiCartesianClosedCategory</span> <span class="id" title="var">CC</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>} {<span class="id" title="var">HThin</span> : <span class="id" title="var">Thin</span> <span class="id" title="var">C</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>} {<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>} {<span class="id" title="var">t1</span> <span class="id" title="var">t2</span> : <span class="id" title="var">tm</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">d1</span> : <span class="id" title="var">derivation</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">t1</span> <span class="id" title="var">A</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">d2</span> : <span class="id" title="var">derivation</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">t2</span> <span class="id" title="var">A</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Heq</span> : <span class="id" title="var">tm_equiv_rel</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span>) : <br/>
+&nbsp;&nbsp;<span class="id" title="var">interp_derivation</span> <span class="id" title="var">d1</span> ≅ <span class="id" title="var">interp_derivation</span> <span class="id" title="var">d2</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">interprets_to</span> {<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>} {<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">BCC</span> : <span class="id" title="var">BiCartesianClosedCategory</span> <span class="id" title="var">CC</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>} <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>) (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>) (<span class="id" title="var">t</span> : <span class="id" title="var">tm</span>) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">f</span> : <span class="id" title="var">hom</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">Gamma</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>)) : <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">exists</span> (<span class="id" title="var">d</span> : <span class="id" title="var">derivation</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">t</span> <span class="id" title="var">A</span>), <span class="id" title="var">interp_derivation</span> <span class="id" title="var">d</span> ≅ <span class="id" title="var">f</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">soundness_terms_equiv</span> {<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>} {<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>} {<span class="id" title="var">BCC</span> : <span class="id" title="var">BiCartesianClosedCategory</span> <span class="id" title="var">CC</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>} {<span class="id" title="var">HThin</span> : <span class="id" title="var">Thin</span> <span class="id" title="var">C</span>}<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>) (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">t1</span> <span class="id" title="var">t2</span> : <span class="id" title="var">tm</span>) <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">f</span> <span class="id" title="var">g</span> : <span class="id" title="var">hom</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">Gamma</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>)) :<br/>
+&nbsp;&nbsp;<span class="id" title="var">interprets_to</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">A</span> <span class="id" title="var">t1</span> <span class="id" title="var">f</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id" title="var">interprets_to</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">A</span> <span class="id" title="var">t2</span> <span class="id" title="var">g</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id" title="var">tm_equiv_rel</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> -&gt;<br/>
+&nbsp;&nbsp;<span class="id" title="var">f</span> ≅ <span class="id" title="var">g</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">Soundness_implicit_aux</span> (<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>) (<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">BCC</span> : <span class="id" title="var">BiCartesianClosedCategory</span> <span class="id" title="var">CC</span>) (<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>) :<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">forall</span> (<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>) (<span class="id" title="var">t</span> : <span class="id" title="var">tm</span>) (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Gamma</span> ⊢ <span class="id" title="var">t</span> [:] <span class="id" title="var">A</span>) -&gt; <span class="id" title="var">inhabited</span> (<span class="id" title="var">hom</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">Gamma</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>)).<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">Soundness_implicit</span> : <span class="id" title="keyword">forall</span> (<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>) (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>),<br/>
+&nbsp;&nbsp;(<span class="id" title="tactic">exists</span> <span class="id" title="var">t</span>, (<span class="id" title="var">Gamma</span> ⊢ <span class="id" title="var">t</span> [:] <span class="id" title="var">A</span>)) -&gt;<br/>
+&nbsp;&nbsp;(<span class="id" title="keyword">forall</span> (<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>) (<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">BCC</span> : <span class="id" title="var">BiCartesianClosedCategory</span> <span class="id" title="var">CC</span>) (<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">inhabited</span> (<span class="id" title="var">hom</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">Gamma</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>))).<br/>
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

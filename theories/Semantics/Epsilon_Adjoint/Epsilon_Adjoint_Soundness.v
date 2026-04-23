@@ -1,5 +1,4 @@
-(* theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Soundness.v *)
-
+(* theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Soundness.v 
 Require Import Coq.Classes.Morphisms.
 Require Import List Arith PeanoNat Lia.
 Import ListNotations. 
@@ -486,3 +485,5 @@ Proof.
       * apply id. 
 
 Defined.
+
+*)

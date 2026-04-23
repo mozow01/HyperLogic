@@ -1,0 +1,95 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>Hyper_Substitution</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library Hyper_Substitution</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">List</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">PeanoNat</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">ListNotations</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.Base.Simple.Base_Syntax</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.Base.Simple.Base_Equiv</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.Hyper.Simple.Hyper_Syntax</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">map_shift_base</span> (<span class="id" title="var">d</span> <span class="id" title="var">c</span> : <span class="id" title="var">nat</span>) (<span class="id" title="var">ts</span> : <span class="id" title="var">list</span> <span class="id" title="var">b_tm</span>) : <span class="id" title="var">list</span> <span class="id" title="var">b_tm</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="var">map</span> (<span class="id" title="var">shift</span> <span class="id" title="var">d</span> <span class="id" title="var">c</span>) <span class="id" title="var">ts</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">map_subst_base</span> (<span class="id" title="var">k</span> : <span class="id" title="var">nat</span>) (<span class="id" title="var">s</span> : <span class="id" title="var">b_tm</span>) (<span class="id" title="var">ts</span> : <span class="id" title="var">list</span> <span class="id" title="var">b_tm</span>) : <span class="id" title="var">list</span> <span class="id" title="var">b_tm</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="var">map</span> (<span class="id" title="tactic">subst</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span>) <span class="id" title="var">ts</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">h_shift</span> (<span class="id" title="var">d</span> : <span class="id" title="var">nat</span>) (<span class="id" title="var">c</span> : <span class="id" title="var">nat</span>) (<span class="id" title="var">Phi</span> : <span class="id" title="var">h_ty</span>) : <span class="id" title="var">h_ty</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">Phi</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Unit</span> =&gt; <span class="id" title="var">Ty_Unit</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Void</span> =&gt; <span class="id" title="var">Ty_Void</span><br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Prod</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span> =&gt; <span class="id" title="var">Ty_Prod</span> (<span class="id" title="var">h_shift</span> <span class="id" title="var">d</span> <span class="id" title="var">c</span> <span class="id" title="var">A</span>) (<span class="id" title="var">h_shift</span> <span class="id" title="var">d</span> <span class="id" title="var">c</span> <span class="id" title="var">B</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Sum</span>  <span class="id" title="var">A</span> <span class="id" title="var">B</span> =&gt; <span class="id" title="var">Ty_Sum</span>  (<span class="id" title="var">h_shift</span> <span class="id" title="var">d</span> <span class="id" title="var">c</span> <span class="id" title="var">A</span>) (<span class="id" title="var">h_shift</span> <span class="id" title="var">d</span> <span class="id" title="var">c</span> <span class="id" title="var">B</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Arr</span>  <span class="id" title="var">A</span> <span class="id" title="var">B</span> =&gt; <span class="id" title="var">Ty_Arr</span>  (<span class="id" title="var">h_shift</span> <span class="id" title="var">d</span> <span class="id" title="var">c</span> <span class="id" title="var">A</span>) (<span class="id" title="var">h_shift</span> <span class="id" title="var">d</span> <span class="id" title="var">c</span> <span class="id" title="var">B</span>)<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Atom</span> <span class="id" title="var">p</span> <span class="id" title="var">ts</span> =&gt; <span class="id" title="var">Ty_Atom</span> <span class="id" title="var">p</span> (<span class="id" title="var">map_shift_base</span> <span class="id" title="var">d</span> <span class="id" title="var">c</span> <span class="id" title="var">ts</span>)<br/>
+<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_All</span> <span class="id" title="var">A</span> <span class="id" title="var">Body</span> =&gt; <span class="id" title="var">Ty_All</span> <span class="id" title="var">A</span> (<span class="id" title="var">h_shift</span> <span class="id" title="var">d</span> (<span class="id" title="var">S</span> <span class="id" title="var">c</span>) <span class="id" title="var">Body</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Ex</span>  <span class="id" title="var">A</span> <span class="id" title="var">Body</span> =&gt; <span class="id" title="var">Ty_Ex</span>  <span class="id" title="var">A</span> (<span class="id" title="var">h_shift</span> <span class="id" title="var">d</span> (<span class="id" title="var">S</span> <span class="id" title="var">c</span>) <span class="id" title="var">Body</span>)<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">h_subst</span> (<span class="id" title="var">k</span> : <span class="id" title="var">nat</span>) (<span class="id" title="var">s</span> : <span class="id" title="var">b_tm</span>) (<span class="id" title="var">Phi</span> : <span class="id" title="var">h_ty</span>) : <span class="id" title="var">h_ty</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">Phi</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Unit</span> =&gt; <span class="id" title="var">Ty_Unit</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Void</span> =&gt; <span class="id" title="var">Ty_Void</span><br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Prod</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span> =&gt; <span class="id" title="var">Ty_Prod</span> (<span class="id" title="var">h_subst</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">A</span>) (<span class="id" title="var">h_subst</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">B</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Sum</span>  <span class="id" title="var">A</span> <span class="id" title="var">B</span> =&gt; <span class="id" title="var">Ty_Sum</span>  (<span class="id" title="var">h_subst</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">A</span>) (<span class="id" title="var">h_subst</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">B</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Arr</span>  <span class="id" title="var">A</span> <span class="id" title="var">B</span> =&gt; <span class="id" title="var">Ty_Arr</span>  (<span class="id" title="var">h_subst</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">A</span>) (<span class="id" title="var">h_subst</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">B</span>)<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Atom</span> <span class="id" title="var">p</span> <span class="id" title="var">ts</span> =&gt; <span class="id" title="var">Ty_Atom</span> <span class="id" title="var">p</span> (<span class="id" title="var">map_subst_base</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">ts</span>)<br/>
+<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_All</span> <span class="id" title="var">A</span> <span class="id" title="var">Body</span> =&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Ty_All</span> <span class="id" title="var">A</span> (<span class="id" title="var">h_subst</span> (<span class="id" title="var">S</span> <span class="id" title="var">k</span>) (<span class="id" title="var">shift</span> 1 0 <span class="id" title="var">s</span>) <span class="id" title="var">Body</span>)<br/>
+<br/>
+&nbsp;&nbsp;| <span class="id" title="var">Ty_Ex</span> <span class="id" title="var">A</span> <span class="id" title="var">Body</span> =&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Ty_Ex</span>  <span class="id" title="var">A</span> (<span class="id" title="var">h_subst</span> (<span class="id" title="var">S</span> <span class="id" title="var">k</span>) (<span class="id" title="var">shift</span> 1 0 <span class="id" title="var">s</span>) <span class="id" title="var">Body</span>)<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>Simple_Soundness</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library Simple_Soundness</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">List</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">PeanoNat</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Coq.Classes.Morphisms</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">ListNotations</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.Core</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.CC</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.CCC</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.BCCC</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.Functor</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.Fibration</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.Base.Simple.Base_Syntax</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.Base.Simple.Base_Typing</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.Hyper.Simple.Hyper_Syntax</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.Hyper.Simple.Hyper_Logic</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Class</span> <span class="id" title="var">SimpleModel</span> (<span class="id" title="var">B</span> : <span class="id" title="var">SetoidCategory</span>) {<span class="id" title="var">CB</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">B</span>} {<span class="id" title="var">GF</span> : <span class="id" title="var">GoodFibration</span> <span class="id" title="var">B</span>} := {<br/>
+&nbsp;&nbsp;<span class="id" title="var">interp_sort</span> : @<span class="id" title="var">obj</span> <span class="id" title="var">B</span>;<br/>
+&nbsp;&nbsp;<span class="id" title="var">interp_atom</span> : <span class="id" title="keyword">forall</span> (<span class="id" title="var">p</span> : <span class="id" title="var">nat</span>) (<span class="id" title="var">dom</span> : @<span class="id" title="var">obj</span> <span class="id" title="var">B</span>), @<span class="id" title="var">obj</span> (<span class="id" title="var">Fiber</span> <span class="id" title="var">dom</span>)<br/>
+}.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">interp_base_ty</span> {<span class="id" title="var">B</span> : <span class="id" title="var">SetoidCategory</span>} {<span class="id" title="var">CB</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">B</span>} {<span class="id" title="var">GF</span> : <span class="id" title="var">GoodFibration</span> <span class="id" title="var">B</span>} {<span class="id" title="var">M</span> : <span class="id" title="var">SimpleModel</span> <span class="id" title="var">B</span>} <br/>
+&nbsp;&nbsp;(<span class="id" title="var">A</span> : <span class="id" title="var">b_ty</span>) : @<span class="id" title="var">obj</span> <span class="id" title="var">B</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">A</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_Unit</span> =&gt; <span class="id" title="var">terminal</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_Prod</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span> =&gt; <span class="id" title="var">prod</span> (<span class="id" title="var">interp_base_ty</span> <span class="id" title="var">A</span>) (<span class="id" title="var">interp_base_ty</span> <span class="id" title="var">B</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_S</span> =&gt; <span class="id" title="var">interp_sort</span><br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">interp_ctx</span> {<span class="id" title="var">B</span> : <span class="id" title="var">SetoidCategory</span>} {<span class="id" title="var">CB</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">B</span>} {<span class="id" title="var">GF</span> : <span class="id" title="var">GoodFibration</span> <span class="id" title="var">B</span>} {<span class="id" title="var">M</span> : <span class="id" title="var">SimpleModel</span> <span class="id" title="var">B</span>} <br/>
+&nbsp;&nbsp;(<span class="id" title="var">G</span> : <span class="id" title="var">b_context</span>) : @<span class="id" title="var">obj</span> <span class="id" title="var">B</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">G</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">nil</span> =&gt; <span class="id" title="var">terminal</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">A</span> :: <span class="id" title="var">G'</span> =&gt; <span class="id" title="var">prod</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">G'</span>) (<span class="id" title="var">interp_base_ty</span> <span class="id" title="var">A</span>)<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

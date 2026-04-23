@@ -1,0 +1,168 @@
+Require Import List PeanoNat Coq.Classes.Morphisms.
+Import ListNotations.
+
+(* HyperLogic Modules *)
+Require Import HyperLogic.Cat.Core.
+Require Import HyperLogic.Cat.CC.
+Require Import HyperLogic.Cat.CCC.
+Require Import HyperLogic.Logic.STLC_PI.STLC_PI.
+Require Import HyperLogic.Logic.STLC_PI.STLC_PI_Lemmas.
+Require Import HyperLogic.Semantics.STLC_PI.STLC_PI_Soundness.
+
+Open Scope stlc_scope.
+
+(* ================================================================= *)
+(* 1. HELPER LEMMAS                                                  *)
+(* ================================================================= *)
+
+(**
+ * Weakening for context concatenation.
+ *)
+Lemma weakening_append : forall Gamma Delta t A,
+  Gamma ⊢ t [:] A -> (Gamma ++ Delta) ⊢ t [:] A.
+Proof. Admitted.
+
+(* ================================================================= *)
+(* 2. CATEGORY CONSTRUCTION (STLC_Category)                          *)
+(* ================================================================= *)
+
+(** Objects are Types *)
+Definition obj_stlc_cat := ty.
+
+Definition id_term (A : ty) : tm := tm_lam A (tm_var 0).
+Lemma id_typing (A : ty) : ⊢ (id_term A) [:] (A ⊃ A).
+Proof. Admitted.
+Definition id_stlc (A : ty) : hom_stlc A A := exist _ (id_term A) (id_typing A).
+
+Definition compose_term {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) :=
+  tm_lam x (tm_app (proj1_sig f) (tm_app (proj1_sig g) (tm_var 0))).
+Lemma compose_typing {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) :
+  ⊢ (compose_term f g) [:] (x ⊃ z).
+Proof. Admitted.
+Definition compose_stlc {x y z : ty} (f : hom_stlc y z) (g : hom_stlc x y) : hom_stlc x z :=
+  exist _ (compose_term f g) (compose_typing f g).
+
+Instance STLC_Category : SetoidCategory.
+Proof. Admitted.
+
+Instance STLC_Thin : Thin STLC_Category.
+Proof. Admitted.
+
+(* ================================================================= *)
+(* 3. CC & CCC CONSTRUCTION                                          *)
+(* ================================================================= *)
+
+(* --- Terminal & Product (Cartesian) --- *)
+
+Definition terminal_term (A : ty) := (tm_lam A tm_unit).
+Lemma terminal_typing (A : ty) : ⊢ (terminal_term A) [:] (A ⊃ Ty_Unit).
+Proof. Admitted.
+Definition terminal_stlc (x : ty) : hom_stlc x Ty_Unit := exist _ (terminal_term x) (terminal_typing x).
+
+Definition prod_map_term (x y z : ty) (f : hom_stlc x y) (g : hom_stlc x z) :=
+  tm_lam x (tm_pair (tm_app (proj1_sig f) (tm_var 0)) (tm_app (proj1_sig g) (tm_var 0))).
+Lemma prod_map_typing (x y z : ty) (f : hom_stlc x y) (g : hom_stlc x z) :
+  ⊢ prod_map_term x y z f g [:] (x ⊃ (Ty_Prod y z)).
+Proof. Admitted.
+Definition prod_map_stlc {x y z : ty} (f : hom_stlc x y) (g : hom_stlc x z) : hom_stlc x (Ty_Prod y z) :=
+  exist _ _ (prod_map_typing x y z f g).
+
+Definition fst_term (x y : ty) := (tm_lam (Ty_Prod x y) (tm_fst (tm_var 0))).
+Lemma fst_typing (x y : ty) : ⊢ (fst_term x y) [:] ((Ty_Prod x y) ⊃ x).
+Proof. Admitted.
+Definition fst_stlc {x y : ty} : hom_stlc (Ty_Prod x y) x := exist _ _ (fst_typing x y).
+
+Definition snd_term (x y : ty) := (tm_lam (Ty_Prod x y) (tm_snd (tm_var 0))).
+Lemma snd_typing (x y : ty) : ⊢ (snd_term x y) [:] ((Ty_Prod x y) ⊃ y).
+Proof. Admitted.
+Definition snd_stlc {x y : ty} : hom_stlc (Ty_Prod x y) y := exist _ _ (snd_typing x y).
+
+(* ÚJ: Explicit CartesianCategory Instance *)
+Instance STLC_CC : CartesianCategory STLC_Category.
+Proof. Admitted.
+
+(* --- Exponentials (Closed) --- *)
+
+Definition eval_term (y z : ty) :=
+  tm_lam (Ty_Prod (Ty_Arrow z y) z) (tm_app (tm_fst (tm_var 0)) (tm_snd (tm_var 0))).
+Lemma eval_typing (y z : ty) : ⊢ eval_term y z [:] (Ty_Prod (Ty_Arrow z y) z ⊃ y).
+Proof. Admitted.
+Definition eval_stlc {y z : ty} : hom_stlc (Ty_Prod (Ty_Arrow z y) z) y := exist _ _ (eval_typing y z).
+
+Definition curry_term (x y z : ty) (g : hom_stlc (Ty_Prod x y) z) :=
+  (tm_lam x (tm_lam y (tm_app (proj1_sig g) (tm_pair (tm_var 1) (tm_var 0))))).
+Lemma curry_typing (x y z : ty) (g : hom_stlc (Ty_Prod x y) z) :
+  ⊢ curry_term x y z g [:] (x ⊃ (Ty_Arrow y z)).
+Proof. Admitted.
+Definition curry_stlc {x y z : ty} (g : hom_stlc (Ty_Prod x y) z) : hom_stlc x (Ty_Arrow y z) :=
+  exist _ _ (curry_typing x y z g).
+
+Instance STLC_CCC : CartesianClosedCategory STLC_Category.
+Proof. Admitted.
+
+(* ================================================================= *)
+(* 4. COMPLETENESS INFRASTRUCTURE                                    *)
+(* ================================================================= *)
+
+Fixpoint make_ctx_ty (Gamma : context) : ty :=
+  match Gamma with
+  | nil => Ty_Unit
+  | A :: Gamma' => Ty_Prod (make_ctx_ty Gamma') A
+  end.
+
+Fixpoint reify_ctx (Gamma : context) : tm :=
+  match Gamma with
+  | nil => tm_unit
+  | A :: Gamma' => tm_pair (lift 1 0 (reify_ctx Gamma')) (tm_var 0)
+  end.
+
+Lemma reify_ctx_typing : forall Gamma,
+  Gamma ⊢ reify_ctx Gamma [:] (make_ctx_ty Gamma).
+Proof. Admitted.
+
+Instance STLC_Model : Model STLC_Category := {
+  interp_base := Ty_Atomic
+}.
+
+(* --- Identity Lemmas --- *)
+(* Az argumentumokból kivettük a CCC-t, mert most már implicit *)
+
+Lemma val_identity : forall A, interp_ty STLC_Category STLC_Model A = A.
+Proof. Admitted.
+
+Lemma ctx_identity : forall Gamma, interp_ctx STLC_Category STLC_Model Gamma = make_ctx_ty Gamma.
+Proof. Admitted.
+
+(* ================================================================= *)
+(* 5. COMPLETENESS THEOREMS                                          *)
+(* ================================================================= *)
+
+Theorem Completeness_Equational :
+  forall (Gamma : context) (A : ty) (t1 t2 : tm)
+         (d1 : derivation Gamma t1 A)
+         (d2 : derivation Gamma t2 A),
+  (* Itt hozzáadtuk a (Ct : CartesianCategory C)-t *)
+  (forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (M : Model C),
+      interp_derivation d1 ≅ interp_derivation d2) ->
+  tm_equiv_rel t1 t2.
+Proof. Admitted.
+
+Theorem completeness_terms_equiv :
+  forall (Gamma : context) (A : ty) (t1 t2 : tm),
+  (* STLC_CCC implicit, ezért itt sem kell explicit megadni *)
+  (exists f, interprets_to (C:=STLC_Category) (M:=STLC_Model) Gamma A t1 f) ->
+  (exists g, interprets_to (C:=STLC_Category) (M:=STLC_Model) Gamma A t2 g) ->
+
+  (forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (M : Model C)
+          (f g : hom (interp_ctx C M Gamma) (interp_ty C M A)),
+      interprets_to Gamma A t1 f ->
+      interprets_to Gamma A t2 g ->
+      f ≅ g) ->
+  tm_equiv_rel t1 t2.
+Proof. Admitted.
+
+Theorem Completeness : forall Gamma A,
+  (forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (M : Model C),
+     inhabited (hom (interp_ctx C M Gamma) (interp_ty C M A))) ->
+  (exists t, (Gamma ⊢ t [:] A)).
+Proof. Admitted.

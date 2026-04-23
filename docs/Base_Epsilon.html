@@ -1,0 +1,119 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>Base_Epsilon</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library Base_Epsilon</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">List</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Setoid</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Morphisms</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.Hyper.Epsilon.Epsilon_Syntax</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">ListNotations</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Reserved Notation</span> &quot;t1 '≈' t2" (<span class="id" title="tactic">at</span> <span class="id" title="keyword">level</span> 70).<br/>
+<span class="id" title="keyword">Reserved Notation</span> &quot;A '≈T' B" (<span class="id" title="tactic">at</span> <span class="id" title="keyword">level</span> 70).<br/>
+
+<br/>
+<span class="id" title="keyword">Inductive</span> <span class="id" title="var">b_equiv_tm</span> : <span class="id" title="var">b_tm</span> -&gt; <span class="id" title="var">b_tm</span> -&gt; <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BE_Refl</span>  : <span class="id" title="keyword">forall</span> <span class="id" title="var">t</span>, <span class="id" title="var">t</span> ≈ <span class="id" title="var">t</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">BE_Sym</span>   : <span class="id" title="keyword">forall</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span>, <span class="id" title="var">t1</span> ≈ <span class="id" title="var">t2</span> -&gt; <span class="id" title="var">t2</span> ≈ <span class="id" title="var">t1</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">BE_Trans</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> <span class="id" title="var">t3</span>, <span class="id" title="var">t1</span> ≈ <span class="id" title="var">t2</span> -&gt; <span class="id" title="var">t2</span> ≈ <span class="id" title="var">t3</span> -&gt; <span class="id" title="var">t1</span> ≈ <span class="id" title="var">t3</span><br/>
+<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BE_Pair_Cong</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">a</span> <span class="id" title="var">a'</span> <span class="id" title="var">b</span> <span class="id" title="var">b'</span>, <span class="id" title="var">a</span> ≈ <span class="id" title="var">a'</span> -&gt; <span class="id" title="var">b</span> ≈ <span class="id" title="var">b'</span> -&gt; (<span class="id" title="var">b_pair</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>) ≈ (<span class="id" title="var">b_pair</span> <span class="id" title="var">a'</span> <span class="id" title="var">b'</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BE_Fst_Cong</span>  : <span class="id" title="keyword">forall</span> <span class="id" title="var">t</span> <span class="id" title="var">t'</span>, <span class="id" title="var">t</span> ≈ <span class="id" title="var">t'</span> -&gt; (<span class="id" title="var">b_fst</span> <span class="id" title="var">t</span>) ≈ (<span class="id" title="var">b_fst</span> <span class="id" title="var">t'</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BE_Snd_Cong</span>  : <span class="id" title="keyword">forall</span> <span class="id" title="var">t</span> <span class="id" title="var">t'</span>, <span class="id" title="var">t</span> ≈ <span class="id" title="var">t'</span> -&gt; (<span class="id" title="var">b_snd</span> <span class="id" title="var">t</span>) ≈ (<span class="id" title="var">b_snd</span> <span class="id" title="var">t'</span>)<br/>
+<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BE_Epsilon_Cong</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span>, <span class="id" title="var">A</span> ≈<span class="id" title="var">T</span> <span class="id" title="var">B</span> -&gt; (<span class="id" title="var">b_epsilon</span> <span class="id" title="var">A</span>) ≈ (<span class="id" title="var">b_epsilon</span> <span class="id" title="var">B</span>)<br/>
+<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BE_Beta_Fst</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>, <span class="id" title="var">b_fst</span> (<span class="id" title="var">b_pair</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>) ≈ <span class="id" title="var">a</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">BE_Beta_Snd</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>, <span class="id" title="var">b_snd</span> (<span class="id" title="var">b_pair</span> <span class="id" title="var">a</span> <span class="id" title="var">b</span>) ≈ <span class="id" title="var">b</span><br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BE_Eta_Pair</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">t</span>, <span class="id" title="var">b_pair</span> (<span class="id" title="var">b_fst</span> <span class="id" title="var">t</span>) (<span class="id" title="var">b_snd</span> <span class="id" title="var">t</span>) ≈ <span class="id" title="var">t</span><br/>
+<br/>
+<span class="id" title="keyword">with</span> <span class="id" title="var">b_equiv_ty</span> : <span class="id" title="var">h_ty</span> -&gt; <span class="id" title="var">h_ty</span> -&gt; <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BTE_Refl</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">A</span>, <span class="id" title="var">A</span> ≈<span class="id" title="var">T</span> <span class="id" title="var">A</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">BTE_Sym</span>  : <span class="id" title="keyword">forall</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span>, <span class="id" title="var">A</span> ≈<span class="id" title="var">T</span> <span class="id" title="var">B</span> -&gt; <span class="id" title="var">B</span> ≈<span class="id" title="var">T</span> <span class="id" title="var">A</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">BTE_Trans</span>: <span class="id" title="keyword">forall</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span> <span class="id" title="var">C</span>, <span class="id" title="var">A</span> ≈<span class="id" title="var">T</span> <span class="id" title="var">B</span> -&gt; <span class="id" title="var">B</span> ≈<span class="id" title="var">T</span> <span class="id" title="var">C</span> -&gt; <span class="id" title="var">A</span> ≈<span class="id" title="var">T</span> <span class="id" title="var">C</span><br/>
+<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BTE_Arr_Cong</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">A</span> <span class="id" title="var">A'</span> <span class="id" title="var">B</span> <span class="id" title="var">B'</span>, <span class="id" title="var">A</span> ≈<span class="id" title="var">T</span> <span class="id" title="var">A'</span> -&gt; <span class="id" title="var">B</span> ≈<span class="id" title="var">T</span> <span class="id" title="var">B'</span> -&gt; (<span class="id" title="var">Ty_Arr</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span>) ≈<span class="id" title="var">T</span> (<span class="id" title="var">Ty_Arr</span> <span class="id" title="var">A'</span> <span class="id" title="var">B'</span>)<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BTE_Prod_Cong</span>: <span class="id" title="keyword">forall</span> <span class="id" title="var">A</span> <span class="id" title="var">A'</span> <span class="id" title="var">B</span> <span class="id" title="var">B'</span>, <span class="id" title="var">A</span> ≈<span class="id" title="var">T</span> <span class="id" title="var">A'</span> -&gt; <span class="id" title="var">B</span> ≈<span class="id" title="var">T</span> <span class="id" title="var">B'</span> -&gt; (<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span>) ≈<span class="id" title="var">T</span> (<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">A'</span> <span class="id" title="var">B'</span>)<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BTE_Atom_Cong</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">p</span> <span class="id" title="var">args</span> <span class="id" title="var">args'</span>,<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Forall2</span> <span class="id" title="var">b_equiv_tm</span> <span class="id" title="var">args</span> <span class="id" title="var">args'</span> -&gt; <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">Ty_Atom</span> <span class="id" title="var">p</span> <span class="id" title="var">args</span>) ≈<span class="id" title="var">T</span> (<span class="id" title="var">Ty_Atom</span> <span class="id" title="var">p</span> <span class="id" title="var">args'</span>)<br/>
+<br/>
+<span class="id" title="keyword">where</span> &quot;t1 '≈' t2" := (<span class="id" title="var">b_equiv_tm</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span>)<br/>
+<span class="id" title="var">and</span>   "A '≈T' B"  := (<span class="id" title="var">b_equiv_ty</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span>).<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">b_equiv_Equivalence</span> : <span class="id" title="var">Equivalence</span> <span class="id" title="var">b_equiv_tm</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">b_equiv_ty_Equivalence</span> : <span class="id" title="var">Equivalence</span> <span class="id" title="var">b_equiv_ty</span>.<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">b_pair_Proper</span> : <span class="id" title="var">Proper</span> (<span class="id" title="var">b_equiv_tm</span> ==&gt; <span class="id" title="var">b_equiv_tm</span> ==&gt; <span class="id" title="var">b_equiv_tm</span>) <span class="id" title="var">b_pair</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">b_fst_Proper</span> : <span class="id" title="var">Proper</span> (<span class="id" title="var">b_equiv_tm</span> ==&gt; <span class="id" title="var">b_equiv_tm</span>) <span class="id" title="var">b_fst</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">b_snd_Proper</span> : <span class="id" title="var">Proper</span> (<span class="id" title="var">b_equiv_tm</span> ==&gt; <span class="id" title="var">b_equiv_tm</span>) <span class="id" title="var">b_snd</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">b_epsilon_Proper</span> : <span class="id" title="var">Proper</span> (<span class="id" title="var">b_equiv_ty</span> ==&gt; <span class="id" title="var">b_equiv_tm</span>) <span class="id" title="var">b_epsilon</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">Ty_Atom_Proper</span> : <span class="id" title="var">Proper</span> (<span class="id" title="var">eq</span> ==&gt; <span class="id" title="var">Forall2</span> <span class="id" title="var">b_equiv_tm</span> ==&gt; <span class="id" title="var">b_equiv_ty</span>) <span class="id" title="var">Ty_Atom</span>.<br/>
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

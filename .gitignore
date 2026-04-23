@@ -1,13 +1,18 @@
+# Coq fordítási fájlok (Automatikusan generált)
 *.vo
 *.vos
 *.vok
 *.glob
-.*.aux
 
-skeleton/
-generate_skeleton.py
+# Make és függőségi fájlok (Gépfüggő)
+Makefile
+Makefile.conf
+.Makefile.d
 
-Makefile.coq
-Makefile.coq.conf
+# Coq gyorsítótárak
+.lia.cache
 
-docs/
+# Szövegszerkesztő biztonsági mentések és temp fájlok
+*~
+#*#
+.#*

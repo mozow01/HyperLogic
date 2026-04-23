@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>STLC_PI_Completeness</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library STLC_PI_Completeness</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">List</span> <span class="id" title="var">PeanoNat</span> <span class="id" title="var">Coq.Classes.Morphisms</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">ListNotations</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.Core</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.CC</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Cat.CCC</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.STLC_PI.STLC_PI</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Logic.STLC_PI.STLC_PI_Lemmas</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">HyperLogic.Semantics.STLC_PI.STLC_PI_Soundness</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Open</span> <span class="id" title="keyword">Scope</span> <span class="id" title="var">stlc_scope</span>.<br/>
+
+<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<a id="lab27"></a><h1 class="section">Weakening for context concatenation.</h1>
+
+ 
+</div>
+<div class="code">
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">weakening_append</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">Delta</span> <span class="id" title="var">t</span> <span class="id" title="var">A</span>,<br/>
+&nbsp;&nbsp;<span class="id" title="var">Gamma</span> ⊢ <span class="id" title="var">t</span> [:] <span class="id" title="var">A</span> -&gt; (<span class="id" title="var">Gamma</span> ++ <span class="id" title="var">Delta</span>) ⊢ <span class="id" title="var">t</span> [:] <span class="id" title="var">A</span>.<br/>
+
+<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Objects are Types 
+</div>
+<div class="code">
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">obj_stlc_cat</span> := <span class="id" title="var">ty</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">id_term</span> (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>) : <span class="id" title="var">tm</span> := <span class="id" title="var">tm_lam</span> <span class="id" title="var">A</span> (<span class="id" title="var">tm_var</span> 0).<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">id_typing</span> (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>) : ⊢ (<span class="id" title="var">id_term</span> <span class="id" title="var">A</span>) [:] (<span class="id" title="var">A</span> ⊃ <span class="id" title="var">A</span>).<br/>
+ <span class="id" title="keyword">Definition</span> <span class="id" title="var">id_stlc</span> (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>) : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">A</span> <span class="id" title="var">A</span> := <span class="id" title="var">exist</span> <span class="id" title="var">_</span> (<span class="id" title="var">id_term</span> <span class="id" title="var">A</span>) (<span class="id" title="var">id_typing</span> <span class="id" title="var">A</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">compose_term</span> {<span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>} (<span class="id" title="var">f</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span>) (<span class="id" title="var">g</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) :=<br/>
+&nbsp;&nbsp;<span class="id" title="var">tm_lam</span> <span class="id" title="var">x</span> (<span class="id" title="var">tm_app</span> (<span class="id" title="var">proj1_sig</span> <span class="id" title="var">f</span>) (<span class="id" title="var">tm_app</span> (<span class="id" title="var">proj1_sig</span> <span class="id" title="var">g</span>) (<span class="id" title="var">tm_var</span> 0))).<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">compose_typing</span> {<span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>} (<span class="id" title="var">f</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span>) (<span class="id" title="var">g</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) :<br/>
+&nbsp;&nbsp;⊢ (<span class="id" title="var">compose_term</span> <span class="id" title="var">f</span> <span class="id" title="var">g</span>) [:] (<span class="id" title="var">x</span> ⊃ <span class="id" title="var">z</span>).<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">compose_stlc</span> {<span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>} (<span class="id" title="var">f</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span>) (<span class="id" title="var">g</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> <span class="id" title="var">z</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="var">exist</span> <span class="id" title="var">_</span> (<span class="id" title="var">compose_term</span> <span class="id" title="var">f</span> <span class="id" title="var">g</span>) (<span class="id" title="var">compose_typing</span> <span class="id" title="var">f</span> <span class="id" title="var">g</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">STLC_Category</span> : <span class="id" title="var">SetoidCategory</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">STLC_Thin</span> : <span class="id" title="var">Thin</span> <span class="id" title="var">STLC_Category</span>.<br/>
+ 
+<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">terminal_term</span> (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>) := (<span class="id" title="var">tm_lam</span> <span class="id" title="var">A</span> <span class="id" title="var">tm_unit</span>).<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">terminal_typing</span> (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>) : ⊢ (<span class="id" title="var">terminal_term</span> <span class="id" title="var">A</span>) [:] (<span class="id" title="var">A</span> ⊃ <span class="id" title="var">Ty_Unit</span>).<br/>
+ <span class="id" title="keyword">Definition</span> <span class="id" title="var">terminal_stlc</span> (<span class="id" title="var">x</span> : <span class="id" title="var">ty</span>) : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> <span class="id" title="var">Ty_Unit</span> := <span class="id" title="var">exist</span> <span class="id" title="var">_</span> (<span class="id" title="var">terminal_term</span> <span class="id" title="var">x</span>) (<span class="id" title="var">terminal_typing</span> <span class="id" title="var">x</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">prod_map_term</span> (<span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>) (<span class="id" title="var">f</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) (<span class="id" title="var">g</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> <span class="id" title="var">z</span>) :=<br/>
+&nbsp;&nbsp;<span class="id" title="var">tm_lam</span> <span class="id" title="var">x</span> (<span class="id" title="var">tm_pair</span> (<span class="id" title="var">tm_app</span> (<span class="id" title="var">proj1_sig</span> <span class="id" title="var">f</span>) (<span class="id" title="var">tm_var</span> 0)) (<span class="id" title="var">tm_app</span> (<span class="id" title="var">proj1_sig</span> <span class="id" title="var">g</span>) (<span class="id" title="var">tm_var</span> 0))).<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">prod_map_typing</span> (<span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>) (<span class="id" title="var">f</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) (<span class="id" title="var">g</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> <span class="id" title="var">z</span>) :<br/>
+&nbsp;&nbsp;⊢ <span class="id" title="var">prod_map_term</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> <span class="id" title="var">f</span> <span class="id" title="var">g</span> [:] (<span class="id" title="var">x</span> ⊃ (<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span>)).<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">prod_map_stlc</span> {<span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>} (<span class="id" title="var">f</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) (<span class="id" title="var">g</span> : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> <span class="id" title="var">z</span>) : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> (<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span>) :=<br/>
+&nbsp;&nbsp;<span class="id" title="var">exist</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> (<span class="id" title="var">prod_map_typing</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> <span class="id" title="var">f</span> <span class="id" title="var">g</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">fst_term</span> (<span class="id" title="var">x</span> <span class="id" title="var">y</span> : <span class="id" title="var">ty</span>) := (<span class="id" title="var">tm_lam</span> (<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) (<span class="id" title="var">tm_fst</span> (<span class="id" title="var">tm_var</span> 0))).<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">fst_typing</span> (<span class="id" title="var">x</span> <span class="id" title="var">y</span> : <span class="id" title="var">ty</span>) : ⊢ (<span class="id" title="var">fst_term</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) [:] ((<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) ⊃ <span class="id" title="var">x</span>).<br/>
+ <span class="id" title="keyword">Definition</span> <span class="id" title="var">fst_stlc</span> {<span class="id" title="var">x</span> <span class="id" title="var">y</span> : <span class="id" title="var">ty</span>} : <span class="id" title="var">hom_stlc</span> (<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) <span class="id" title="var">x</span> := <span class="id" title="var">exist</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> (<span class="id" title="var">fst_typing</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">snd_term</span> (<span class="id" title="var">x</span> <span class="id" title="var">y</span> : <span class="id" title="var">ty</span>) := (<span class="id" title="var">tm_lam</span> (<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) (<span class="id" title="var">tm_snd</span> (<span class="id" title="var">tm_var</span> 0))).<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">snd_typing</span> (<span class="id" title="var">x</span> <span class="id" title="var">y</span> : <span class="id" title="var">ty</span>) : ⊢ (<span class="id" title="var">snd_term</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) [:] ((<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) ⊃ <span class="id" title="var">y</span>).<br/>
+ <span class="id" title="keyword">Definition</span> <span class="id" title="var">snd_stlc</span> {<span class="id" title="var">x</span> <span class="id" title="var">y</span> : <span class="id" title="var">ty</span>} : <span class="id" title="var">hom_stlc</span> (<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) <span class="id" title="var">y</span> := <span class="id" title="var">exist</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> (<span class="id" title="var">snd_typing</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">STLC_CC</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">STLC_Category</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">eval_term</span> (<span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>) :=<br/>
+&nbsp;&nbsp;<span class="id" title="var">tm_lam</span> (<span class="id" title="var">Ty_Prod</span> (<span class="id" title="var">Ty_Arrow</span> <span class="id" title="var">z</span> <span class="id" title="var">y</span>) <span class="id" title="var">z</span>) (<span class="id" title="var">tm_app</span> (<span class="id" title="var">tm_fst</span> (<span class="id" title="var">tm_var</span> 0)) (<span class="id" title="var">tm_snd</span> (<span class="id" title="var">tm_var</span> 0))).<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">eval_typing</span> (<span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>) : ⊢ <span class="id" title="var">eval_term</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> [:] (<span class="id" title="var">Ty_Prod</span> (<span class="id" title="var">Ty_Arrow</span> <span class="id" title="var">z</span> <span class="id" title="var">y</span>) <span class="id" title="var">z</span> ⊃ <span class="id" title="var">y</span>).<br/>
+ <span class="id" title="keyword">Definition</span> <span class="id" title="var">eval_stlc</span> {<span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>} : <span class="id" title="var">hom_stlc</span> (<span class="id" title="var">Ty_Prod</span> (<span class="id" title="var">Ty_Arrow</span> <span class="id" title="var">z</span> <span class="id" title="var">y</span>) <span class="id" title="var">z</span>) <span class="id" title="var">y</span> := <span class="id" title="var">exist</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> (<span class="id" title="var">eval_typing</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">curry_term</span> (<span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>) (<span class="id" title="var">g</span> : <span class="id" title="var">hom_stlc</span> (<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) <span class="id" title="var">z</span>) :=<br/>
+&nbsp;&nbsp;(<span class="id" title="var">tm_lam</span> <span class="id" title="var">x</span> (<span class="id" title="var">tm_lam</span> <span class="id" title="var">y</span> (<span class="id" title="var">tm_app</span> (<span class="id" title="var">proj1_sig</span> <span class="id" title="var">g</span>) (<span class="id" title="var">tm_pair</span> (<span class="id" title="var">tm_var</span> 1) (<span class="id" title="var">tm_var</span> 0))))).<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">curry_typing</span> (<span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>) (<span class="id" title="var">g</span> : <span class="id" title="var">hom_stlc</span> (<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) <span class="id" title="var">z</span>) :<br/>
+&nbsp;&nbsp;⊢ <span class="id" title="var">curry_term</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> <span class="id" title="var">g</span> [:] (<span class="id" title="var">x</span> ⊃ (<span class="id" title="var">Ty_Arrow</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span>)).<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">curry_stlc</span> {<span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> : <span class="id" title="var">ty</span>} (<span class="id" title="var">g</span> : <span class="id" title="var">hom_stlc</span> (<span class="id" title="var">Ty_Prod</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span>) <span class="id" title="var">z</span>) : <span class="id" title="var">hom_stlc</span> <span class="id" title="var">x</span> (<span class="id" title="var">Ty_Arrow</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span>) :=<br/>
+&nbsp;&nbsp;<span class="id" title="var">exist</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> (<span class="id" title="var">curry_typing</span> <span class="id" title="var">x</span> <span class="id" title="var">y</span> <span class="id" title="var">z</span> <span class="id" title="var">g</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">STLC_CCC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">STLC_Category</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">make_ctx_ty</span> (<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>) : <span class="id" title="var">ty</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">Gamma</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">nil</span> =&gt; <span class="id" title="var">Ty_Unit</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">A</span> :: <span class="id" title="var">Gamma'</span> =&gt; <span class="id" title="var">Ty_Prod</span> (<span class="id" title="var">make_ctx_ty</span> <span class="id" title="var">Gamma'</span>) <span class="id" title="var">A</span><br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">reify_ctx</span> (<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>) : <span class="id" title="var">tm</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">Gamma</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">nil</span> =&gt; <span class="id" title="var">tm_unit</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">A</span> :: <span class="id" title="var">Gamma'</span> =&gt; <span class="id" title="var">tm_pair</span> (<span class="id" title="var">lift</span> 1 0 (<span class="id" title="var">reify_ctx</span> <span class="id" title="var">Gamma'</span>)) (<span class="id" title="var">tm_var</span> 0)<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">reify_ctx_typing</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">Gamma</span>,<br/>
+&nbsp;&nbsp;<span class="id" title="var">Gamma</span> ⊢ <span class="id" title="var">reify_ctx</span> <span class="id" title="var">Gamma</span> [:] (<span class="id" title="var">make_ctx_ty</span> <span class="id" title="var">Gamma</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Instance</span> <span class="id" title="var">STLC_Model</span> : <span class="id" title="var">Model</span> <span class="id" title="var">STLC_Category</span> := {<br/>
+&nbsp;&nbsp;<span class="id" title="var">interp_base</span> := <span class="id" title="var">Ty_Atomic</span><br/>
+}.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">val_identity</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">A</span>, <span class="id" title="var">interp_ty</span> <span class="id" title="var">STLC_Category</span> <span class="id" title="var">STLC_Model</span> <span class="id" title="var">A</span> = <span class="id" title="var">A</span>.<br/>
+ 
+<br/>
+<span class="id" title="keyword">Lemma</span> <span class="id" title="var">ctx_identity</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">Gamma</span>, <span class="id" title="var">interp_ctx</span> <span class="id" title="var">STLC_Category</span> <span class="id" title="var">STLC_Model</span> <span class="id" title="var">Gamma</span> = <span class="id" title="var">make_ctx_ty</span> <span class="id" title="var">Gamma</span>.<br/>
+ 
+<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">Completeness_Equational</span> :<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">forall</span> (<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>) (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span> : <span class="id" title="var">tm</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">d1</span> : <span class="id" title="var">derivation</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">t1</span> <span class="id" title="var">A</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">d2</span> : <span class="id" title="var">derivation</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">t2</span> <span class="id" title="var">A</span>),<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;(<span class="id" title="keyword">forall</span> (<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>) (<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">interp_derivation</span> <span class="id" title="var">d1</span> ≅ <span class="id" title="var">interp_derivation</span> <span class="id" title="var">d2</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="id" title="var">tm_equiv_rel</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">completeness_terms_equiv</span> :<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">forall</span> (<span class="id" title="var">Gamma</span> : <span class="id" title="keyword">context</span>) (<span class="id" title="var">A</span> : <span class="id" title="var">ty</span>) (<span class="id" title="var">t1</span> <span class="id" title="var">t2</span> : <span class="id" title="var">tm</span>),<br/>
+&nbsp;&nbsp;<br/>
+&nbsp;&nbsp;(<span class="id" title="tactic">exists</span> <span class="id" title="var">f</span>, <span class="id" title="var">interprets_to</span> (<span class="id" title="var">C</span>:=<span class="id" title="var">STLC_Category</span>) (<span class="id" title="var">M</span>:=<span class="id" title="var">STLC_Model</span>) <span class="id" title="var">Gamma</span> <span class="id" title="var">A</span> <span class="id" title="var">t1</span> <span class="id" title="var">f</span>) -&gt;<br/>
+&nbsp;&nbsp;(<span class="id" title="tactic">exists</span> <span class="id" title="var">g</span>, <span class="id" title="var">interprets_to</span> (<span class="id" title="var">C</span>:=<span class="id" title="var">STLC_Category</span>) (<span class="id" title="var">M</span>:=<span class="id" title="var">STLC_Model</span>) <span class="id" title="var">Gamma</span> <span class="id" title="var">A</span> <span class="id" title="var">t2</span> <span class="id" title="var">g</span>) -&gt;<br/>
+<br/>
+&nbsp;&nbsp;(<span class="id" title="keyword">forall</span> (<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>) (<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">f</span> <span class="id" title="var">g</span> : <span class="id" title="var">hom</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">Gamma</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>)),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">interprets_to</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">A</span> <span class="id" title="var">t1</span> <span class="id" title="var">f</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">interprets_to</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">A</span> <span class="id" title="var">t2</span> <span class="id" title="var">g</span> -&gt;<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">f</span> ≅ <span class="id" title="var">g</span>) -&gt;<br/>
+&nbsp;&nbsp;<span class="id" title="var">tm_equiv_rel</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">Completeness</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">Gamma</span> <span class="id" title="var">A</span>,<br/>
+&nbsp;&nbsp;(<span class="id" title="keyword">forall</span> (<span class="id" title="var">C</span> : <span class="id" title="var">SetoidCategory</span>) (<span class="id" title="var">Ct</span> : <span class="id" title="var">CartesianCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">CC</span> : <span class="id" title="var">CartesianClosedCategory</span> <span class="id" title="var">C</span>) (<span class="id" title="var">M</span> : <span class="id" title="var">Model</span> <span class="id" title="var">C</span>),<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">inhabited</span> (<span class="id" title="var">hom</span> (<span class="id" title="var">interp_ctx</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">Gamma</span>) (<span class="id" title="var">interp_ty</span> <span class="id" title="var">C</span> <span class="id" title="var">M</span> <span class="id" title="var">A</span>))) -&gt;<br/>
+&nbsp;&nbsp;(<span class="id" title="tactic">exists</span> <span class="id" title="var">t</span>, (<span class="id" title="var">Gamma</span> ⊢ <span class="id" title="var">t</span> [:] <span class="id" title="var">A</span>)).<br/>
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

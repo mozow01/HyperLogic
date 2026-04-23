@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>Base_Individual</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library Base_Individual</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">List</span> <span class="id" title="var">Arith</span> <span class="id" title="var">PeanoNat</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">ListNotations</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Inductive</span> <span class="id" title="var">b_ty</span> : <span class="id" title="keyword">Set</span> :=<br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_Unit</span> : <span class="id" title="var">b_ty</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_S</span>    : <span class="id" title="var">b_ty</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">b_context</span> := <span class="id" title="var">list</span> <span class="id" title="var">b_ty</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Inductive</span> <span class="id" title="var">b_tm</span> : <span class="id" title="keyword">Set</span> :=<br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_var</span>   : <span class="id" title="var">nat</span> -&gt; <span class="id" title="var">b_tm</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_unit</span>  : <span class="id" title="var">b_tm</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_const</span> : <span class="id" title="var">nat</span> -&gt; <span class="id" title="var">b_tm</span>. 
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">b_lift</span> (<span class="id" title="var">n</span> : <span class="id" title="var">nat</span>) (<span class="id" title="var">k</span> : <span class="id" title="var">nat</span>) (<span class="id" title="var">t</span> : <span class="id" title="var">b_tm</span>) : <span class="id" title="var">b_tm</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_var</span> <span class="id" title="var">i</span>   =&gt; <span class="id" title="keyword">if</span> <span class="id" title="var">k</span> &lt;=? <span class="id" title="var">i</span> <span class="id" title="keyword">then</span> <span class="id" title="var">b_var</span> (<span class="id" title="var">n</span> + <span class="id" title="var">i</span>) <span class="id" title="keyword">else</span> <span class="id" title="var">b_var</span> <span class="id" title="var">i</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_unit</span>    =&gt; <span class="id" title="var">b_unit</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_const</span> <span class="id" title="var">c</span> =&gt; <span class="id" title="var">b_const</span> <span class="id" title="var">c</span> <br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">b_subst</span> (<span class="id" title="var">k</span> : <span class="id" title="var">nat</span>) (<span class="id" title="var">s</span> : <span class="id" title="var">b_tm</span>) (<span class="id" title="var">t</span> : <span class="id" title="var">b_tm</span>) : <span class="id" title="var">b_tm</span> :=<br/>
+&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">t</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_var</span> <span class="id" title="var">i</span>   =&gt; <span class="id" title="keyword">if</span> <span class="id" title="var">k</span> =? <span class="id" title="var">i</span> <span class="id" title="keyword">then</span> <span class="id" title="var">s</span> <span class="id" title="keyword">else</span> <span class="id" title="keyword">if</span> <span class="id" title="var">k</span> &lt;? <span class="id" title="var">i</span> <span class="id" title="keyword">then</span> <span class="id" title="var">b_var</span> (<span class="id" title="var">i</span> - 1) <span class="id" title="keyword">else</span> <span class="id" title="var">b_var</span> <span class="id" title="var">i</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_unit</span>    =&gt; <span class="id" title="var">b_unit</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">b_const</span> <span class="id" title="var">c</span> =&gt; <span class="id" title="var">b_const</span> <span class="id" title="var">c</span> <br/>
+&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Inductive</span> <span class="id" title="var">b_typing</span> : <span class="id" title="var">b_context</span> -&gt; <span class="id" title="var">b_tm</span> -&gt; <span class="id" title="var">b_ty</span> -&gt; <span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;| <span class="id" title="var">BT_Var0</span>  : <span class="id" title="keyword">forall</span> <span class="id" title="var">G</span> <span class="id" title="var">A</span>, <span class="id" title="var">b_typing</span> (<span class="id" title="var">A</span> :: <span class="id" title="var">G</span>) (<span class="id" title="var">b_var</span> 0) <span class="id" title="var">A</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">BT_VarS</span>  : <span class="id" title="keyword">forall</span> <span class="id" title="var">G</span> <span class="id" title="var">A</span> <span class="id" title="var">B</span> <span class="id" title="var">i</span>, <span class="id" title="var">b_typing</span> <span class="id" title="var">G</span> (<span class="id" title="var">b_var</span> <span class="id" title="var">i</span>) <span class="id" title="var">A</span> -&gt; <span class="id" title="var">b_typing</span> (<span class="id" title="var">B</span> :: <span class="id" title="var">G</span>) (<span class="id" title="var">b_var</span> (<span class="id" title="var">S</span> <span class="id" title="var">i</span>)) <span class="id" title="var">A</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">BT_Unit</span>  : <span class="id" title="keyword">forall</span> <span class="id" title="var">G</span>, <span class="id" title="var">b_typing</span> <span class="id" title="var">G</span> <span class="id" title="var">b_unit</span> <span class="id" title="var">b_Unit</span><br/>
+&nbsp;&nbsp;| <span class="id" title="var">BT_Const</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">G</span> <span class="id" title="var">n</span>, <span class="id" title="var">b_typing</span> <span class="id" title="var">G</span> (<span class="id" title="var">b_const</span> <span class="id" title="var">n</span>) <span class="id" title="var">b_S</span>. </div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>

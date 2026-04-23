@@ -1,4 +1,3 @@
--Q theories theories
 -arg -w -arg -deprecated-native-compiler-option
 -arg -w -arg -variable-collision
 -R theories HyperLogic
