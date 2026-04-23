@@ -1,3 +1,6 @@
+-Q theories theories
+-arg -w -arg -deprecated-native-compiler-option
+-arg -w -arg -variable-collision
 -R theories HyperLogic
 
 theories/Cat/Core.v
@@ -40,8 +43,7 @@ theories/Semantics/STLC_PI_Sum/STLC_PI_Sum_Completeness.v
 # --- Simple Semantics ---
 theories/Semantics/Simple/Base_Simple_Soundness.v
 theories/Semantics/Simple/Base_Simple_Completeness.v
-
-theories/Semantics/Simple/Simple_Soundness.v
+theories/Semantics/Simple/Simple_Soundness_WF.v
 
 # --- Epsilon Semantics ---
 theories/Semantics/Epsilon/Epsilon_Fibration.v
