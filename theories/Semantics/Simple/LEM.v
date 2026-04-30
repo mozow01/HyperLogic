@@ -1,3 +1,5 @@
+(*theories/Semantics/Simple/LEM.v*)
+
 Require Import Coq.Logic.Classical.
 Require Import Coq.Logic.FunctionalExtensionality.
 Require Import Coq.Logic.ProofIrrelevance.
@@ -319,4 +321,4 @@ Proof.
   (* 2. A 'constructor' itt a 'wf_ctx' induktív típusod alapértelmezett 
         (üres kontextusra vonatkozó) konstruktorát hívja meg. *)
   constructor. 
-Qed.
+Defined.

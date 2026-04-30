@@ -43,6 +43,7 @@ theories/Semantics/Simple/Base_Simple_Completeness.v
 theories/Semantics/Simple/Simple_Soundness.v
 theories/Semantics/Simple/Simple_Completeness.v
 theories/Semantics/Simple/LEM.v
+theories/Semantics/Simple/DualDrinker.v
 
 # --- Epsilon Semantics ---
 theories/Semantics/Epsilon/Epsilon_Fibration.v

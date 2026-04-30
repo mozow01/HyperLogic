@@ -1,5 +1,6 @@
+(*theories/Semantics/Simple/DualDrinker.v*)
 Require Import Coq.Logic.Classical.
-Require Import Coq.Logic.FunctionalExtensionality.
+(* Require Import Coq.Logic.FunctionalExtensionality. *)
 Require Import Coq.Logic.PropExtensionality.
 (* Ide jöhet a Require Import LEM. is, ha szükséged van a régi taktikákra! *)
 
