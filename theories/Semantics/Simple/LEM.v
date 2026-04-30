@@ -36,13 +36,13 @@ Definition H3_le (x y : H3) : Prop :=
   | _, _ => False
   end.
 
-Lemma H3_le_refl : forall x, H3_le x x.
-Proof. destruct x; simpl; exact I. Qed.
+Lemma H3_le_refl : forall x, H3_le x x. 
+Proof. destruct x; simpl; exact I. Defined.
 
 Lemma H3_le_trans : forall x y z, H3_le y z -> H3_le x y -> H3_le x z.
-Proof. destruct x, y, z; simpl; tauto. Qed.
+Proof. destruct x, y, z; simpl; tauto. Defined.
 
-(* Logikai műveletek H3-on *)
+(* Logikai művelet H3-on (inf)*)
 Definition H3_meet (x y : H3) : H3 :=
   match x, y with
   | HBot, _ | _, HBot => HBot
@@ -50,6 +50,7 @@ Definition H3_meet (x y : H3) : H3 :=
   | HMid, HMid => HMid
   end.
 
+(* Logikai művelet H3-on (sup)*)
 Definition H3_join (x y : H3) : H3 :=
   match x, y with
   | HTop, _ | _, HTop => HTop
@@ -57,6 +58,7 @@ Definition H3_join (x y : H3) : H3 :=
   | HMid, HMid => HMid
   end.
 
+(* Logikai művelet H3-on (imp)*)
 Definition H3_impl (x y : H3) : H3 :=
   match x, y with
   | HBot, _ => HTop
@@ -267,4 +269,54 @@ Proof.
   
   (* A kiértékelés alapján f_lem típusa: False. Azonnal bezárjuk a cáfolatot! *)
   exact f_lem.
+Defined.
+
+Theorem LEM_Underivable : 
+  (forall (I : b_ty) (wfc : wf_ctx I nil) (wf_Phi : WellFormed I (LEM_Formula I)),
+       { p : h_tm & h_derivation I nil p (LEM_Formula I) }) -> False.
+Proof.
+  (* 1. Feltesszük indirekt módon, hogy minden I-re létezik (Type szinten) levezetés *)
+  intro H_all_der.
+  
+  (* 2. Alkalmazzuk a kolléga cáfolatát, ami a False-ra vezet *)
+  apply LEM_Refuted.
+  
+  (* 3. A Coq kéri a modelleket és egy tetszőleges I_any-t *)
+  intros C CC TSC GF SGF HM I_any wfc_any wf_Phi_any.
+  
+  (* 4. Alkalmazzuk az indirekt feltevésünket az I_any-ra. 
+        Mivel ez egy { p & ... } szigma-típus, a 'destruct' 
+        szépen kettébontja a 'p' termre és a 'H_der' levezetésre! *)
+  destruct (H_all_der I_any wfc_any wf_Phi_any) as [p H_der].
+  
+  (* 5. Átlépünk a Prop univerzumba a constructor-ral (inhabits). *)
+  constructor.
+  
+  (* 6. Rászabadítjuk a Soundness tételt a H_der-re! *)
+  apply (hyper_soundness_inhabited H_der wfc_any wf_Phi_any).
+Defined.
+
+(* Lemma LEM_WellFormed_inhabited : forall (I : b_ty), inhabited (WellFormed I (LEM_Formula I)).
+Proof.
+  intro I.
+  (* Az 'inhabited' burkolóból kibontjuk a tényleges célt *)
+  constructor. 
+  
+  (* A 'repeat constructor' utasítás megmondja a Coq-nak, hogy addig 
+     alkalmazza a WellFormed típus megfelelő konstruktorait, amíg 
+     a formula végére nem ér. Mivel a LEM formula struktúrája triviális 
+     (Sum, Arrow, Atom, Void), ezt csont nélkül végig fogja vinni. *)
+  repeat constructor.
+Qed. *)
+
+Lemma wf_ctx_nil_inhabited : forall (I : b_ty), inhabited (wf_ctx I nil).
+Proof.
+  intro I.
+  (* 1. A 'constructor' itt az 'inhabited' típus 'inhabits' konstruktorát 
+        hívja meg, így a célunk 'wf_ctx I nil'-re változik. *)
+  constructor. 
+  
+  (* 2. A 'constructor' itt a 'wf_ctx' induktív típusod alapértelmezett 
+        (üres kontextusra vonatkozó) konstruktorát hívja meg. *)
+  constructor. 
 Qed.

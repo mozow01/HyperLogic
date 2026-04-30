@@ -13,8 +13,6 @@ theories/Cat/Monad.v
 
 theories/Logic/Base/Simple/Base_Syntax.v
 theories/Logic/Hyper/Simple/Hyper_Syntax.v
-theories/Logic/Hyper/Simple/Hyper_Syntax_Conv.v
-theories/Logic/Hyper/Simple/Hyper_Lemmas_Conv.v
 theories/Logic/Hyper/Simple/Hyper_Lemmas.v
 theories/Logic/Base/Epsilon/Base_Syntax.v
 theories/Logic/Hyper/Epsilon/Hyper_Syntax.v
@@ -42,7 +40,9 @@ theories/Semantics/STLC_PI_Sum/STLC_PI_Sum_Completeness.v
 # --- Simple Semantics ---
 theories/Semantics/Simple/Base_Simple_Soundness.v
 theories/Semantics/Simple/Base_Simple_Completeness.v
-theories/Semantics/Simple/Simple_Soundness_WF.v
+theories/Semantics/Simple/Simple_Soundness.v
+theories/Semantics/Simple/Simple_Completeness.v
+theories/Semantics/Simple/LEM.v
 
 # --- Epsilon Semantics ---
 theories/Semantics/Epsilon/Epsilon_Fibration.v
