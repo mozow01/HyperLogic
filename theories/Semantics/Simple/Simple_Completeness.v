@@ -15,15 +15,15 @@ Require Import HyperLogic.Cat.Fibration.
 Require Import HyperLogic.Logic.Base.Simple.Base_Syntax.
 Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
 
-Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Syntax_Conv.
-Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Lemmas_Conv.
+Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Syntax.
+Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Lemmas.
 
 
 
 
 (* Import the semantic definitions (HyperModel, interp_h_ty, etc.) from Soundness *)
 Require Import HyperLogic.Semantics.Simple.Base_Simple_Soundness.
-Require Import HyperLogic.Semantics.Simple.Simple_Soundness_WF.
+Require Import HyperLogic.Semantics.Simple.Simple_Soundness.
 
 
 

@@ -1,4 +1,4 @@
-(*Logic/Hyper/Simple/Hyper_Syntax.*)
+(*Logic/Hyper/Simple/Hyper_Syntax_Conv.*)
 
 Require Import List.
 Import ListNotations.
@@ -12,6 +12,7 @@ Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
 (* ================================================================= *)
 (* 1. FORMULÁK (HYPER TYPES)                                         *)
 (* ================================================================= *)
+
 
 Inductive h_ty : Type :=
   (* --- A) Propozicionális Modul (A BiCCC / STLC réteg másolata) --- *)
@@ -67,6 +68,68 @@ Fixpoint form_pullback (f : b_tm) (Phi : h_ty) : h_ty :=
 (* Egy teljes logikai kontextus visszahúzása *)
 Definition ctx_pullback (f : b_tm) (G : h_context) : h_context :=
   map (form_pullback f) G.
+  
+(* ================================================================= *)
+(* 2.7 WELL-FORMEDNESS (WFF) A FORMULÁKRA                            *)
+(* ================================================================= *)
+
+Inductive WellFormed : b_ty -> h_ty -> Type :=
+  (* Propozicionális szint: A kontextus (I) változatlanul megy tovább *)
+  | WF_Unit  : forall I, WellFormed I Ty_Unit
+  | WF_Void  : forall I, WellFormed I Ty_Void
+  | WF_Prod  : forall I Phi Psi, WellFormed I Phi -> WellFormed I Psi -> WellFormed I (Ty_Prod Phi Psi)
+  | WF_Sum   : forall I Phi Psi, WellFormed I Phi -> WellFormed I Psi -> WellFormed I (Ty_Sum Phi Psi)
+  | WF_Arrow : forall I Phi Psi, WellFormed I Phi -> WellFormed I Psi -> WellFormed I (Ty_Arrow Phi Psi)
+
+  (* Atomi szint: Itt kapcsolódik be a bázis! A termnek jól gépeltnek kell lennie az I felett. *)
+  | WF_Atom  : forall I p t A, 
+      base_typing I t A -> 
+      WellFormed I (Ty_Atom p t)
+
+  (* Kvantorok: A kontextus kiterjed (I x A)-ra a kötött változó miatt! *)
+  | WF_All   : forall I A Body, 
+      WellFormed (b_Prod I A) Body -> 
+      WellFormed I (Ty_All A Body)
+  | WF_Ex    : forall I A Body, 
+      WellFormed (b_Prod I A) Body -> 
+      WellFormed I (Ty_Ex A Body).
+
+Lemma wf_pullback : forall I J (f : b_tm) (Phi : h_ty),
+  base_typing I f J ->
+  WellFormed J Phi ->
+  WellFormed I (form_pullback f Phi).
+Proof.
+  intros I J f Phi Hf Hwf.
+  
+  (* VISSZADOBJUK I-t és f-et, hogy a kvantorok alatti indukció működjön! *)
+  revert I f Hf.
+  induction Hwf; intros I' f' Hf'.
+  - simpl. apply WF_Unit.
+  - simpl. apply WF_Void.
+  - simpl. apply WF_Prod; auto.
+  - simpl. apply WF_Sum; auto.
+  - simpl. apply WF_Arrow; auto.
+  
+  - (* Atomi eset *)
+    simpl. eapply WF_Atom. 
+    eapply BT_Comp.
+    + exact b.
+    + exact Hf'.
+
+  - (* Ty_All eset *)
+    simpl. apply WF_All. apply IHHwf.
+    unfold b_pullback_ext.
+    eapply BT_Pair.
+    + eapply BT_Comp. exact Hf'. apply BT_Fst.
+    + apply BT_Snd.
+
+  - (* Ty_Ex eset *)
+    simpl. apply WF_Ex. apply IHHwf.
+    unfold b_pullback_ext.
+    eapply BT_Pair.
+    + eapply BT_Comp. exact Hf'. apply BT_Fst.
+    + apply BT_Snd.
+Defined.
 
 (* ================================================================= *)
 (* 3. BIZONYÍTÁSTERMEK (HYPER TERMS)                                 *)
@@ -88,30 +151,103 @@ Inductive h_tm : Type :=
 
   (* --- B) Hyper Modul (Kvantor Szabályok) --- *)
   | tm_all_intro : h_tm -> h_tm
-  (* Az eliminációhoz a Bázisból kérünk egy 'witness' morfizmust (b_tm)! *)
   | tm_all_elim  : h_tm -> b_tm -> h_tm   
   | tm_ex_intro  : b_tm -> h_tm -> h_tm   
   | tm_ex_elim   : h_tm -> h_tm -> h_tm.
+
+
+(* ================================================================= *)
+(* 3.5 FORMULA EKVIVALENCIA (Már a WFF és a Bázis kontextus védelmében!) *)
+(* ================================================================= *)
+
+(* ================================================================= *)
+(* 3.5 FORMULA EKVIVALENCIA (Már a WFF és a Bázis kontextus védelmében!) *)
+(* ================================================================= *)
+
+Inductive form_equiv (I : b_ty) : h_ty -> h_ty -> Type :=
+  
+  | FEQ_Atom : forall p t1 t2 A (d1 : base_typing I t1 A) (d2 : base_typing I t2 A),
+        base_equiv I A t1 t2 ->   (* <--- NEW NON-DEPENDENT CALL *)
+        form_equiv I (Ty_Atom p t1) (Ty_Atom p t2)
+      
+  (* Strukturális szabályok (Alapeseteknél megköveteljük a WFF-et!) *)
+  | FEQ_Refl : forall Phi, 
+      WellFormed I Phi -> 
+      form_equiv I Phi Phi
+      
+  | FEQ_Sym  : forall Phi Psi, 
+      form_equiv I Phi Psi -> 
+      form_equiv I Psi Phi
+      
+  | FEQ_Trans: forall Phi Psi Chi, 
+      form_equiv I Phi Psi -> 
+      form_equiv I Psi Chi -> 
+      form_equiv I Phi Chi
+  
+  (* Kongruencia a logikai kötőszavakra *)
+  | FEQ_Prod : forall A B A' B', form_equiv I A A' -> form_equiv I B B' -> form_equiv I (Ty_Prod A B) (Ty_Prod A' B')
+  | FEQ_Sum  : forall A B A' B', form_equiv I A A' -> form_equiv I B B' -> form_equiv I (Ty_Sum A B) (Ty_Sum A' B')
+  | FEQ_Arrow: forall A B A' B', form_equiv I A A' -> form_equiv I B B' -> form_equiv I (Ty_Arrow A B) (Ty_Arrow A' B')
+  
+  (* Kvantorok: Az ekvivalenciát a kiterjesztett (I x D) kontextusban vizsgáljuk! *)
+  | FEQ_All  : forall D Body Body', 
+      form_equiv (b_Prod I D) Body Body' -> 
+      form_equiv I (Ty_All D Body) (Ty_All D Body')
+      
+  | FEQ_Ex   : forall D Body Body', 
+      form_equiv (b_Prod I D) Body Body' -> 
+      form_equiv I (Ty_Ex D Body) (Ty_Ex D Body')
+  
+  (* --- FIBRÁCIÓS FUNKTOR SZABÁLYOK (WFF premisszákkal!) --- *)
+  
+  | FEQ_Pullback_Id : forall Phi, 
+      WellFormed I Phi ->
+      form_equiv I (form_pullback b_id Phi) Phi
+      
+  | FEQ_Pullback_Comp : forall J K (f g : b_tm) Phi
+                              (df : base_typing J f K) (dg : base_typing I g J),
+      WellFormed K Phi ->
+      form_equiv I (form_pullback g (form_pullback f Phi)) (form_pullback (b_comp f g) Phi)
+      
+  | FEQ_Pullback_Cong : forall J (f g : b_tm) Phi 
+      (df : base_typing I f J) (dg : base_typing I g J), 
+      base_equiv I J f g ->   (* <--- NEW NON-DEPENDENT CALL *)
+      WellFormed J Phi ->
+      form_equiv I (form_pullback f Phi) (form_pullback g Phi).
+
+(* Context Equivalence: Lifts indexed formula equivalence to lists *)
+Inductive ctx_equiv (I : b_ty) : h_context -> h_context -> Type :=
+  | CEQ_nil  : ctx_equiv I nil nil
+  | CEQ_cons : forall Phi Psi G1 G2,
+      form_equiv I Phi Psi -> 
+      ctx_equiv I G1 G2 -> 
+      ctx_equiv I (Phi :: G1) (Psi :: G2).
 
 (* ================================================================= *)
 (* 4. DUAL CONTEXT TYPING (Bizonyíthatóság)                          *)
 (* ================================================================= *)
 
-(* Jelölés: I | Gamma |- p : Phi 
-   I: b_ty (A Base kontextus, ahol az individuumok élnek)
-   G: h_context (A logikai kontextus) *)
+(* Well formed contexts *)
+Inductive wf_ctx (I : b_ty) : h_context -> Type :=
+  | WFC_nil  : wf_ctx I nil
+  | WFC_cons : forall Phi G, WellFormed I Phi -> wf_ctx I G -> wf_ctx I (Phi :: G).
+
+
 Inductive h_typing (I : b_ty) : h_context -> h_tm -> h_ty -> Prop :=
 
   (* --- Strukturális Szabályok --- *)
   | HT_Var0 : forall G Phi,
+      wf_ctx I G -> WellFormed I Phi -> 
       h_typing I (Phi :: G) (tm_var 0) Phi
 
   | HT_VarS : forall G Phi Psi i,
+      WellFormed I Psi -> 
       h_typing I G (tm_var i) Phi ->
       h_typing I (Psi :: G) (tm_var (S i)) Phi
 
   (* --- Propozicionális Modul (Az 'I' bázis passzív marad) --- *)
   | HT_Unit : forall G,
+      wf_ctx I G -> 
       h_typing I G tm_unit Ty_Unit
 
   | HT_Lam : forall G p Phi Psi,
@@ -137,10 +273,12 @@ Inductive h_typing (I : b_ty) : h_context -> h_tm -> h_ty -> Prop :=
       h_typing I G (tm_snd p) Psi
 
   | HT_Inl : forall G p Phi Psi,
+      WellFormed I Psi ->                 (* <--- NEW PREMISE *)
       h_typing I G p Phi ->
       h_typing I G (tm_inl Psi p) (Ty_Sum Phi Psi)
 
   | HT_Inr : forall G p Phi Psi,
+      WellFormed I Phi ->                 (* <--- NEW PREMISE *)
       h_typing I G p Psi ->
       h_typing I G (tm_inr Phi p) (Ty_Sum Phi Psi)
 
@@ -151,51 +289,58 @@ Inductive h_typing (I : b_ty) : h_context -> h_tm -> h_ty -> Prop :=
       h_typing I G (tm_case p p1 p2) Chi
 
   | HT_Absurd : forall G p Phi,
+      WellFormed I Phi ->                 (* <--- NEW PREMISE *)
       h_typing I G p Ty_Void ->
       h_typing I G (tm_absurd Phi p) Phi
 
-  (* --- Hyper Modul (Dual Context interakció a Bázissal!) --- *)
-
-  (* ALL Intro: A bázist megnöveljük (I x A)-ra. 
-     A kontextust visszahúzzuk a pi_1 mentén (Weakening) *)
   | HT_All_Intro : forall G p A Phi,
+      wf_ctx I G ->                       (* <--- NEW PREMISE *)
       h_typing (b_Prod I A) (ctx_pullback b_fst G) p Phi ->
       h_typing I G (tm_all_intro p) (Ty_All A Phi)
 
-  (* ALL Elim: f : I -> A bázis-morfizmussal (b_typing) specializálunk.
-     A form_pullback <id_I, f> húzza vissza a formulát I-re! *)
   | HT_All_Elim : forall G p A Phi f,
       h_typing I G p (Ty_All A Phi) ->
       base_typing I f A ->
       h_typing I G (tm_all_elim p f) (form_pullback (b_pair b_id f) Phi)
 
-  (* EX Intro: f : I -> A bázis-morfizmussal adunk egy tanút. *)
   | HT_Ex_Intro : forall G p A Phi f,
+      WellFormed (b_Prod I A) Phi ->      (* <--- NEW PREMISE *)
       base_typing I f A ->
       h_typing I G p (form_pullback (b_pair b_id f) Phi) ->
       h_typing I G (tm_ex_intro f p) (Ty_Ex A Phi)
 
-  (* EX Elim: Dual Context csere a bal adjungálthoz. *)
   | HT_Ex_Elim : forall G p p2 A Phi Chi,
+      WellFormed I Chi ->                 (* <--- NEW PREMISE *)
       h_typing I G p (Ty_Ex A Phi) ->
       h_typing (b_Prod I A) (Phi :: ctx_pullback b_fst G) p2 (form_pullback b_fst Chi) ->
-      h_typing I G (tm_ex_elim p p2) Chi.
-      
+      h_typing I G (tm_ex_elim p p2) Chi
+
+  (* --- CONVERSION RULE --- *)
+  | HT_Conv : forall G1 G2 p Phi Psi,
+      ctx_equiv I G1 G2 ->
+      form_equiv I Phi Psi ->
+      h_typing I G1 p Phi ->
+      h_typing I G2 p Psi.
+
 (* ================================================================= *)
 (* 4.5 DERIVATION TREES (DATA LAYER - Set)                           *)
 (* ================================================================= *)
 
-Inductive h_derivation (I : b_ty) : h_context -> h_tm -> h_ty -> Set :=
+Inductive h_derivation (I : b_ty) : h_context -> h_tm -> h_ty -> Type :=
 
   (* --- Strukturális Szabályok --- *)
   | HD_Var0 : forall G Phi,
+      wf_ctx I G -> WellFormed I Phi -> 
       h_derivation I (Phi :: G) (tm_var 0) Phi
   | HD_VarS : forall G Phi Psi i,
+      WellFormed I Psi -> 
       h_derivation I G (tm_var i) Phi ->
       h_derivation I (Psi :: G) (tm_var (S i)) Phi
 
   (* --- Propozicionális Modul --- *)
-  | HD_Unit : forall G, h_derivation I G tm_unit Ty_Unit
+  | HD_Unit : forall G, 
+      wf_ctx I G -> 
+      h_derivation I G tm_unit Ty_Unit
   | HD_Lam : forall G p Phi Psi,
       h_derivation I (Phi :: G) p Psi ->
       h_derivation I G (tm_lam Phi p) (Ty_Arrow Phi Psi)
@@ -214,9 +359,11 @@ Inductive h_derivation (I : b_ty) : h_context -> h_tm -> h_ty -> Set :=
       h_derivation I G p (Ty_Prod Phi Psi) ->
       h_derivation I G (tm_snd p) Psi
   | HD_Inl : forall G p Phi Psi,
+      WellFormed I Psi ->  
       h_derivation I G p Phi ->
       h_derivation I G (tm_inl Psi p) (Ty_Sum Phi Psi)
   | HD_Inr : forall G p Phi Psi,
+      WellFormed I Phi ->  
       h_derivation I G p Psi ->
       h_derivation I G (tm_inr Phi p) (Ty_Sum Phi Psi)
   | HD_Case : forall G p p1 p2 Phi Psi Chi,
@@ -225,11 +372,13 @@ Inductive h_derivation (I : b_ty) : h_context -> h_tm -> h_ty -> Set :=
       h_derivation I (Psi :: G) p2 Chi ->
       h_derivation I G (tm_case p p1 p2) Chi
   | HD_Absurd : forall G p Phi,
+      WellFormed I Phi ->
       h_derivation I G p Ty_Void ->
       h_derivation I G (tm_absurd Phi p) Phi
 
   (* --- Hyper Modul --- *)
   | HD_All_Intro : forall G p A Phi,
+      wf_ctx I G ->
       h_derivation (b_Prod I A) (ctx_pullback b_fst G) p Phi ->
       h_derivation I G (tm_all_intro p) (Ty_All A Phi)
   | HD_All_Elim : forall G p A Phi f,
@@ -237,38 +386,39 @@ Inductive h_derivation (I : b_ty) : h_context -> h_tm -> h_ty -> Set :=
       base_typing I f A ->
       h_derivation I G (tm_all_elim p f) (form_pullback (b_pair b_id f) Phi)
   | HD_Ex_Intro : forall G p A Phi f,
+      WellFormed (b_Prod I A) Phi ->
       base_typing I f A ->
       h_derivation I G p (form_pullback (b_pair b_id f) Phi) ->
       h_derivation I G (tm_ex_intro f p) (Ty_Ex A Phi)
   | HD_Ex_Elim : forall G p p2 A Phi Chi,
+      WellFormed I Chi ->
       h_derivation I G p (Ty_Ex A Phi) ->
       h_derivation (b_Prod I A) (Phi :: ctx_pullback b_fst G) p2 (form_pullback b_fst Chi) ->
-      h_derivation I G (tm_ex_elim p p2) Chi.
-
-(* Bridge a Set és Prop között 
-Fixpoint forget_h_derivation {I G p Phi} (D : h_derivation I G p Phi) : h_typing I G p Phi.
-Proof. Admitted. *)
+      h_derivation I G (tm_ex_elim p p2) Chi
+      
+  (* --- CONVERSION RULE --- *)
+  | HD_Conv : forall G1 G2 p Phi Psi,
+      ctx_equiv I G1 G2 ->
+      form_equiv I Phi Psi ->
+      h_derivation I G1 p Phi ->
+      h_derivation I G2 p Psi.
 
 (* ================================================================= *)
 (* 5. PROOF IRRELEVANCE EKVIVALENCIA                                 *)
 (* ================================================================= *)
 
-(* Ez mondja ki, hogy a szálak Thin kategóriák: minden, ami azonos 
-   típussal (Phi) bizonyítható, az triviálisan ekvivalens! *)
 Inductive h_equiv_rel (I : b_ty) : h_tm -> h_tm -> Prop :=
   | PI_rule : forall G Phi p q,
       h_typing I G p Phi ->
       h_typing I G q Phi ->
       h_equiv_rel I p q.
-      
+
 (* ================================================================= *)
-(*          TÍPUSOK (FORMULÁK) BEÁGYAZÁSA (EMBEDDING)                *)
+(* 5. TÍPUSOK (FORMULÁK) BEÁGYAZÁSA (EMBEDDING)                      *)
 (* ================================================================= *)
       
 Fixpoint embed_ty (A : STLC_PI_Sum.ty) : h_ty :=
   match A with
-  (* Az STLC atomi kijelentéseit 0-változós predikátumként ágyazzuk be, 
-     amit a bázis 'b_unit' (üres/triviális) termjére alkalmazunk! *)
   | STLC_PI_Sum.Ty_Atomic p  => Ty_Atom p b_unit
   | STLC_PI_Sum.Ty_Unit      => Ty_Unit
   | STLC_PI_Sum.Ty_Void      => Ty_Void
@@ -277,12 +427,33 @@ Fixpoint embed_ty (A : STLC_PI_Sum.ty) : h_ty :=
   | STLC_PI_Sum.Ty_Sum A B   => Ty_Sum (embed_ty A) (embed_ty B)
   end.
 
-(* Egy teljes logikai kontextus lefordítása *)
 Definition embed_ctx (G : STLC_PI_Sum.context) : h_context :=
   map embed_ty G.
 
+(* Automatically proves that any embedded STLC type is strictly Well-Formed *)
+Lemma embed_ty_wf : forall I A, WellFormed I (embed_ty A).
+Proof.
+  intros I A. induction A; simpl.
+  - eapply WF_Atom. apply BT_Unit.
+  - apply WF_Unit.
+  - apply WF_Void.
+  - apply WF_Arrow; auto.
+  - apply WF_Prod; auto.
+  - apply WF_Sum; auto.
+Defined.
+
+(* Automatically proves that any embedded STLC context is strictly Well-Formed *)
+Lemma embed_ctx_wf : forall I G, wf_ctx I (embed_ctx G).
+Proof.
+  intros I G. induction G; simpl.
+  - apply WFC_nil.
+  - apply WFC_cons.
+    + apply embed_ty_wf.
+    + apply IHG.
+Defined.
+
 (* ================================================================= *)
-(* 2. BIZONYÍTÁSTERMEK BEÁGYAZÁSA                                    *)
+(* 6. BIZONYÍTÁSTERMEK BEÁGYAZÁSA                                    *)
 (* ================================================================= *)
 
 Fixpoint embed_tm (t : STLC_PI_Sum.tm) : h_tm :=
@@ -301,30 +472,29 @@ Fixpoint embed_tm (t : STLC_PI_Sum.tm) : h_tm :=
   end.
 
 (* ================================================================= *)
-(* 3. LIFTING THEOREM (A BIZONYÍTÁSOK ÁTMENTÉSE)                     *)
+(* 7. LIFTING THEOREM (A BIZONYÍTÁSOK ÁTMENTÉSE)                     *)
 (* ================================================================= *)
 
-(** Ez a tétel mondja ki: ami bizonyítható a propozicionális STLC-ben,
-    az automatikusan bizonyítható a Hyper logikában (bármely I bázis felett)! *)
 Theorem embed_typing_sound : forall (G : STLC_PI_Sum.context) (t : STLC_PI_Sum.tm) (A : STLC_PI_Sum.ty) (I : b_ty),
   STLC_PI_Sum.typeability G t A ->
   h_typing I (embed_ctx G) (embed_tm t) (embed_ty A).
 Proof.
   intros G t A I H.
-  
-  (* Mivel a szerkezet 1-1-ben megegyezik, a Coq indukcióval 
-     automatikusan végig tud menni az összes eseten! *)
-  induction H.
-  - apply HT_Unit.
-  - apply HT_Var0.
-  - apply HT_VarS. assumption.
-  - apply HT_Lam. assumption.
+  induction H; simpl.
+  - apply HT_Unit. apply embed_ctx_wf.
+  - apply HT_Var0. 
+    + apply embed_ctx_wf. 
+    + apply embed_ty_wf.
+  - apply HT_VarS. 
+    + apply embed_ty_wf. 
+    + exact IHtypeability.
+  - apply HT_Lam. exact IHtypeability.
   - eapply HT_App; eassumption.
   - apply HT_Pair; assumption.
   - eapply HT_Fst; eassumption.
   - eapply HT_Snd; eassumption.
-  - apply HT_Inl; assumption.
-  - apply HT_Inr; assumption.
+  - apply HT_Inl; [apply embed_ty_wf | assumption].
+  - apply HT_Inr; [apply embed_ty_wf | assumption].
   - eapply HT_Case; eassumption.
-  - apply HT_Absurd; assumption.
+  - apply HT_Absurd; [apply embed_ty_wf | assumption].
 Defined.

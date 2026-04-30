@@ -16,8 +16,8 @@ Require Import HyperLogic.Logic.Base.Simple.Base_Syntax.
 Require Import HyperLogic.Semantics.Simple.Base_Simple_Soundness.
 Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
 (*Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Syntax.*)
-Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Syntax_Conv.
-Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Lemmas_Conv.
+Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Syntax.
+Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Lemmas.
 
 (* Axiom-Free Extractors for WellFormed Derivations *)
 Definition ext_prod_L {I A B} (wf : WellFormed I (Ty_Prod A B)) : WellFormed I A :=
