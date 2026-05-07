@@ -298,27 +298,73 @@ Proof.
   apply (hyper_soundness_inhabited H_der wfc_any wf_Phi_any).
 Defined.
 
-(* Lemma LEM_WellFormed_inhabited : forall (I : b_ty), inhabited (WellFormed I (LEM_Formula I)).
-Proof.
-  intro I.
-  (* Az 'inhabited' burkolóból kibontjuk a tényleges célt *)
-  constructor. 
-  
-  (* A 'repeat constructor' utasítás megmondja a Coq-nak, hogy addig 
-     alkalmazza a WellFormed típus megfelelő konstruktorait, amíg 
-     a formula végére nem ér. Mivel a LEM formula struktúrája triviális 
-     (Sum, Arrow, Atom, Void), ezt csont nélkül végig fogja vinni. *)
-  repeat constructor.
-Qed. *)
+(* ----------------------------------------------------------------- *)
+(* SEGÉDLEMMÁK (Tisztán, 'inhabited' nélkül, hogy használhatóak legyenek!) *)
 
-Lemma wf_ctx_nil_inhabited : forall (I : b_ty), inhabited (wf_ctx I nil).
+Lemma LEM_WellFormed : forall (I : b_ty), WellFormed I (LEM_Formula I).
 Proof.
   intro I.
-  (* 1. A 'constructor' itt az 'inhabited' típus 'inhabits' konstruktorát 
-        hívja meg, így a célunk 'wf_ctx I nil'-re változik. *)
-  constructor. 
+  apply WF_Sum.
+  - eapply WF_Atom. apply BT_Unit.
+  - apply WF_Arrow. eapply WF_Atom. apply BT_Unit. apply WF_Void.
+Defined. (* Fontos a Defined, hogy a simpl ki tudja értékelni! *)
+
+Lemma wf_ctx_nil_valid : forall (I : b_ty), wf_ctx I nil.
+Proof.
+  intro I.
+  constructor.
+Defined.
+
+(* ----------------------------------------------------------------- *)
+(* A CÁFOLAT (Letisztítva) *)
+
+(* Mivel a lemmáink globálisak, a tétel állításából kivehetjük a wfc és wf_Phi feltételeket! *)
+Theorem LEM_Refuted_WF : 
+  ~ (forall (C : SetoidCategory) (CC : CartesianCategory C)
+            (TSC : TwoSortCategory C) (GF : GoodFibration C) 
+            (SGF : StrictGoodFibration C GF) (HM : HyperModel SGF)
+            (I : b_ty),
+       inhabited (hom (interp_h_ctx I nil (wf_ctx_nil_valid I)) 
+                      (interp_h_ty I (LEM_Formula I) (LEM_WellFormed I)))).
+Proof.
+  intro H_univ.
   
-  (* 2. A 'constructor' itt a 'wf_ctx' induktív típusod alapértelmezett 
-        (üres kontextusra vonatkozó) konstruktorát hívja meg. *)
-  constructor. 
+  (* A specializálás is zseniálisan leegyszerűsödik: csak a b_Unit bázist kell megadni, 
+     a formáltsági bizonyításokat a Coq maga helyettesíti be a lemmáinkból! *)
+  specialize (H_univ 
+               (@Base_SetoidCategory nat) 
+               (@Base_CartesianCategory nat)
+               (@Base_TwoSortCategory nat)
+               H3_GoodFibration 
+               H3_StrictGoodFibration 
+               H3_HyperModel 
+               b_Unit).
+               
+  destruct H_univ as [f_lem].
+  simpl in f_lem.
+  exact f_lem.
+Defined.
+
+(* ----------------------------------------------------------------- *)
+(* A FŐTÉTEL: A LEM NEM LEVEZETHETŐ *)
+
+Theorem LEM_Underivable_WF : 
+  (* Így már a tétel gyönyörű matematikai formát ölt: *)
+  (forall (I : b_ty), { p : h_tm & h_derivation I nil p (LEM_Formula I) }) -> False.
+Proof.
+  intro H_all_der.
+  
+  (* 1. Hívjuk segítségül a cáfolatunkat *)
+  apply LEM_Refuted.
+  intros C CC TSC GF SGF HM I_any.
+  
+  (* 2. Szedjük ki a szintaktikus levezetést az adott I_any bázisra *)
+  destruct (H_all_der I_any) as [p H_der].
+  
+  (* 3. Lépjünk be a Prop univerzumba a morfizmus létezéséhez *)
+  constructor.
+  
+  (* A soundness tétel pontosan azokat a formáltsági bizonyításokat kéri, 
+     amik a kontextusodban (wfc, wf_Phi) már szerepelnek! *)
+  apply (hyper_soundness_inhabited H_der wfc wf_Phi).
 Defined.
