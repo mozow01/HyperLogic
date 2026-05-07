@@ -1,4 +1,4 @@
-(* theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Completeness.v 
+(* theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Completeness.v  *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Classes.RelationClasses.
@@ -435,28 +435,62 @@ Defined.
 (* ÁLTALÁNOS HELYETTESÍTÉSI LEMMA                    *)
 (* ================================================================= *)
 
+(* Az Általános Inverz Helyettesítési Lemma: 
+   Ha egy f-fel helyettesített formula jólformált, és f érvényes morfizmus, 
+   akkor az eredeti formula is jólformált volt. *)
+Lemma form_wf_subst_inv : forall {Sign : Type} {SM : SkolemMapping Sign} {I J : b_ty} 
+  (f : @b_tm Sign) (df : base_typing I f J) (Phi : @h_ty Sign),
+  WellFormed I (form_subst f Phi) -> WellFormed J Phi.
+Proof.
+  intros Sign SM I J f df Phi.
+  (* Fontos: a kontextusokat generalizáljuk, hogy az IH a b_subst_ext-re is működjön *)
+  generalize dependent J. generalize dependent I. generalize dependent f.
+  
+  (* Indukció a formula (Phi) szerkezetén! 
+     JAVÍTÁS: Helyes sorrend az intros-ban (f, I, J, df) *)
+  induction Phi; intros f I J df Hwf; simpl in Hwf; inversion Hwf; subst.
+  
+  - (* Ty_Unit *) apply WF_Unit.
+  - (* Ty_Void *) apply WF_Void.
+  - (* Ty_Prod *) apply WF_Prod; [eapply IHPhi1 | eapply IHPhi2]; eassumption.
+  - (* Ty_Sum  *) apply WF_Sum;  [eapply IHPhi1 | eapply IHPhi2]; eassumption.
+  - (* Ty_Arrow*) apply WF_Arrow;[eapply IHPhi1 | eapply IHPhi2]; eassumption.
+  
+  - (* Ty_Atom *) 
+    match goal with
+    | [ H_typ : base_typing _ (b_comp _ _) _ |- _ ] => inversion H_typ; subst
+    end.
+    (* A base_typing_unique lemmáddal bebizonyítjuk, hogy a közbülső B típus egyezik J-vel! *)
+    assert (H_eq : J = B). { eapply base_typing_unique. exact df. eassumption. }
+    subst B.
+    eapply WF_Atom. eassumption.
+    
+  - (* Ty_All *) 
+    apply WF_All.
+    eapply IHPhi. 2: eassumption.
+    (* A b_subst_ext tipizálása kézzel felépítve *)
+    unfold b_subst_ext.
+    eapply BT_Pair.
+    + eapply BT_Comp. exact df. apply BT_Fst.
+    + apply BT_Snd.
+    
+  - (* Ty_Ex *) 
+    apply WF_Ex.
+    eapply IHPhi. 2: eassumption.
+    unfold b_subst_ext.
+    eapply BT_Pair.
+    + eapply BT_Comp. exact df. apply BT_Fst.
+    + apply BT_Snd.
+Qed.
 (* Step 2: Structural Inversion Lemma for Formulas pulled back along the first projection. *)
 Lemma form_wf_fst_inv : forall {Sign : Type} {SM : SkolemMapping Sign} {I A : b_ty} {Phi : @h_ty Sign},
   WellFormed (b_Prod I A) (form_subst b_fst Phi) -> WellFormed I Phi.
 Proof.
-  intros Sign SM I A Phi H.
-  (* The proof proceeds by induction on the structure of the WellFormed hypothesis,
-     which is more robust than induction on the formula `Phi` itself. *)
-  induction H.
-  - (* WF_Unit *) apply WF_Unit.
-  - (* WF_Void *) apply WF_Void.
-  - (* WF_Prod: The IHs give us WellFormed for P and Q in the base context I. *)
-    apply WF_Prod; assumption.
-  - (* WF_Sum: Similar to product. *)
-    apply WF_Sum; assumption.
-  - (* WF_Arrow: Similar to product. *)
-    apply WF_Arrow; assumption.
-  - (* WF_All: The IH gives us WellFormed for the body P in the extended context (b_Prod I B). *)
-    apply WF_All; assumption.
-  - (* WF_Ex: Similar to forall. *)
-    apply WF_Ex; assumption.
+  intros Sign SM I A Phi Hwf.
+  eapply form_wf_subst_inv.
+  - eapply BT_Fst. (* A 'f' morfizmusunk itt a b_fst *)
+  - exact Hwf.
 Qed.
-
 (* Step 3: Structural Inversion Lemma for Contexts pulled back along the first projection. *)
 Lemma ctx_wf_fst_inv : forall {Sign : Type} {SM : SkolemMapping Sign} {I A : b_ty} {G : @h_context Sign},
   All_WellFormed (b_Prod I A) (ctx_subst b_fst G) -> All_WellFormed I G.
@@ -465,14 +499,22 @@ Proof.
   induction G.
   - (* Case: G is nil *)
     simpl in H. inversion H. apply AWF_Nil.
-  - (* Case: G is Phi :: G' *)
-    simpl in H. inversion H as [| ? Hphi Hctx].
+  - (* Case: G is a :: G' *)
+    simpl in H. 
+    (* JAVÍTÁS: A helyes minta [| formula kontextus fej_biz farok_biz] *)
+    inversion H as [| ? ? H_head H_tail]; subst.
     apply AWF_Cons.
-    + (* Prove WellFormed for the head of the list using the formula inversion lemma. *)
-      apply form_wf_fst_inv. exact Hphi.
-    + (* Use induction hypothesis for the tail of the list. *)
-      apply IHG. exact Hctx.
+    + (* Prove WellFormed for the head of the list *)
+      eapply form_wf_fst_inv. exact H_head.
+    + (* Prove All_WellFormed for the tail of the list *)
+      apply IHG. exact H_tail.
 Qed.
+
+Lemma meta_ctx_wf : forall {Sign : Type} {SM : SkolemMapping Sign} {I : b_ty} 
+  {G : @h_context Sign} {p : h_tm} {Phi : @h_ty Sign},
+  h_derivation I G p Phi -> @All_WellFormed Sign I G.
+Proof.
+Admitted.
 
 (* Strukturális Metatétel (Context Regularity): 
    Ha egy kontextusból le lehet vezetni valamit, akkor az a kontextus jólformált.
@@ -529,11 +571,7 @@ Admitted.
 
 (* Strukturális Metatétel (Context Regularity - Alap): 
    Ha egy normál kontextusból le lehet vezetni valamit, akkor az a kontextus jólformált. *)
-Lemma meta_ctx_wf : forall {Sign : Type} {SM : SkolemMapping Sign} {I : b_ty} 
-  {G : @h_context Sign} {p : h_tm} {Phi : @h_ty Sign},
-  h_derivation I G p Phi -> @All_WellFormed Sign I G.
-Proof.
-Admitted.
+
 
 (* Strukturális Metatétel: Az Epszilon magja jólformált *)
 Lemma meta_eps_body_wf : forall {Sign : Type} {SM : SkolemMapping Sign} {I A : b_ty} 
@@ -783,6 +821,4 @@ meta_eps_elim_chi_wf
 
 meta_eps_bc 
  
-*)
-
 *)

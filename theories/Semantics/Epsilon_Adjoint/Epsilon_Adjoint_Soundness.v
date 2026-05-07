@@ -1,4 +1,4 @@
-(* theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Soundness.v 
+(* theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Soundness.v *)
 Require Import Coq.Classes.Morphisms.
 Require Import List Arith PeanoNat Lia.
 Import ListNotations. 
@@ -118,15 +118,15 @@ Proof.
   - apply coprod_iso_cong. { eapply IHHwf1. exact Heq'. } { eapply IHHwf2. exact Heq'. }
   - apply exp_iso_cong. { eapply IHHwf2. exact Heq'. } { eapply IHHwf1. exact Heq'. }
   - eapply i_atom_cong_global. eapply BE_CongComp.
-    + exact Heq'. + exact (BE_Refl _ _ _ b).
+    + exact Heq'. + exact (BE_Refl _ _ _ b b).
   - apply pi_iso_cong. eapply (IHHwf (b_Prod I' A) (b_subst_ext f') (b_subst_ext g')).
     unfold b_subst_ext. eapply BE_CongPair.
-    + eapply BE_CongComp. * exact (BE_Refl _ _ _ BT_Fst). * exact Heq'.
-    + exact (BE_Refl _ _ _ BT_Snd).
+    + eapply BE_CongComp. * exact (BE_Refl _ _ _ BT_Fst BT_Fst). * exact Heq'.
+    + exact (BE_Refl _ _ _ BT_Snd BT_Snd).
   - apply sigma_iso_cong. eapply (IHHwf (b_Prod I' A) (b_subst_ext f') (b_subst_ext g')).
     unfold b_subst_ext. eapply BE_CongPair.
-    + eapply BE_CongComp. * exact (BE_Refl _ _ _ BT_Fst). * exact Heq'.    
-    + exact (BE_Refl _ _ _ BT_Snd).
+    + eapply BE_CongComp. * exact (BE_Refl _ _ _ BT_Fst BT_Fst). * exact Heq'.    
+    + exact (BE_Refl _ _ _ BT_Snd BT_Snd).
 Defined. 
 
 Lemma interp_subst_id : forall {Sign : Type} {SM : SkolemMapping Sign} 
@@ -187,12 +187,12 @@ Proof.
                              (b_subst_ext (b_comp f0 g0)) 
                              (b_comp (b_subst_ext f0) (b_subst_ext g0)) Phi). (* JAVÍTVA: Body -> Phi *)
       * unfold b_subst_ext. eapply BE_Trans. 
-        { eapply BE_CongPair. - eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ BT_Fst dg0 df0). - exact (BE_Refl _ _ _ BT_Snd). }
+        { eapply BE_CongPair. - eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ BT_Fst dg0 df0). - exact (BE_Refl _ _ _ BT_Snd BT_Snd). }
         eapply BE_Sym. eapply BE_Trans. 
         { exact (BE_CompPair _ _ _ _ _ _ _ (BT_Comp df0 BT_Fst) BT_Snd (BT_Pair (BT_Comp dg0 BT_Fst) BT_Snd)). } 
         eapply BE_CongPair.
         -- eapply BE_Trans. { eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ (BT_Pair (BT_Comp dg0 BT_Fst) BT_Snd) BT_Fst df0). }
-           eapply BE_CongComp. ++ apply BE_BetaFst. ++ exact (BE_Refl _ _ _ df0).    
+           eapply BE_CongComp. ++ apply BE_BetaFst. ++ exact (BE_Refl _ _ _ df0 df0).    
         -- apply BE_BetaSnd.    
       * exact Hwf.
     + eapply (IHHwf (b_Prod I0 A) (b_Prod J0 A) (b_subst_ext f0) (b_subst_ext g0)).
@@ -203,12 +203,12 @@ Proof.
                              (b_subst_ext (b_comp f0 g0)) 
                              (b_comp (b_subst_ext f0) (b_subst_ext g0)) Phi). (* JAVÍTVA: Body -> Phi *)
       * unfold b_subst_ext. eapply BE_Trans. 
-        { eapply BE_CongPair. - eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ BT_Fst dg0 df0). - exact (BE_Refl _ _ _ BT_Snd). }
+        { eapply BE_CongPair. - eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ BT_Fst dg0 df0). - exact (BE_Refl _ _ _ BT_Snd BT_Snd). }
         eapply BE_Sym. eapply BE_Trans. 
         { exact (BE_CompPair _ _ _ _ _ _ _ (BT_Comp df0 BT_Fst) BT_Snd (BT_Pair (BT_Comp dg0 BT_Fst) BT_Snd)). } 
         eapply BE_CongPair.
         -- eapply BE_Trans. { eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ (BT_Pair (BT_Comp dg0 BT_Fst) BT_Snd) BT_Fst df0). }
-           eapply BE_CongComp. ++ apply BE_BetaFst. ++ exact (BE_Refl _ _ _ df0).    
+           eapply BE_CongComp. ++ apply BE_BetaFst. ++ exact (BE_Refl _ _ _ df0 df0).    
         -- apply BE_BetaSnd.    
       * exact Hwf.
     + eapply (IHHwf (b_Prod I0 A) (b_Prod J0 A) (b_subst_ext f0) (b_subst_ext g0)).
@@ -483,7 +483,5 @@ Proof.
     + apply prod_map.
       * eapply compose. { exact H_sigma. } { exact IHD1_ex. } (* Itt kapja meg a konvertált bizonyítást! *)
       * apply id. 
-
 Defined.
 
-*)
