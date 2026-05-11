@@ -455,11 +455,6 @@ Defined.
 (* 6. A FIBRÁCIÓ ÉS A HIPERMODELL                                    *)
 (* ================================================================= *)
 
-(* A "Joker" Axióma: Mivel a Beck-Chevalley feltételek csak Prop (logikai) 
-   szintű bizonyítások, ezzel az axiómával azonnal átléphetjük őket anélkül, 
-   hogy elveszítenénk a 'Defined' kulcsszót a számoláshoz! *)
-Axiom cheat_math : False.
-
 Instance Fin_GoodFibration : GoodFibration Fin_Setoid.
 Proof.
   refine {|
@@ -473,49 +468,115 @@ Proof.
     pullback_has_right_adjoint := fun X Y => Fin_Subst_IsLeftAdjoint _
   |}.
   Unshelve.
-  - intros; econstructor; h5_pred_crush.
-  - intros; econstructor; h5_pred_crush.
-  - intros; econstructor; h5_pred_crush.
-  - intros; econstructor; h5_pred_crush.
-  - intros; econstructor; h5_pred_crush.
-  - intros; econstructor; h5_pred_crush.
-  - intros; econstructor; h5_pred_crush.
-  
-  (* 8. Beck-Chevalley (Bal): A Joker bevetése *)
-  - intros; econstructor; destruct cheat_math.
-  (* 9. Beck-Chevalley (Jobb): A Joker bevetése *)
-  - intros; econstructor; destruct cheat_math.
-  
- (* 10. Morfizmusok egyenlősége: Felfedjük az összes rejtett célt! *)
-  - intros I J f g Heq A.
+ (* ÚJ TAKTIKA: A triviális izomorfizmusok bizonyításához *)
+  (* Ezzel soha semmi nem kerül a polcra, mindent azonnal megoldunk! *)
+ (* ÚJ TAKTIKA: A triviális izomorfizmusok bizonyításához *)
+  (* A 'try' kombinációval kezeljük az elvont egyenlőségeket ÉS a True-ra egyszerűsödőket is! *)
+  Ltac solve_trivial_iso :=
+    intros; unshelve econstructor;
+    [ intros x; simpl; try apply H5_le_refl; try exact Logic.I
+    | intros x; simpl; try apply H5_le_refl; try exact Logic.I
+    | unfold hom_equiv; compute; exact Logic.I
+    | unfold hom_equiv; compute; exact Logic.I ].
+
+  - solve_trivial_iso. (* 1. Identitás *)
+  - solve_trivial_iso. (* 2. Kompozíció *)
+  - solve_trivial_iso. (* 3. Terminális *)
+  - solve_trivial_iso. (* 4. Szorzat *)
+  - solve_trivial_iso. (* 5. Kezdeti *)
+  - solve_trivial_iso. (* 6. Koszorzat *)
+  - solve_trivial_iso. (* 7. Exponenciális *)
+(* 8. Beck-Chevalley (Bal) - Egzisztenciális Kvantor felcserélhetősége *)
+  - intros I J K f A.
     unshelve econstructor.
-    + (* 1. Cél: Az oda-morfizmus (A (f x) <= A (g x)) *)
-      intros x; simpl; rewrite (Heq x); apply H5_le_refl.
-    + (* 2. Cél: A vissza-morfizmus (A (g x) <= A (f x)) *)
-      intros x; simpl; rewrite (Heq x); apply H5_le_refl.
+    + (* LHS <= RHS *)
+      intros k. simpl. unfold Fin_Exists_val. simpl.
+      (* Sima apply-ok, a Coq magától kitalálja a rétegeket! *)
+      apply Fin_sup_least_bound. intros i.
+      apply Fin_sup_least_bound. intros j.
+      destruct (eq_fin (f k) i) eqn:Heq.
+      * apply eq_fin_eq in Heq. subst i.
+        assert (H1 := Fin_sup_upper_bound K (fun a => Fin_sup (fun b : interp_F J => if eq_fin k a then A (f a, b) else HBot)) k).
+        assert (H2 := Fin_sup_upper_bound J (fun b => if eq_fin k k then A (f k, b) else HBot) j).
+        simpl in H1; rewrite eq_fin_refl in H1. 
+        simpl in H2; rewrite eq_fin_refl in H2.
+        exact (H5_le_trans _ _ _ H1 H2).
+      * simpl. reflexivity.
+    + (* RHS <= LHS *)
+      intros k. simpl. unfold Fin_Exists_val. simpl.
+      apply Fin_sup_least_bound. intros k'.
+      apply Fin_sup_least_bound. intros j.
+      destruct (eq_fin k k') eqn:Heq.
+      * apply eq_fin_eq in Heq. subst k'.
+        assert (H1 := Fin_sup_upper_bound I (fun a => Fin_sup (fun b : interp_F J => if eq_fin (f k) a then A (a, b) else HBot)) (f k)).
+        assert (H2 := Fin_sup_upper_bound J (fun b => if eq_fin (f k) (f k) then A (f k, b) else HBot) j).
+        simpl in H1; rewrite eq_fin_refl in H1.
+        simpl in H2; rewrite eq_fin_refl in H2.
+        exact (H5_le_trans _ _ _ H1 H2).
+      * simpl. reflexivity.
     + unfold hom_equiv; compute; reflexivity.
     + unfold hom_equiv; compute; reflexivity.
-  
+
+  (* 9. Beck-Chevalley (Jobb) - Univerzális Kvantor felcserélhetősége *)
+  - intros I_obj J_obj K_obj f A.
+    unshelve econstructor.
+    + (* LHS <= RHS *)
+      intros k. simpl. unfold Fin_Forall_val. simpl.
+      apply Fin_inf_greatest_bound. intros k'.
+      apply Fin_inf_greatest_bound. intros j.
+      destruct (eq_fin k k') eqn:Heq.
+      * apply eq_fin_eq in Heq. subst k'.
+        assert (H1 := Fin_inf_lower_bound I_obj (fun a => Fin_inf (fun b : interp_F J_obj => if eq_fin (f k) a then A (a, b) else HTop)) (f k)).
+        assert (H2 := Fin_inf_lower_bound J_obj (fun b => if eq_fin (f k) (f k) then A (f k, b) else HTop) j).
+        simpl in H1; rewrite eq_fin_refl in H1.
+        simpl in H2; rewrite eq_fin_refl in H2.
+        exact (H5_le_trans _ _ _ H2 H1).
+      * match goal with |- H5_le ?x _ => destruct x; exact Logic.I end.
+    + (* RHS <= LHS *)
+      intros k. simpl. unfold Fin_Forall_val. simpl.
+      apply Fin_inf_greatest_bound. intros i.
+      apply Fin_inf_greatest_bound. intros j.
+      destruct (eq_fin (f k) i) eqn:Heq.
+      * apply eq_fin_eq in Heq. subst i.
+        assert (H1 := Fin_inf_lower_bound K_obj (fun a => Fin_inf (fun b : interp_F J_obj => if eq_fin k a then A (f a, b) else HTop)) k).
+        assert (H2 := Fin_inf_lower_bound J_obj (fun b => if eq_fin k k then A (f k, b) else HTop) j).
+        simpl in H1; rewrite eq_fin_refl in H1.
+        simpl in H2; rewrite eq_fin_refl in H2.
+        exact (H5_le_trans _ _ _ H2 H1).
+      * match goal with |- H5_le ?x _ => destruct x; exact Logic.I end.
+    + unfold hom_equiv; compute; reflexivity.
+    + unfold hom_equiv; compute; reflexivity.
+
+  (* 10. Morfizmusok egyenlősége *)
+  - intros I_obj J_obj f g Heq A.
+    unshelve econstructor.
+    + intros x; simpl; rewrite (Heq x); apply H5_le_refl.
+    + intros x; simpl; rewrite (Heq x); apply H5_le_refl.
+    + unfold hom_equiv; compute; reflexivity.
+    + unfold hom_equiv; compute; reflexivity.
+
   (* ITT JÖN A POLC TAKARÍTÁSA *)
   Unshelve.
   all: try (intros; econstructor; h5_pred_crush).
-  all: try (intros; destruct cheat_math).
 Defined.
 
-(*
 
 Instance Fin_StrictGoodFibration : StrictGoodFibration Fin_Setoid Fin_GoodFibration.
 Proof.
-  econstructor. intros. exists I. exact I.
+  econstructor.
+  intros X Y M1 M2 H.
+  (* Kézzel adjuk meg a bázisbeli egyenlőség megfordítását! *)
+  exists (fun x => eq_sym (H x)).
+  exact I.
 Defined.
 
 Instance Fin_HyperModel : HyperModel Fin_StrictGoodFibration.
 Proof.
   unshelve econstructor.
   - intros p t I A dt. exact (fun x => HBot).
-  - intros. exact I.
-  - intros. exact I.
-  - intros. exact I.
+  - intros. simpl. reflexivity.
+  - intros. apply base_soundness_equational. exact H.
+  - intros. simpl. reflexivity.
 Defined.
 
 (* ================================================================= *)
@@ -526,28 +587,18 @@ Defined.
 Definition Drinker_Pred (b : bool) : H5 :=
   if b then H1 else H2.
 
-(* 2. A Hipermodell kiegészítése a konkrét predikátumunkkal *)
-Instance Drinker_Model : HyperModel Fin_StrictGoodFibration.
-Proof.
-  unshelve econstructor.
-  - intros p t I A dt. 
-    (* Ha a predikátumunkat kérdezik, a Drinker_Pred-et adjuk vissza *)
-    exact Drinker_Pred.
-  - all: repeat intro; exact I.
-Defined.
-
-(* 3. A Formula kiértékelése a Coq számítógépével *)
+(* 2. A Formula kiértékelése a Coq számítógépével *)
+(* Közvetlenül a szemantikai kvantorokat (Fin_Exists_val, Fin_sup) hívjuk meg!
+   A @ jelekkel expliciten megadjuk a típusokat, hogy a Coq ne zavarodjon össze. *)
 Theorem Drinker_Is_Not_HTop : 
-  forall (gamma : interp_F F_Unit),
-  (* A formula: EX x, (EX y, P(y) -> P(x)) *)
-  let formula_val := Fin_Exists_val (fun _ : bool => tt) 
-      (fun x => H5_impl (Fin_sup Drinker_Pred) (Drinker_Pred x)) tt in
-  formula_val = H12. (* Az eredmény H12, ami nem HTop! *)
+  let formula_val := @Fin_Exists_val F_Unit F_Bool (fun _ : bool => tt) 
+      (fun x => H5_impl (@Fin_sup F_Bool Drinker_Pred) (Drinker_Pred x)) tt in
+  formula_val = H12. (* Az eredmény H12, ami nem HTop (Abszolút Igazság)! *)
 Proof.
   intros.
-  simpl.
-  (* A Coq itt lefuttatja az összes H5_join, H5_impl és Fin_sup műveletet *)
+  (* A 'simpl' parancs kiszámolja a Fin_sup-ot (H1 v H2 = H12) 
+     és lefuttatja a H5_impl-eket, majd a külső egzisztenciális kvantort. *)
+  simpl. 
   reflexivity.
 Qed.
 
-*)
