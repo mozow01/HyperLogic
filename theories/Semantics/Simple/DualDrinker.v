@@ -1,10 +1,10 @@
 (*theories/Semantics/Simple/DualDrinker.v*)
 (*theories/Semantics/Simple/LEM.v*)
 
-Require Import Stdlib.Logic.Classical.
-Require Import Stdlib.Logic.FunctionalExtensionality.
-Require Import Stdlib.Logic.ProofIrrelevance.
-Require Import Stdlib.Classes.Morphisms.
+Require Import Coq.Logic.Classical.
+Require Import Coq.Logic.FunctionalExtensionality.
+Require Import Coq.Logic.ProofIrrelevance.
+Require Import Coq.Classes.Morphisms.
 
 (* Importáljuk az eddigi fájlokat a szintaxishoz és a kategóriákhoz *)
 Require Import HyperLogic.Cat.Core.
@@ -216,9 +216,9 @@ Inductive FinObj : Type :=
 (* 2. Az objektumok "lefordítása" valódi Coq típusokra *)
 Fixpoint interp_F (A : FinObj) : Type :=
   match A with
-  | F_Unit => Corelib.Init.Datatypes.unit
+  | F_Unit => Coq.Init.Datatypes.unit
   | F_Bool => bool
-  | F_Prod A B => Corelib.Init.Datatypes.prod (interp_F A) (interp_F B)
+  | F_Prod A B => Coq.Init.Datatypes.prod (interp_F A) (interp_F B)
   end.
 
 (* 3. A Morfizmusok (Sima függvények a lefordított típusok között) *)

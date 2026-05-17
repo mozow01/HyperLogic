@@ -54,8 +54,11 @@ theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Soundness.v
 
 # --- Epsilon Adjoin Semantics ---
 theories/Logic/Base/Epsilon_Adjoint/Base_Syntax.v
+theories/Logic/Base/Epsilon_Adjoint/Base_Syntax_Lemmas.v
 theories/Logic/Hyper/Epsilon_Adjoint/Hyper_Syntax.v
 theories/Logic/Hyper/Epsilon_Adjoint/Hyper_Syntax_Lemmas.v
 theories/Semantics/Epsilon_Adjoint/Base_Epsilon_Soundness.v
 theories/Semantics/Epsilon_Adjoint/Base_Epsilon_Completeness.v
 theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Completeness.v
+theories/Semantics/Epsilon_Adjoint/LEM_disproved.v
+
