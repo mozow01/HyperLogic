@@ -570,35 +570,139 @@ Proof.
   exact I.
 Defined.
 
-Instance Fin_HyperModel : HyperModel Fin_StrictGoodFibration.
-Proof.
-  unshelve econstructor.
-  - intros p t I A dt. exact (fun x => HBot).
-  - intros. simpl. reflexivity.
-  - intros. apply base_soundness_equational. exact H.
-  - intros. simpl. reflexivity.
-Defined.
-
 (* ================================================================= *)
-(* 7. A DUAL DRINKER CÁFOLATA (A Végkifejlet)                        *)
+(* 7. A DUAL DRINKER CÁFOLATA SZINTAKTIKAI SZINTEN                   *)
 (* ================================================================= *)
 
 (* 1. A cáfoló predikátum (A bool-on): P(true)=H1, P(false)=H2 *)
 Definition Drinker_Pred (b : bool) : H5 :=
   if b then H1 else H2.
 
-(* 2. A Formula kiértékelése a Coq számítógépével *)
-(* Közvetlenül a szemantikai kvantorokat (Fin_Exists_val, Fin_sup) hívjuk meg!
-   A @ jelekkel expliciten megadjuk a típusokat, hogy a Coq ne zavarodjon össze. *)
-Theorem Drinker_Is_Not_HTop : 
-  let formula_val := @Fin_Exists_val F_Unit F_Bool (fun _ : bool => tt) 
-      (fun x => H5_impl (@Fin_sup F_Bool Drinker_Pred) (Drinker_Pred x)) tt in
-  formula_val = H12. (* Az eredmény H12, ami nem HTop (Abszolút Igazság)! *)
+(* 2. A HyperModel bekötése a Drinker_Pred-del *)
+Instance Fin_HyperModel : HyperModel Fin_StrictGoodFibration.
 Proof.
-  intros.
-  (* A 'simpl' parancs kiszámolja a Fin_sup-ot (H1 v H2 = H12) 
-     és lefuttatja a H5_impl-eket, majd a külső egzisztenciális kvantort. *)
-  simpl. 
-  reflexivity.
-Qed.
+  unshelve econstructor.
+  - (* 1. Cél: Az i_atom függvény megadása (Szemantikai illesztéssel) *)
+    intros p t I A dt env.
+    exact (
+      match interp_ty A as FA return interp_F FA -> H5 with
+      | F_Bool => Drinker_Pred
+      | _ => fun _ => HBot
+      end (interp_tm dt env)
+    ).
+    
+  - (* 2. Cél: Atom Pullback izomorfizmus (Morfizmus egyenlőség a Szálban) *)
+    intros. unshelve econstructor.
+    + intros env; simpl; apply H5_le_refl.
+    + intros env; simpl; apply H5_le_refl.
+    + exact Logic.I.
+    + exact Logic.I.
+    
+  - (* 3. Cél: Bázis kategória (STLC) helyessége *)
+    intros I J f g df dg Heq.
+    apply base_soundness_equational. exact Heq.
+    
+  - (* 4. Cél: Atom Kongruencia (Egyenlő kifejezések azonos predikátumot adnak) *)
+    intros p t1 t2 I A d1 d2 H.
+    unshelve econstructor.
+    + (* d1 <= d2 *)
+      intros env. simpl.
+      (* 1. Felvesszük a kategóriaelméleti egyenlőséget (így működik az apply!) *)
+      assert (Heq : interp_tm d1 ≅ interp_tm d2).
+      { apply base_soundness_equational. exact H. }
+      
+      (* 2. Kicsomagoljuk belőle a pontonkénti egyenlőséget az 'env'-re *)
+      pose proof (Heq env) as Heq_env.
+      
+      (* 3. Behelyettesítjük az egyenlőséget és lezárjuk a reflexivitással *)
+      rewrite Heq_env. apply H5_le_refl.
+      
+    + (* d2 <= d1 *)
+      intros env. simpl.
+      assert (Heq : interp_tm d1 ≅ interp_tm d2).
+      { apply base_soundness_equational. exact H. }
+      pose proof (Heq env) as Heq_env.
+      
+      (* Mivel a Heq_env (d1 = d2) formájú, a rewrite a jobb oldali d1-et is d2-re cseréli *)
+      rewrite Heq_env. apply H5_le_refl.
+      
+    + exact Logic.I.
+    + exact Logic.I.
+Defined.
 
+(* 3. Segédlemma a kontextushoz (ugyanaz, mint a LEM.v-ben) *)
+Lemma wf_ctx_nil_valid : forall (I : b_ty), wf_ctx I nil.
+Proof. intro I; constructor. Defined.
+
+(* 4. A Dual Drinker formula felépítése a Hyper_Syntax használatával *)
+Definition P_x (I D : b_ty) : h_ty := Ty_Atom 0 b_snd.
+Definition Ex_P (I D : b_ty) : h_ty := Ty_Ex D (P_x I D).
+
+Definition DualDrinkerFormula (I D : b_ty) : h_ty :=
+  Ty_Ex D (Ty_Arrow (form_pullback b_fst (Ex_P I D)) (P_x I D)).
+
+(* 5. Jólformáltság (WF) *)
+Lemma DualDrinker_WellFormed : forall I D, WellFormed I (DualDrinkerFormula I D).
+Proof.
+  intros I D.
+  unfold DualDrinkerFormula, Ex_P, P_x.
+  (* Mivel ez tisztán szintaktikai faépítés, a Coq beépített 
+     automatizációja jó eséllyel megoldja magától: *)
+  repeat econstructor.
+Defined. (* <- KULCSFONTOSSÁGÚ: Qed helyett Defined, hogy futtatható maradjon! *)
+
+(* 6. A metatétel: Szemantikai cáfolat a mi H5 modellünkkel *)
+Theorem DualDrinker_Refuted : 
+  ~ (forall (C : SetoidCategory) (CC : CartesianCategory C)
+            (TSC : TwoSortCategory C) (GF : GoodFibration C) 
+            (SGF : StrictGoodFibration C GF) (HM : HyperModel SGF)
+            (I D : b_ty),
+       inhabited (hom (interp_h_ctx I nil (wf_ctx_nil_valid I)) 
+                      (interp_h_ty I (DualDrinkerFormula I D) (DualDrinker_WellFormed I D)))).
+Proof.
+  intro H_univ.
+  
+  (* Specializálunk a mi 5-elemű logikánkra, a b_Unit bázisra és a BT_Bool tartományra! *)
+  specialize (H_univ 
+               Fin_Setoid 
+               Fin_Cartesian
+               Fin_TwoSort
+               Fin_GoodFibration 
+               Fin_StrictGoodFibration 
+               Fin_HyperModel 
+               b_Unit
+               b_S).
+               
+  destruct H_univ as [f_drinker].
+  
+  (* 1. Alkalmazzuk a morfizmust a 'tt' (üres) kontextusra! 
+     Így a 'forall x, H5_le ...' állításból eltűnik a változó. *)
+  pose proof (f_drinker tt) as f_eval.
+  
+  (* 2. A 'compute' taktika brutális erővel mindent kiszámol a legkisebb építőelemekig.
+     Végigmegy a Fin_sup-on, kiértékeli az implikációkat, és mivel az eredmény
+     H5_le HTop H12 lesz, azt is azonnal False-ra redukálja! *)
+  compute in f_eval.
+  
+  (* Az f_eval típusa most már szó szerint False! Kész vagyunk! *)
+  exact f_eval.
+Defined.
+
+
+(* 7. A Végső Metatétel: A Dual Drinker nem levezethető *)
+Theorem DualDrinker_Underivable : 
+  (forall (I D : b_ty), { p : h_tm & h_derivation I nil p (DualDrinkerFormula I D) }) -> False.
+Proof.
+  intro H_all_der.
+  
+  (* Alkalmazzuk a cáfolatunkat *)
+  apply DualDrinker_Refuted.
+  intros C CC TSC GF SGF HM I_any D_any.
+  
+  (* Az indirekt feltevésből kinyerjük a levezetést *)
+  destruct (H_all_der I_any D_any) as [p H_der].
+  constructor.
+  
+  (* A Soundness tétellel átkonvertáljuk a szintaktikai levezetést egy szemantikai morfizmussá! *)
+  apply (hyper_soundness_inhabited H_der (wf_ctx_nil_valid I_any) (DualDrinker_WellFormed I_any D_any)).
+Defined.
