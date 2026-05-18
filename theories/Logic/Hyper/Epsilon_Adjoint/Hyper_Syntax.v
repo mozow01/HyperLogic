@@ -127,11 +127,23 @@ Inductive form_equiv {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_ty Sign
   | FE_Pullback_Comp : forall J K (f g : @b_tm Sign) Phi (df : base_typing J f K) (dg : base_typing I g J),
       WellFormed K Phi -> form_equiv I (form_subst g (form_subst f Phi)) (form_subst (b_comp f g) Phi)
   | FE_Pullback_Cong : forall J (f g : @b_tm Sign) Phi (df : base_typing I f J) (dg : base_typing I g J), 
-      @base_equiv Sign I J f g df dg -> WellFormed J Phi -> form_equiv I (form_subst f Phi) (form_subst g Phi).
+      @base_equiv Sign I J f g df dg -> WellFormed J Phi -> form_equiv I (form_subst f Phi) (form_subst g Phi)
+(* --- A BECK-CHEVALLEY AXIÓMA AZ EPSZILONRA --- *)
+  | FE_Eps_BC : forall J A (t : @b_tm Sign) (dt : base_typing I t J) Phi,
+      WellFormed (b_Prod J A) Phi ->
+      form_equiv I 
+        ((form_subst (b_subst_ext t) Phi) .[ ε A, form_subst (b_subst_ext t) Phi ])
+        (form_subst t (Phi .[ ε A, Phi ])).
 
 (* ================================================================= *)
 (* 2.6 KONTEXTUS EKVIVALENCIA (A Completenesshez)                    *)
 (* ================================================================= *)
+
+(* Saját iterátor a Type univerzumban lévő WellFormed fák listázásához *)
+Inductive All_WellFormed {Sign : Type} (J : b_ty) : @h_context Sign -> Type :=
+  | AWF_Nil : All_WellFormed J nil
+  | AWF_Cons : forall (Phi : @h_ty Sign) (G : @h_context Sign),
+      WellFormed J Phi -> All_WellFormed J G -> All_WellFormed J (Phi :: G).
 
 Inductive ctx_equiv {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_context Sign -> @h_context Sign -> Type :=
   | CEq_Nil  : ctx_equiv I [] []
@@ -184,37 +196,94 @@ Inductive h_typing {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_context S
 (* 4. DUAL CONTEXT DERIVATION (Set-alapú)                            *)
 (* ================================================================= *)
 
-Inductive h_derivation {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_context Sign -> @h_tm Sign -> @h_ty Sign -> Type :=
-  | HD_Var0 : forall G Phi, h_derivation I (Phi :: G) (tm_var 0) Phi
-  | HD_VarS : forall G Phi Psi i, h_derivation I G (tm_var i) Phi -> h_derivation I (Psi :: G) (tm_var (S i)) Phi
-  
-  | HD_Conv : forall G p Phi Psi, h_derivation I G p Phi -> form_equiv I Phi Psi -> h_derivation I G p Psi
-  | HD_Ctx_Conv : forall G1 G2 p Phi, ctx_equiv I G1 G2 -> h_derivation I G1 p Phi -> h_derivation I G2 p Phi
-  
-  | HD_Unit : forall G, h_derivation I G tm_unit Ty_Unit
-  | HD_Lam : forall G p Phi Psi, h_derivation I (Phi :: G) p Psi -> h_derivation I G (tm_lam Phi p) (Ty_Arrow Phi Psi)
-  | HD_App : forall G p1 p2 Phi Psi, h_derivation I G p1 (Ty_Arrow Phi Psi) -> h_derivation I G p2 Phi -> h_derivation I G (tm_app p1 p2) Psi
-  | HD_Pair : forall G p1 p2 Phi Psi, h_derivation I G p1 Phi -> h_derivation I G p2 Psi -> h_derivation I G (tm_pair p1 p2) (Ty_Prod Phi Psi)
-  | HD_Fst : forall G p Phi Psi, h_derivation I G p (Ty_Prod Phi Psi) -> h_derivation I G (tm_fst p) Phi
-  | HD_Snd : forall G p Phi Psi, h_derivation I G p (Ty_Prod Phi Psi) -> h_derivation I G (tm_snd p) Psi
-  | HD_Inl : forall G p Phi Psi, h_derivation I G p Phi -> h_derivation I G (tm_inl Psi p) (Ty_Sum Phi Psi)
-  | HD_Inr : forall G p Phi Psi, h_derivation I G p Psi -> h_derivation I G (tm_inr Phi p) (Ty_Sum Phi Psi)
-  | HD_Case : forall G p p1 p2 Phi Psi Chi, h_derivation I G p (Ty_Sum Phi Psi) -> h_derivation I (Phi :: G) p1 Chi -> h_derivation I (Psi :: G) p2 Chi -> h_derivation I G (tm_case p p1 p2) Chi
-  | HD_Absurd : forall G p Phi, h_derivation I G p Ty_Void -> h_derivation I G (tm_absurd Phi p) Phi
-  
-  | HD_All_Intro : forall G p A Phi, h_derivation (b_Prod I A) (ctx_subst b_fst G) p Phi -> h_derivation I G (tm_all_intro p) (Ty_All A Phi)
-  | HD_All_Elim : forall G p A Phi f, h_derivation I G p (Ty_All A Phi) -> base_typing I f A -> h_derivation I G (tm_all_elim p f) (form_subst (b_pair b_id f) Phi)
-  
-  | HD_Ex_Intro : forall G p A Phi f, base_typing I f A -> h_derivation I G p (form_subst (b_pair b_id f) Phi) -> h_derivation I G (tm_ex_intro f p) (Ty_Ex A Phi)
-  | HD_Ex_Elim : forall G p p2 A Phi Chi, h_derivation I G p (Ty_Ex A Phi) -> h_derivation (b_Prod I A) (Phi :: ctx_subst b_fst G) p2 (form_subst b_fst Chi) -> h_derivation I G (tm_ex_elim p p2) Chi
 
-  | HD_Eps_Intro : forall G p A Phi f,
+Inductive h_derivation {Sign : Type} `{SkolemMapping Sign} : 
+  b_ty -> h_context (Sign:=Sign) -> @h_tm Sign -> h_ty (Sign:=Sign) -> Type :=
+
+  (* --- LEVELEK (Regularitási premisszákkal) --- *)
+  
+  (* 0-s indexű változó *)
+  | HD_Var0 : forall (I : b_ty) (Phi : @h_ty Sign) (G : @h_context Sign), 
+      All_WellFormed I (Phi :: G) -> 
+      h_derivation I (Phi :: G) (tm_var 0) Phi
+
+  (* S n-es indexű változó *)
+  | HD_VarS : forall (I : b_ty) (Phi Psi : @h_ty Sign) (G : @h_context Sign) (n : nat), 
+      WellFormed I Psi -> 
+      h_derivation I G (tm_var n) Phi -> 
+      h_derivation I (Psi :: G) (tm_var (S n)) Phi
+
+  (* Unit konstans *)
+  | HD_Unit : forall (I : b_ty) (G : @h_context Sign), 
+      All_WellFormed I G -> 
+      h_derivation I G tm_unit Ty_Unit
+
+  (* --- KONVERZIÓK --- *)
+  | HD_Conv : forall (I : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi Psi : @h_ty Sign),
+      h_derivation I G p Phi ->
+      form_equiv I Phi Psi ->
+      h_derivation I G p Psi
+
+  | HD_Ctx_Conv : forall (I : b_ty) (G1 G2 : @h_context Sign) (p : @h_tm Sign) (Phi : @h_ty Sign),
+      ctx_equiv I G1 G2 ->
+      h_derivation I G1 p Phi ->
+      h_derivation I G2 p Phi
+
+  (* --- STRUKTURÁLIS SZABÁLYOK (Mindenhol explicit I és @h_tm Sign) --- *)
+  | HD_Lam : forall (I : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi Psi : @h_ty Sign), 
+      h_derivation I (Phi :: G) p Psi -> 
+      h_derivation I G (tm_lam Phi p) (Ty_Arrow Phi Psi)
+      
+  | HD_App : forall (I : b_ty) (G : @h_context Sign) (p1 p2 : @h_tm Sign) (Phi Psi : @h_ty Sign), 
+      h_derivation I G p1 (Ty_Arrow Phi Psi) -> h_derivation I G p2 Phi -> h_derivation I G (tm_app p1 p2) Psi
+      
+  | HD_Pair : forall (I : b_ty) (G : @h_context Sign) (p1 p2 : @h_tm Sign) (Phi Psi : @h_ty Sign), 
+      h_derivation I G p1 Phi -> h_derivation I G p2 Psi -> h_derivation I G (tm_pair p1 p2) (Ty_Prod Phi Psi)
+      
+  | HD_Fst : forall (I : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi Psi : @h_ty Sign), 
+      h_derivation I G p (Ty_Prod Phi Psi) -> h_derivation I G (tm_fst p) Phi
+      
+  | HD_Snd : forall (I : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi Psi : @h_ty Sign), 
+      h_derivation I G p (Ty_Prod Phi Psi) -> h_derivation I G (tm_snd p) Psi
+      
+  | HD_Inl : forall {I G p Phi Psi},
+      WellFormed I Psi ->     (* <--- EZ HIÁNYZOTT! *)
+      h_derivation I G p Phi ->
+      h_derivation I G (tm_inl Psi p) (Ty_Sum Phi Psi)
+
+  | HD_Inr : forall {I G p Phi Psi},
+      WellFormed I Phi ->     (* <--- EZ HIÁNYZOTT! *)
+      h_derivation I G p Psi ->
+      h_derivation I G (tm_inr Phi p) (Ty_Sum Phi Psi)
+       
+  | HD_Case : forall (I : b_ty) (G : @h_context Sign) (p p1 p2 : @h_tm Sign) (Phi Psi Chi : @h_ty Sign), 
+      h_derivation I G p (Ty_Sum Phi Psi) -> h_derivation I (Phi :: G) p1 Chi -> h_derivation I (Psi :: G) p2 Chi -> h_derivation I G (tm_case p p1 p2) Chi
+      
+  | HD_Absurd : forall {I G p Phi},
+      WellFormed I Phi ->    (* <--- ÚJ PREMISSZA: A "motive" jólformáltsága *)
+      h_derivation I G p Ty_Void ->
+      h_derivation I G (tm_absurd Phi p) Phi
+  
+  (* --- KVANTOROK ÉS EPSZILON (I és A bázis típusokkal) --- *)
+  | HD_All_Intro : forall (I A : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi : @h_ty Sign), 
+      h_derivation (b_Prod I A) (ctx_subst b_fst G) p Phi -> h_derivation I G (tm_all_intro p) (Ty_All A Phi)
+      
+  | HD_All_Elim : forall (I A : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi : @h_ty Sign) (f : @b_tm Sign), 
+      h_derivation I G p (Ty_All A Phi) -> base_typing I f A -> h_derivation I G (tm_all_elim p f) (form_subst (b_pair b_id f) Phi)
+  
+  | HD_Ex_Intro : forall (I A : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi : @h_ty Sign) (f : @b_tm Sign), 
+      base_typing I f A -> h_derivation I G p (form_subst (b_pair b_id f) Phi) -> h_derivation I G (tm_ex_intro f p) (Ty_Ex A Phi)
+      
+  | HD_Ex_Elim : forall (I A : b_ty) (G : @h_context Sign) (p p2 : @h_tm Sign) (Phi Chi : @h_ty Sign), 
+      h_derivation I G p (Ty_Ex A Phi) -> h_derivation (b_Prod I A) (Phi :: ctx_subst b_fst G) p2 (form_subst b_fst Chi) -> h_derivation I G (tm_ex_elim p p2) Chi
+
+  | HD_Eps_Intro : forall (I A : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi : @h_ty Sign) (f : @b_tm Sign),
       base_typing I f A ->
       h_derivation I G p (form_subst (b_pair b_id f) Phi) ->
       h_derivation I G (tm_eps_intro f p) 
                    (form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi)
 
-  | HD_Eps_Elim : forall G p p2 A Phi Chi,
+  | HD_Eps_Elim : forall (I A : b_ty) (G : @h_context Sign) (p p2 : @h_tm Sign) (Phi Chi : @h_ty Sign),
       h_derivation I G p (form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi) ->
       h_derivation (b_Prod I A) (Phi :: ctx_subst b_fst G) p2 (form_subst b_fst Chi) ->
       h_derivation I G (tm_eps_elim p p2) Chi.

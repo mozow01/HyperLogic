@@ -71,10 +71,9 @@ Class EpsilonHyperModel
   i_atom_pb : forall (p : nat) (t : @b_tm Sign) (I A : b_ty) (f : @b_tm Sign) (df : @base_typing Sign I f A),
       @fobj _ _ (Pullback (interp_tm df)) (i_atom p t A) ≅O i_atom p (b_comp t f) I;
 
-  i_atom_cong_global : forall (p : nat) (I_target I_orig A : b_ty) (t1 t2 : b_tm) 
-                              (d1 : base_typing I_orig t1 A) (d2 : base_typing I_orig t2 A),
-                       base_equiv d1 d2 -> i_atom p t1 I_target ≅O i_atom p t2 I_target
-}.
+  i_atom_cong_global : forall (p : nat) (I A : b_ty) (t1 t2 : b_tm) 
+                              (d1 : base_typing I t1 A) (d2 : base_typing I t2 A),
+                       base_equiv d1 d2 -> i_atom p t1 I ≅O i_atom p t2 I}.
 
 Fixpoint interp_h_ty 
   {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
@@ -117,13 +116,16 @@ Class AdjointEpsilonFibration
   {SGF : StrictGoodFibration C GF} 
   {EHM : EpsilonHyperModel SGF} := {
 
-    eps_is_left_adj_obj : forall (I A : b_ty) (Phi : @h_ty Sign),
+  eps_is_left_adj_obj : forall (I A : b_ty) (Phi : @h_ty Sign),
+    WellFormed (b_Prod I A) Phi -> (* <--- Megköveteljük a helyes szintaxist *)
     @left_adj_obj _ _ _ pullback_has_left_adjoint 
       (interp_h_ty (b_Prod I A) Phi)
     ≅O 
     interp_h_ty I (form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi) ;
 
-    eps_functorial : forall (I A : b_ty) (Phi Psi : @h_ty Sign),
+  eps_functorial : forall (I A : b_ty) (Phi Psi : @h_ty Sign),
+    WellFormed (b_Prod I A) Phi -> 
+    WellFormed (b_Prod I A) Psi -> 
     interp_h_ty (b_Prod I A) Phi ≅O interp_h_ty (b_Prod I A) Psi ->
     interp_h_ty I (form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi) 
     ≅O 

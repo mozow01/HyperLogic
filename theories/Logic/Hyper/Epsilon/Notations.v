@@ -62,6 +62,8 @@ Notation "Phi [ t ]" := (form_pullback (b_pair b_id t) Phi) (at level 40, left a
 (* Gyengítés (Lifting/Weakening): Amikor egy új változó kerül a kontextusba *)
 Notation "⇑ Phi" := (form_pullback b_fst Phi) (at level 40) : logic_scope.
 
+Check (form_pullback b_fst) .
+
 (* Explicit pullback (ha mégis egy általános f helyettesítés kell) *)
 Notation "Phi [ f ]*" := (form_pullback f Phi) (at level 40, left associativity) : logic_scope.
 
