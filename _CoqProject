@@ -61,4 +61,5 @@ theories/Semantics/Epsilon_Adjoint/Base_Epsilon_Soundness.v
 theories/Semantics/Epsilon_Adjoint/Base_Epsilon_Completeness.v
 theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Completeness.v
 theories/Semantics/Epsilon_Adjoint/LEM_disproved.v
+theories/Logic/Hyper/Epsilon_Adjoint/Curvature.v
 
