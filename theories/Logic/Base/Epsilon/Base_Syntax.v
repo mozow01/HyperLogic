@@ -107,10 +107,6 @@ Inductive base_equiv {Sign : Type} : forall (A B : b_ty) (f g : @b_tm Sign),
         base_equiv A (b_Prod C D) (b_comp (b_pair f g) h) (b_pair (b_comp f h) (b_comp g h)) 
                    (BT_Comp (BT_Pair df dg) dh) (BT_Pair (BT_Comp df dh) (BT_Comp dg dh)). 
 
-(* --- 5. SETOID ÉS MORFIZMUS REGISZTRÁCIÓ --- *)
-
-(* Implicitté tesszük a b_equiv Sign paraméterét is. *)
-Arguments base_equiv {Sign A B f g}.
 
 (* --- 5. SETOID ÉS MORFIZMUS REGISZTRÁCIÓ --- *)
 

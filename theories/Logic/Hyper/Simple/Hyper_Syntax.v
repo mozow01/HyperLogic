@@ -160,10 +160,6 @@ Inductive h_tm : Type :=
 (* 3.5 FORMULA EKVIVALENCIA (Már a WFF és a Bázis kontextus védelmében!) *)
 (* ================================================================= *)
 
-(* ================================================================= *)
-(* 3.5 FORMULA EKVIVALENCIA (Már a WFF és a Bázis kontextus védelmében!) *)
-(* ================================================================= *)
-
 Inductive form_equiv (I : b_ty) : h_ty -> h_ty -> Type :=
   
   | FEQ_Atom : forall p t1 t2 A (d1 : base_typing I t1 A) (d2 : base_typing I t2 A),
