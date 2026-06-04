@@ -63,3 +63,10 @@ theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Completeness.v
 theories/Semantics/Epsilon_Adjoint/LEM_disproved.v
 theories/Logic/Hyper/Epsilon_Adjoint/Curvature.v
 
+# --- Simple Extended Logic ---
+theories/Logic/Hyper/Simple_Ext/Hyper_Syntax.v
+theories/Logic/Hyper/Simple_Ext/Hyper_Lemmas.v
+theories/Logic/Hyper/Simple_Ext/Notations.v
+theories/Logic/Hyper/Simple_Ext/DualDrinker_WF.v
+
+
