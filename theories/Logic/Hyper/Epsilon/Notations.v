@@ -47,7 +47,6 @@ Notation "A ⇒ B" := (Ty_Arrow A B) (at level 90, right associativity) : logic_
 (* ================================================================= *)
 
 Notation "'∀' D , Phi" := (Ty_All D Phi) (at level 50) : logic_scope.
-Notation "'∃' D , Phi" := (Ty_Ex D Phi) (at level 50) : logic_scope.
 
 (* Az Epszilon szimbólum elrejti a Skolem-indexálást és a konstanst *)
 Notation "'ε' D , Phi" := (b_const D (skolem_index D Phi)) (at level 50) : logic_scope.
@@ -57,15 +56,13 @@ Notation "'ε' D , Phi" := (b_const D (skolem_index D Phi)) (at level 50) : logi
 (* ================================================================= *)
 
 (* Hagyományos behelyettesítés: Phi[t] a <id, t> pullback helyett *)
-Notation "Phi [ t ]" := (form_pullback (b_pair b_id t) Phi) (at level 40, left associativity) : logic_scope.
+Notation "Phi [ t ]" := (form_subst (b_pair b_id t) Phi) (at level 40, left associativity) : logic_scope.
 
 (* Gyengítés (Lifting/Weakening): Amikor egy új változó kerül a kontextusba *)
-Notation "⇑ Phi" := (form_pullback b_fst Phi) (at level 40) : logic_scope.
-
-Check (form_pullback b_fst) .
+Notation "⇑ Phi" := (form_subst b_fst Phi) (at level 40) : logic_scope.
 
 (* Explicit pullback (ha mégis egy általános f helyettesítés kell) *)
-Notation "Phi [ f ]*" := (form_pullback f Phi) (at level 40, left associativity) : logic_scope.
+Notation "Phi [ f ]*" := (form_subst f Phi) (at level 40, left associativity) : logic_scope.
 
 (* ================================================================= *)
 (* 5. JÓL-FORMÁLTSÁG (WFF) ÉS EKVIVALENCIA                           *)

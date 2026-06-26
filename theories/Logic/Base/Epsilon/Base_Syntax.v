@@ -2,138 +2,209 @@
 
 Require Import Setoid.
 Require Import Relation_Definitions.
-Require Import Morphisms.   
-  
-(* 1. OBJEKTUMOK (Marad az eredeti) *)
+Require Import Morphisms.
+Require Import Coq.Classes.RelationClasses.
+
+(* 1. OBJEKTUMOK *)
 Inductive b_ty : Type :=
   | b_Unit : b_ty
   | b_S    : b_ty
   | b_Prod : b_ty -> b_ty -> b_ty.
 
-(* 2. NYERS MORFIZMUSOK (Bővítve az implicit {Sign} paraméterrel) *)
-Inductive b_tm {Sign : Type} : Type :=
+Scheme Equality for b_ty.
+
+(* 1.5 FUNKCIÓJELEK SZIGNATÚRÁJA *)
+Class FunctionSignature (Func : Type) : Type := {
+  func_dom : Func -> b_ty;
+  func_cod : Func -> b_ty
+}.
+
+(* 2. NYERS MORFIZMUSOK *)
+Inductive b_tm {Sign Func : Type} : Type :=
   | b_id   : b_tm
   | b_comp : b_tm -> b_tm -> b_tm
   | b_unit : b_tm
   | b_pair : b_tm -> b_tm -> b_tm
   | b_fst  : b_tm
   | b_snd  : b_tm
-  (* ÚJ: A rigid konstans hordozója. 
-     Tartalmazza a típusát (b_ty) és az azonosítóját (Sign). *)
-  | b_const : b_ty -> Sign -> b_tm.
+  (* Epszilon-helyőrző. *)
+  | b_const : b_ty -> Sign -> b_tm
+  (* Valódi algebrai függvényjel. *)
+  | b_func : Func -> b_tm.
 
-(* 3. TIPUSOLASI SZABALYOK (B1 |- f : B2) *)
-
-(* 3. TIPUSOLASI SZABALYOK (B1 |- f : B2) *)
-Inductive base_typing {Sign : Type} : b_ty -> b_tm (Sign:=Sign) -> b_ty -> Type :=
+(* 3. TIPUSOLÁSI SZABÁLYOK *)
+Inductive base_typing {Sign Func : Type} `{HFunc : FunctionSignature Func}
+  : b_ty -> b_tm (Sign:=Sign) (Func:=Func) -> b_ty -> Type :=
   | BT_Id : forall A, base_typing A b_id A
-  | BT_Comp : forall A B C g f, base_typing B g C -> base_typing A f B -> base_typing A (b_comp g f) C
+  | BT_Comp : forall A B C g f,
+      base_typing B g C ->
+      base_typing A f B ->
+      base_typing A (b_comp g f) C
   | BT_Unit : forall A, base_typing A b_unit b_Unit
-  | BT_Pair : forall A B C f g, base_typing A f B -> base_typing A g C -> base_typing A (b_pair f g) (b_Prod B C)
+  | BT_Pair : forall A B C f g,
+      base_typing A f B ->
+      base_typing A g C ->
+      base_typing A (b_pair f g) (b_Prod B C)
   | BT_Fst : forall A B, base_typing (b_Prod A B) b_fst A
   | BT_Snd : forall A B, base_typing (b_Prod A B) b_snd B
-  (* ÚJ: A konstans tipizálási szabálya. *)
-  | BT_Const : forall I A (s : Sign), base_typing I (b_const A s) A.
+  | BT_Const : forall I A (s : Sign), base_typing I (b_const A s) A
+  | BT_Func : forall f, base_typing (func_dom f) (b_func f) (func_cod f).
 
-(* --- 1. LÉPÉS: Argumentumok implicitté tétele --- *)
-(* Mivel bevezettük a {Sign} paramétert a b_tm és base_typing típusokba, 
-   ez a paraméter lesz az ELSŐ implicit argumentum minden konstruktornál. *)
-Arguments BT_Id {Sign A}.
-Arguments BT_Comp {Sign A B C g f}.
-Arguments BT_Unit {Sign A}.
-Arguments BT_Pair {Sign A B C f g}.
-Arguments BT_Fst {Sign A B}.
-Arguments BT_Snd {Sign A B}.
-Arguments BT_Const {Sign I A s}.
+Arguments BT_Id {Sign Func HFunc A}.
+Arguments BT_Comp {Sign Func HFunc A B C g f}.
+Arguments BT_Unit {Sign Func HFunc A}.
+Arguments BT_Pair {Sign Func HFunc A B C f g}.
+Arguments BT_Fst {Sign Func HFunc A B}.
+Arguments BT_Snd {Sign Func HFunc A B}.
+Arguments BT_Const {Sign Func HFunc I A s}.
+Arguments BT_Func {Sign Func HFunc f}.
 
-(* --- 2. LÉPÉS: A tiszta ekvivalencia reláció --- *)
-(* Ide is bejön a {Sign : Type} explicit implicit paraméterként. *)
-Inductive base_equiv {Sign : Type} : forall (A B : b_ty) (f g : @b_tm Sign), 
-  @base_typing Sign A f B -> @base_typing Sign A g B -> Prop :=
+(* 4. BÁZIS-EKVIVALENCIA *)
+Inductive base_equiv {Sign Func : Type} `{HFunc : FunctionSignature Func}
+  : forall (A B : b_ty) (f g : @b_tm Sign Func),
+      @base_typing Sign Func HFunc A f B ->
+      @base_typing Sign Func HFunc A g B -> Prop :=
 
-    (* --- Ekvivalencia relacio alapjai --- *)
-    | BE_Refl : forall A B (f : @b_tm Sign) (df : @base_typing Sign A f B),
-        base_equiv A B f f df df
-        
-    | BE_Sym : forall A B (f g : @b_tm Sign) (df : @base_typing Sign A f B) (dg : @base_typing Sign A g B),
-        base_equiv A B f g df dg -> base_equiv A B g f dg df
-        
-    | BE_Trans : forall A B (f g h : @b_tm Sign) (df : @base_typing Sign A f B) (dg : @base_typing Sign A g B) (dh : @base_typing Sign A h B),
-        base_equiv A B f g df dg -> base_equiv A B g h dg dh -> base_equiv A B f h df dh
+  | BE_Refl : forall A B (f : @b_tm Sign Func)
+      (df dg : @base_typing Sign Func HFunc A f B),
+      base_equiv A B f f df dg
 
-    (* --- Kongruencia --- *)
-    | BE_CongComp : forall A B C (f f' g g' : @b_tm Sign)
-        (df : @base_typing Sign A f B) (df' : @base_typing Sign A f' B)
-        (dg : @base_typing Sign B g C) (dg' : @base_typing Sign B g' C),
-        base_equiv A B f f' df df' -> 
-        base_equiv B C g g' dg dg' -> 
-        base_equiv A C (b_comp g f) (b_comp g' f') (BT_Comp dg df) (BT_Comp dg' df')
+  | BE_Sym : forall A B (f g : @b_tm Sign Func)
+      (df : @base_typing Sign Func HFunc A f B)
+      (dg : @base_typing Sign Func HFunc A g B),
+      base_equiv A B f g df dg ->
+      base_equiv A B g f dg df
 
-    | BE_CongPair : forall A B C (f f' g g' : @b_tm Sign)
-        (df : @base_typing Sign A f B) (df' : @base_typing Sign A f' B)
-        (dg : @base_typing Sign A g C) (dg' : @base_typing Sign A g' C),
-        base_equiv A B f f' df df' -> 
-        base_equiv A C g g' dg dg' ->
-        base_equiv A (b_Prod B C) (b_pair f g) (b_pair f' g') (BT_Pair df dg) (BT_Pair df' dg')
+  | BE_Trans : forall A B (f g h : @b_tm Sign Func)
+      (df : @base_typing Sign Func HFunc A f B)
+      (dg : @base_typing Sign Func HFunc A g B)
+      (dh : @base_typing Sign Func HFunc A h B),
+      base_equiv A B f g df dg ->
+      base_equiv A B g h dg dh ->
+      base_equiv A B f h df dh
 
-    (* --- Kategoria axiomak --- *)
-    | BE_Assoc : forall A B C D (f g h : @b_tm Sign) 
-        (df: @base_typing Sign A f B) (dg: @base_typing Sign B g C) (dh: @base_typing Sign C h D),
-        base_equiv A D (b_comp h (b_comp g f)) (b_comp (b_comp h g) f) 
-                   (BT_Comp dh (BT_Comp dg df)) (BT_Comp (BT_Comp dh dg) df)
+  | BE_CongComp : forall A B C (f f' g g' : @b_tm Sign Func)
+      (df : @base_typing Sign Func HFunc A f B)
+      (df' : @base_typing Sign Func HFunc A f' B)
+      (dg : @base_typing Sign Func HFunc B g C)
+      (dg' : @base_typing Sign Func HFunc B g' C),
+      base_equiv A B f f' df df' ->
+      base_equiv B C g g' dg dg' ->
+      base_equiv A C (b_comp g f) (b_comp g' f') (BT_Comp dg df) (BT_Comp dg' df')
 
-    | BE_IdL : forall A B (f : @b_tm Sign) (df: @base_typing Sign A f B),
-        base_equiv A B (b_comp b_id f) f (BT_Comp BT_Id df) df
+  | BE_CongPair : forall A B C (f f' g g' : @b_tm Sign Func)
+      (df : @base_typing Sign Func HFunc A f B)
+      (df' : @base_typing Sign Func HFunc A f' B)
+      (dg : @base_typing Sign Func HFunc A g C)
+      (dg' : @base_typing Sign Func HFunc A g' C),
+      base_equiv A B f f' df df' ->
+      base_equiv A C g g' dg dg' ->
+      base_equiv A (b_Prod B C) (b_pair f g) (b_pair f' g') (BT_Pair df dg) (BT_Pair df' dg')
 
-    | BE_IdR : forall A B (f : @b_tm Sign) (df: @base_typing Sign A f B),
-        base_equiv A B (b_comp f b_id) f (BT_Comp df BT_Id) df
+  | BE_Assoc : forall A B C D (f g h : @b_tm Sign Func)
+      (df : @base_typing Sign Func HFunc A f B)
+      (dg : @base_typing Sign Func HFunc B g C)
+      (dh : @base_typing Sign Func HFunc C h D),
+      base_equiv A D (b_comp h (b_comp g f)) (b_comp (b_comp h g) f)
+        (BT_Comp dh (BT_Comp dg df)) (BT_Comp (BT_Comp dh dg) df)
 
-    (* --- Cartesian (Beta/Eta) axiomak --- *)
-    | BE_BetaFst : forall A B C (f g : @b_tm Sign) (df: @base_typing Sign A f B) (dg: @base_typing Sign A g C),
-        base_equiv A B (b_comp b_fst (b_pair f g)) f (BT_Comp BT_Fst (BT_Pair df dg)) df
+  | BE_IdL : forall A B (f : @b_tm Sign Func)
+      (df : @base_typing Sign Func HFunc A f B),
+      base_equiv A B (b_comp b_id f) f (BT_Comp BT_Id df) df
 
-    | BE_BetaSnd : forall A B C (f g : @b_tm Sign) (df: @base_typing Sign A f B) (dg: @base_typing Sign A g C),
-        base_equiv A C (b_comp b_snd (b_pair f g)) g (BT_Comp BT_Snd (BT_Pair df dg)) dg
+  | BE_IdR : forall A B (f : @b_tm Sign Func)
+      (df : @base_typing Sign Func HFunc A f B),
+      base_equiv A B (b_comp f b_id) f (BT_Comp df BT_Id) df
 
-    | BE_EtaPair : forall A B C (h : @b_tm Sign) (dh: @base_typing Sign A h (b_Prod B C)),
-        base_equiv A (b_Prod B C) (b_pair (b_comp b_fst h) (b_comp b_snd h)) h 
-                   (BT_Pair (BT_Comp BT_Fst dh) (BT_Comp BT_Snd dh)) dh
+  | BE_BetaFst : forall A B C (f g : @b_tm Sign Func)
+      (df : @base_typing Sign Func HFunc A f B)
+      (dg : @base_typing Sign Func HFunc A g C),
+      base_equiv A B (b_comp b_fst (b_pair f g)) f (BT_Comp BT_Fst (BT_Pair df dg)) df
 
-    | BE_EtaUnit : forall A (f : @b_tm Sign) (df: @base_typing Sign A f b_Unit),
-        base_equiv A b_Unit f b_unit df BT_Unit
-        
-    | BE_CompPair : forall A B C D (f g h : @b_tm Sign) 
-        (df: @base_typing Sign B f C) (dg: @base_typing Sign B g D) (dh: @base_typing Sign A h B),
-        base_equiv A (b_Prod C D) (b_comp (b_pair f g) h) (b_pair (b_comp f h) (b_comp g h)) 
-                   (BT_Comp (BT_Pair df dg) dh) (BT_Pair (BT_Comp df dh) (BT_Comp dg dh)). 
+  | BE_BetaSnd : forall A B C (f g : @b_tm Sign Func)
+      (df : @base_typing Sign Func HFunc A f B)
+      (dg : @base_typing Sign Func HFunc A g C),
+      base_equiv A C (b_comp b_snd (b_pair f g)) g (BT_Comp BT_Snd (BT_Pair df dg)) dg
 
+  | BE_EtaPair : forall A B C (h : @b_tm Sign Func)
+      (dh : @base_typing Sign Func HFunc A h (b_Prod B C)),
+      base_equiv A (b_Prod B C) (b_pair (b_comp b_fst h) (b_comp b_snd h)) h
+        (BT_Pair (BT_Comp BT_Fst dh) (BT_Comp BT_Snd dh)) dh
 
-(* --- 5. SETOID ÉS MORFIZMUS REGISZTRÁCIÓ --- *)
+  | BE_EtaUnit : forall A (f : @b_tm Sign Func)
+      (df : @base_typing Sign Func HFunc A f b_Unit),
+      base_equiv A b_Unit f b_unit df BT_Unit
 
-(* Implicitté tesszük a b_equiv Sign paraméterét is. *)
-Arguments base_equiv {Sign A B f g}.
+  | BE_CompPair : forall A B C D (f g h : @b_tm Sign Func)
+      (df : @base_typing Sign Func HFunc B f C)
+      (dg : @base_typing Sign Func HFunc B g D)
+      (dh : @base_typing Sign Func HFunc A h B),
+      base_equiv A (b_Prod C D) (b_comp (b_pair f g) h) (b_pair (b_comp f h) (b_comp g h))
+        (BT_Comp (BT_Pair df dg) dh) (BT_Pair (BT_Comp df dh) (BT_Comp dg dh)).
 
-(* Ekvivalencia reláció regisztrálása *)
-Add Parametric Relation (Sign : Type) (A B : b_ty) (f : @b_tm Sign) : (@base_typing Sign A f B) (@base_equiv Sign A B f f)
-  reflexivity proved by (@BE_Refl Sign A B f)
-  symmetry proved by (@BE_Sym Sign A B f f)
-  transitivity proved by (@BE_Trans Sign A B f f f)
-  as base_equiv_rel.
+Arguments base_equiv {Sign Func HFunc A B f g}.
 
-(* Morfizmus regisztrálása a kompozícióra *)
-Add Parametric Morphism (Sign : Type) (A B C : b_ty) (f g : @b_tm Sign) : (@BT_Comp Sign A B C g f)
-  with signature (@base_equiv Sign B C g g) ==> (@base_equiv Sign A B f f) ==> (@base_equiv Sign A C (b_comp g f) (b_comp g f))
-  as comp_mor.
+Definition base_equiv_typed {Sign Func : Type} `{HFunc : FunctionSignature Func}
+  (I J : b_ty) (f g : @b_tm Sign Func) : Prop :=
+  exists (df : base_typing I f J) (dg : base_typing I g J),
+    base_equiv df dg.
+
+Notation "f '≡_[' I ',' J ']' g" := (base_equiv_typed I J f g) (at level 70).
+
+Lemma bet_refl : forall {Sign Func : Type} `{HFunc : FunctionSignature Func}
+  {I J : b_ty} {f : @b_tm Sign Func} (df : base_typing I f J),
+  base_equiv_typed I J f f.
 Proof.
-  intros dg dg' Hg df df' Hf.
-  apply BE_CongComp; auto.
+  intros. exists df, df. apply BE_Refl.
 Defined.
 
-(* Morfizmus regisztrálása a párosításra *)
-Add Parametric Morphism (Sign : Type) (A B C : b_ty) (f g : @b_tm Sign) : (@BT_Pair Sign A B C f g)
-  with signature (@base_equiv Sign A B f f) ==> (@base_equiv Sign A C g g) ==> (@base_equiv Sign A (b_Prod B C) (b_pair f g) (b_pair f g))
-  as pair_mor.
-Proof. 
-  intros df df' Hf dg dg' Hg.
-  apply BE_CongPair; auto.
+Lemma bet_sym : forall {Sign Func : Type} `{HFunc : FunctionSignature Func}
+  {I J : b_ty} {f g : @b_tm Sign Func},
+  base_equiv_typed I J f g -> base_equiv_typed I J g f.
+Proof.
+  intros Sign Func HFunc I J f g [df [dg H]].
+  exists dg, df. apply BE_Sym. exact H.
+Defined.
+
+Lemma bet_trans : forall {Sign Func : Type} `{HFunc : FunctionSignature Func}
+  {I J : b_ty} {f g h : @b_tm Sign Func},
+  base_equiv_typed I J f g -> base_equiv_typed I J g h -> base_equiv_typed I J f h.
+Proof.
+  intros Sign Func HFunc I J f g h [df [dg1 H1]] [dg2 [dh H2]].
+  exists df, dh.
+  eapply BE_Trans.
+  - exact H1.
+  - eapply BE_Trans.
+    + apply BE_Refl.
+    + exact H2.
+Qed.
+
+Instance bet_sym_inst {Sign Func : Type} `{HFunc : FunctionSignature Func} {I J : b_ty}
+  : Symmetric (@base_equiv_typed Sign Func HFunc I J).
+Proof. exact (@bet_sym Sign Func HFunc I J). Defined.
+
+Instance bet_trans_inst {Sign Func : Type} `{HFunc : FunctionSignature Func} {I J : b_ty}
+  : Transitive (@base_equiv_typed Sign Func HFunc I J).
+Proof. exact (@bet_trans Sign Func HFunc I J). Defined.
+
+Add Parametric Morphism (Sign Func : Type) (HFunc : FunctionSignature Func) (A B C : b_ty) : (@b_comp Sign Func)
+  with signature (@base_equiv_typed Sign Func HFunc B C) ==> (@base_equiv_typed Sign Func HFunc A B) ==> (@base_equiv_typed Sign Func HFunc A C)
+  as comp_typed_mor.
+Proof.
+  intros g g' [dg [dg' Hg]] f f' [df [df' Hf]].
+  exists (BT_Comp dg df), (BT_Comp dg' df').
+  apply BE_CongComp.
+  - exact Hf.
+  - exact Hg.
+Defined.
+
+Add Parametric Morphism (Sign Func : Type) (HFunc : FunctionSignature Func) (A B C : b_ty) : (@b_pair Sign Func)
+  with signature (@base_equiv_typed Sign Func HFunc A B) ==> (@base_equiv_typed Sign Func HFunc A C) ==> (@base_equiv_typed Sign Func HFunc A (b_Prod B C))
+  as pair_typed_mor.
+Proof.
+  intros f f' [df [df' Hf]] g g' [dg [dg' Hg]].
+  exists (BT_Pair df dg), (BT_Pair df' dg').
+  apply BE_CongPair.
+  - exact Hf.
+  - exact Hg.
 Defined.

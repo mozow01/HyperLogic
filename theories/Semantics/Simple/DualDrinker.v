@@ -273,7 +273,8 @@ Proof.
     intro Heq. discriminate Heq.
 Defined.
 
-Require Import Stdlib.Bool.Bool.
+Require Import Coq.Bool.Bool.
+   (* or just: Require Import Bool. *)
 
 (* ================================================================= *)
 (* 4. A KISZÁMÍTHATÓ KVANTOROK (Adjunktok) Véges Típusokon           *)
@@ -315,7 +316,8 @@ Definition Fin_Exists_val {X Y : FinObj} (f : FinHom Y X) (P : interp_F Y -> H5)
 Definition Fin_Forall_val {X Y : FinObj} (f : FinHom Y X) (P : interp_F Y -> H5) (x : interp_F X) : H5 :=
   Fin_inf (fun y => if eq_fin x (f y) then P y else HTop).
 
-Require Import Stdlib.Bool.Bool.
+Require Import Coq.Bool.Bool.
+   (* or just: Require Import Bool. *)
 
 (* ================================================================= *)
 (* 5. A VÉGES KVANTOROK MATEMATIKAI BIZONYÍTÁSAI                     *)
