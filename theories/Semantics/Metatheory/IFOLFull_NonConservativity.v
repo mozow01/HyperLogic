@@ -5,6 +5,31 @@ Import ListNotations.
 
 Require Import Coq.Program.Equality.
 
+(*
+  Metatheoretic axiom audit:
+
+  This file uses [Coq.Program.Equality] for [dependent destruction].  In the
+  current proof terms, the IFOL-to-simple transfer lemmas depend on
+  [Eqdep.Eq_rect_eq.eq_rect_eq], i.e. a UIP/K-style principle for transports.
+  This is a standard-library axiom, not a theorem of Coq's kernel.
+
+  The simple Dual Drinker countermodel itself is axiom-free; the UIP dependency
+  appears only in the dependently indexed metatheoretic transfer from IFOL to
+  Simple.  It is expected to be technical rather than mathematical: for this
+  concrete syntax (NoSign, NoFunc, nat predicates, and decidable syntactic
+  indices), it should be replaceable by local decidable-equality/no-confusion
+  inversion lemmas instead of global UIP.
+
+  HoTT/cubical reading: this should not be understood as a principle of the
+  object logic.  In a Cubical Agda-style development, the corresponding
+  set-truncation obligations would be explicit local structure: syntactic
+  index types would be required to be sets where needed, and categorical
+  hom-equality would be carried as proposition/set-level data.  The present
+  use of [Eqdep.Eq_rect_eq.eq_rect_eq] is Coq's global, standard-library way
+  of discharging those local set/proof-irrelevance obligations in the
+  dependently indexed metatheory.
+*)
+
 Require Import HyperLogic.Logic.Base.EpsilonFull.Base_Syntax.
 Require Import HyperLogic.Logic.Base.EpsilonFull.Base_Syntax_Lemmas.
 Require Import HyperLogic.Logic.Hyper.EpsilonFull.Hyper_Syntax.

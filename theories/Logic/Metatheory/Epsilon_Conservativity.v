@@ -1,6 +1,7 @@
 (* theories/Logic/Metatheory/Epsilon_Conservativity.v *)
 
 Require Import HyperLogic.Logic.Metatheory.EpsilonFull_Translation.
+Require Import HyperLogic.Logic.Metatheory.EpsilonFull_Erasure.
 
 Section EpsilonConservativity.
 
@@ -57,3 +58,45 @@ Proof.
 Qed.
 
 End EpsilonConservativity.
+
+Section EpsilonFullErasureConservativity.
+
+Context {SignFull SignEps Func Pred : Type}.
+
+Context `{HFuncEps : EpsBase.FunctionSignature Func}.
+Context `{HFuncFull : FullBase.FunctionSignature Func}.
+Context {HFuncCompat : @FunctionSignatureCompat Func HFuncEps HFuncFull}.
+Context `{HPredEps : EpsHyper.PredicateSignature Pred}.
+Context `{HPredFull : FullHyper.PredicateSignature Pred}.
+Context {HPredCompat : @PredicateSignatureCompat Pred HPredEps HPredFull}.
+Context `{HSkolemEps : EpsHyper.SkolemMapping SignEps Func Pred}.
+Context `{HSkolemFull : FullHyper.SkolemMapping SignFull Func Pred}.
+Context `{HSkolemErasure : @SkolemErasure SignFull SignEps Func Pred HSkolemEps HSkolemFull}.
+
+(* This is the useful conservative direction: every Full derivation erases to
+   an Epsilon derivation.  The signature morphism and its skolem-index law are
+   packaged in [SkolemErasure]. *)
+Definition epsilonfull_erasure_conservative_over_epsilon : Type :=
+  forall (I : FullBase.b_ty)
+         (G : @FullHyper.h_context SignFull Func Pred)
+         (Phi : @FullHyper.h_ty SignFull Func Pred),
+    { p_full : @FullHyper.h_tm SignFull Func Pred &
+        @FullHyper.h_derivation SignFull Func Pred
+          HFuncFull HPredFull HSkolemFull I G p_full Phi } ->
+    { p_eps : @EpsHyper.h_tm SignEps Func Pred &
+        @EpsHyper.h_derivation SignEps Func Pred
+          HFuncEps HPredEps HSkolemEps
+          (erase_b_ty I)
+          (erase_h_context G)
+          p_eps
+          (erase_h_ty Phi) }.
+
+Theorem epsilonfull_erasure_conservativity :
+  epsilonfull_erasure_conservative_over_epsilon.
+Proof.
+  intros I G Phi [p_full Hfull].
+  exists (erase_h_tm p_full).
+  exact (erase_h_derivation Hfull).
+Qed.
+
+End EpsilonFullErasureConservativity.

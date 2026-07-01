@@ -1,8 +1,5 @@
 (*theories/Semantics/Simple/LEM.v*)
 
-Require Import Coq.Logic.Classical.
-Require Import Coq.Logic.FunctionalExtensionality.
-Require Import Coq.Logic.ProofIrrelevance.
 Require Import Coq.Classes.Morphisms.
 
 (* Importáljuk az eddigi fájlokat a szintaxishoz és a kategóriákhoz *)

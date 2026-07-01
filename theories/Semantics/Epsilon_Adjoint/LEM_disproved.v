@@ -1,8 +1,5 @@
 (* theories/Semantics/Epsilon_Adjoint/LEM_disproved.v *)
 
-Require Import Coq.Logic.Classical.
-Require Import Coq.Logic.FunctionalExtensionality.
-Require Import Coq.Logic.ProofIrrelevance.
 Require Import Coq.Classes.Morphisms.
 
 (* Kategóriaelméleti alapok *)
