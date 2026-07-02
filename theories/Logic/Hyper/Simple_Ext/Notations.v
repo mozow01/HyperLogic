@@ -1,6 +1,6 @@
-(* theories/Logic/Hyper/Simple/Notations_Simple.v *)
+(* theories/Logic/Hyper/Simple_Ext/Notations.v *)
 
-Require Import HyperLogic.Logic.Base.Epsilon.Base_Syntax.
+Require Import HyperLogic.Logic.Base.Simple_Ext.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Simple_Ext.Hyper_Syntax.
 
 (* Új scope a hagyományos logikai jelölésekhez *)

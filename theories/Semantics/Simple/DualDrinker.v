@@ -1,5 +1,5 @@
 (*theories/Semantics/Simple/DualDrinker.v*)
-(*theories/Semantics/Simple/LEM.v*)
+
 
 Require Import Coq.Logic.Classical.
 Require Import Coq.Logic.FunctionalExtensionality.

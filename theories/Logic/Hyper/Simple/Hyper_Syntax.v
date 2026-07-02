@@ -1,4 +1,4 @@
-(*Logic/Hyper/Simple/Hyper_Syntax_Conv.*)
+(*Logic/Hyper/Simple/Hyper_Syntax.*)
 
 Require Import List.
 Import ListNotations.

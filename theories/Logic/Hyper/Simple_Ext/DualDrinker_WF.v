@@ -2,7 +2,7 @@
 (* Logic/Hyper/Simple_Ext/DualDrinker_WF.v                           *)
 (* ========================================================================= *)
 
-Require Import HyperLogic.Logic.Base.Epsilon.Base_Syntax.
+Require Import HyperLogic.Logic.Base.Simple_Ext.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Simple_Ext.Hyper_Syntax.
 Require Import HyperLogic.Logic.Hyper.Simple_Ext.Notations.
 

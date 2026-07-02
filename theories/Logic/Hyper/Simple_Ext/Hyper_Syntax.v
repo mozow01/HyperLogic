@@ -1,8 +1,8 @@
-(*Logic/Hyper/Simple/Hyper_Syntax_Simple.v*)
+(*Logic/Hyper/Simple_Ext/Hyper_Syntax.v*)
 
 Require Import List.
 Import ListNotations.
-Require Import HyperLogic.Logic.Base.Epsilon.Base_Syntax.
+Require Import HyperLogic.Logic.Base.Simple_Ext.Base_Syntax.
 Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
 
 (* ================================================================= *)
@@ -154,6 +154,34 @@ Proof.
 Qed.
 
 (* ================================================================= *)
+(* WELL-FORMEDNESS (WFF) A KONTEXTUSOKRA                             *)
+(* ================================================================= *)
+
+(* Egy kontextus (formulák listája) akkor jólformált az I bázis felett, 
+   ha a lista minden egyes eleme jólformált az I felett. *)
+Inductive wf_ctx {Sign : Type} (I : b_ty) : @h_context Sign -> Type :=
+  | WFC_nil  : wf_ctx I nil
+  | WFC_cons : forall Phi G, 
+      @WellFormed Sign I Phi -> 
+      wf_ctx I G -> 
+      wf_ctx I (Phi :: G).
+
+(* Ha egy kontextust visszahúzunk f mentén, az továbbra is jólformált marad. *)
+Lemma wf_ctx_pullback : forall {Sign : Type} I J (f : @b_tm Sign) (G : @h_context Sign),
+  @base_typing Sign I f J ->
+  wf_ctx J G ->
+  wf_ctx I (ctx_pullback f G).
+Proof.
+  intros Sign I J f G Hf wfc.
+  induction wfc; simpl.
+  - apply WFC_nil.
+  - apply WFC_cons.
+    + eapply wf_pullback. exact Hf. exact w.
+    + exact IHwfc.
+Defined.
+
+
+(* ================================================================= *)
 (* 2.5 FORMULA EKVIVALENCIA (Már a WFF és a Bázis kontextus védelmében!) *)
 (* ================================================================= *)
 
@@ -209,6 +237,16 @@ Inductive form_equiv {Sign : Type} (I : b_ty) : @h_ty Sign -> @h_ty Sign -> Type
       @base_equiv Sign I J f g df dg -> 
       WellFormed J Phi ->
       form_equiv I (form_pullback f Phi) (form_pullback g Phi).
+
+(* ================================================================= *)
+(* KONTEXTUS EKVIVALENCIA (ctx_equiv)                                *)
+(* ================================================================= *)
+Inductive ctx_equiv {Sign : Type} (I : b_ty) : @h_context Sign -> @h_context Sign -> Type :=
+  | CEQ_nil  : ctx_equiv I nil nil
+  | CEQ_cons : forall Phi Psi G1 G2,
+      @form_equiv Sign I Phi Psi ->
+      ctx_equiv I G1 G2 ->
+      ctx_equiv I (Phi :: G1) (Psi :: G2).
 
 (* ================================================================= *)
 (* 3. DUAL CONTEXT TYPING                                            *)
@@ -298,26 +336,36 @@ Inductive h_typing {Sign : Type} (I : b_ty) : @h_context Sign -> @h_tm Sign -> @
   | HT_Ex_Elim : forall G p p2 A Phi Chi,
       h_typing I G p (Ty_Ex A Phi) ->
       h_typing (b_Prod I A) (Phi :: ctx_pullback b_fst G) p2 (form_pullback b_fst Chi) ->
-      h_typing I G (tm_ex_elim p p2) Chi.
+      h_typing I G (tm_ex_elim p p2) Chi
+
+  | HT_Ctx_Conv : forall G1 G2 p Phi,
+      h_typing I G1 p Phi ->
+      @ctx_equiv Sign I G1 G2 ->
+      @wf_ctx Sign I G2 ->
+      h_typing I G2 p Phi.
 
 Inductive h_derivation {Sign : Type} (I : b_ty) : @h_context Sign -> @h_tm Sign -> @h_ty Sign -> Type :=
 
    (* --- Strukturális Szabályok --- *)
   | HD_Var0 : forall G Phi,
+      @wf_ctx Sign I G ->           (* ÚJ: Garantálja a maradék kontextust *)
+      @WellFormed Sign I Phi ->     (* ÚJ: Garantálja az új elemet *)
       h_derivation I (Phi :: G) (tm_var 0) Phi
 
   | HD_VarS : forall G Phi Psi i,
       h_derivation I G (tm_var i) Phi ->
+      @WellFormed Sign I Psi ->     (* ÚJ *)
       h_derivation I (Psi :: G) (tm_var (S i)) Phi
       
-  (* --- ÚJ: KONVERZIÓS SZABÁLY (h_derivation szinten) --- *)
   | HD_Conv : forall G p Phi Psi,
       h_derivation I G p Phi ->  
-      form_equiv I Phi Psi ->   (* <--- IDE IS KELL AZ I *)
+      form_equiv I Phi Psi ->
+      @WellFormed Sign I Psi ->     (* ÚJ *)
       h_derivation I G p Psi
 
-  (* --- Propozicionális Modul (Az 'I' bázis passzív marad) --- *)
+  (* --- Propozicionális Modul --- *)
   | HD_Unit : forall G,
+      @wf_ctx Sign I G ->           (* ÚJ *)
       h_derivation I G tm_unit Ty_Unit
 
   | HD_Lam : forall G p Phi Psi,
@@ -344,10 +392,12 @@ Inductive h_derivation {Sign : Type} (I : b_ty) : @h_context Sign -> @h_tm Sign 
 
   | HD_Inl : forall G p Phi Psi,
       h_derivation I G p Phi ->
+      @WellFormed Sign I Psi ->     (* ÚJ *)
       h_derivation I G (tm_inl Psi p) (Ty_Sum Phi Psi)
 
   | HD_Inr : forall G p Phi Psi,
       h_derivation I G p Psi ->
+      @WellFormed Sign I Phi ->     (* ÚJ *)
       h_derivation I G (tm_inr Phi p) (Ty_Sum Phi Psi)
 
   | HD_Case : forall G p p1 p2 Phi Psi Chi,
@@ -358,11 +408,12 @@ Inductive h_derivation {Sign : Type} (I : b_ty) : @h_context Sign -> @h_tm Sign 
 
   | HD_Absurd : forall G p Phi,
       h_derivation I G p Ty_Void ->
+      @WellFormed Sign I Phi ->     (* ÚJ *)
       h_derivation I G (tm_absurd Phi p) Phi
 
-  (* --- Hyper Modul (Dual Context interakció a Bázissal!) --- *)
-
+  (* --- Hyper Modul --- *)
   | HD_All_Intro : forall G p A Phi,
+      @wf_ctx Sign I G ->           (* ÚJ: Védi a kontextus visszahúzását *)
       h_derivation (b_Prod I A) (ctx_pullback b_fst G) p Phi ->
       h_derivation I G (tm_all_intro p) (Ty_All A Phi)
 
@@ -372,14 +423,23 @@ Inductive h_derivation {Sign : Type} (I : b_ty) : @h_context Sign -> @h_tm Sign 
       h_derivation I G (tm_all_elim p f) (form_pullback (b_pair b_id f) Phi)
 
   | HD_Ex_Intro : forall G p A Phi f,
+      @WellFormed Sign (b_Prod I A) Phi -> (* ÚJ *)
       base_typing I f A ->
       h_derivation I G p (form_pullback (b_pair b_id f) Phi) ->
       h_derivation I G (tm_ex_intro f p) (Ty_Ex A Phi)
+  
+  | HD_Ctx_Conv : forall G1 G2 p Phi,
+      h_derivation I G1 p Phi ->
+      @ctx_equiv Sign I G1 G2 ->
+      @wf_ctx Sign I G2 ->
+      h_derivation I G2 p Phi
 
   | HD_Ex_Elim : forall G p p2 A Phi Chi,
+      @WellFormed Sign I Chi ->     (* ÚJ *)
       h_derivation I G p (Ty_Ex A Phi) ->
       h_derivation (b_Prod I A) (Phi :: ctx_pullback b_fst G) p2 (form_pullback b_fst Chi) ->
       h_derivation I G (tm_ex_elim p p2) Chi.
+
 
 (* ================================================================= *)
 (* 5. PROOF IRRELEVANCE EKVIVALENCIA                                 *)

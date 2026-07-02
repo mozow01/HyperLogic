@@ -44,6 +44,7 @@ theories/Semantics/Simple/Simple_Soundness.v
 theories/Semantics/Simple/Simple_Completeness.v
 theories/Semantics/Simple/LEM.v
 theories/Semantics/Simple/DualDrinker.v
+theories/Semantics/Simple/Examples.v
 
 # --- Epsilon Semantics ---
 theories/Semantics/Epsilon/Epsilon_Fibration.v
@@ -64,9 +65,20 @@ theories/Semantics/Epsilon_Adjoint/LEM_disproved.v
 theories/Logic/Hyper/Epsilon_Adjoint/Curvature.v
 
 # --- Simple Extended Logic ---
+theories/Logic/Base/Simple_Ext/Base_Syntax.v
+theories/Logic/Base/Simple_Ext/Base_Syntax_Lemmas.v
 theories/Logic/Hyper/Simple_Ext/Hyper_Syntax.v
 theories/Logic/Hyper/Simple_Ext/Hyper_Lemmas.v
+theories/Logic/Hyper/Simple_Ext/Hyper_Lifting.v
 theories/Logic/Hyper/Simple_Ext/Notations.v
 theories/Logic/Hyper/Simple_Ext/DualDrinker_WF.v
 
+# --- Simple Extended Semantics ---
+theories/Semantics/Simple_Ext/Base_Epsilon_Completeness.v
+theories/Semantics/Simple_Ext/Base_Epsilon_Soundness.v
+theories/Semantics/Simple_Ext/Simple_Ext_Completeness.v
+theories/Semantics/Simple_Ext/Simple_Ext_Soundness.v
+theories/Semantics/Simple_Ext/Simple_Ext_Fibration.v
 
+# --- Conservativity ---
+theories/Semantics/Conservativity/Model_Expansion.v

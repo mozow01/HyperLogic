@@ -1,4 +1,4 @@
-(*Logic/Hyper/Simple/Hyper_Lemmas_Conv.v*)
+(*Logic/Hyper/Simple/Hyper_Lemmas.v*)
 
 Require Import List Arith PeanoNat Lia.
 Import ListNotations.

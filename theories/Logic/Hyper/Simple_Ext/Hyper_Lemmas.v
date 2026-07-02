@@ -1,6 +1,6 @@
 (* Logic/Hyper/Simple/Simple_Syntax_Lemmas.v *)
 
-Require Import HyperLogic.Logic.Base.Epsilon.Base_Syntax.
+Require Import HyperLogic.Logic.Base.Simple_Ext.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Simple_Ext.Hyper_Syntax.
 (* Ha van saját Notations fájlod a Simple szintaxishoz, azt is importáld ide! *)
 Require Import HyperLogic.Logic.Hyper.Simple_Ext.Notations. 
