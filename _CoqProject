@@ -15,10 +15,13 @@ theories/Logic/Base/Simple/Base_Syntax.v
 theories/Logic/Hyper/Simple/Hyper_Syntax.v
 theories/Logic/Hyper/Simple/Hyper_Lemmas.v
 theories/Logic/Base/Epsilon/Base_Syntax.v
+theories/Logic/Base/Epsilon/Base_Syntax_Lemmas.v
 theories/Logic/Hyper/Epsilon/Hyper_Syntax.v
 theories/Logic/Hyper/Epsilon/Notations.v
 theories/Logic/Hyper/Epsilon/Epsilon_Syntax_Lemmas.v 
-theories/Logic/Hyper/Epsilon/Critical_Epsilon_Provable.v
+theories/Logic/Metatheory/EpsilonFull_Translation.v
+theories/Logic/Metatheory/EpsilonFull_Erasure.v
+theories/Logic/Metatheory/Epsilon_Conservativity.v
 
 # --- STLC Logic (STLC_PI) ---
 theories/Logic/STLC_PI/STLC_PI.v
@@ -46,18 +49,13 @@ theories/Semantics/Simple/LEM.v
 theories/Semantics/Simple/DualDrinker.v
 theories/Semantics/Simple/Examples.v
 
-# --- Epsilon Semantics ---
-theories/Semantics/Epsilon/Epsilon_Fibration.v
-theories/Semantics/Epsilon/Epsilon_Soundness.v
-theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Fibration.v
-theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Soundness.v
-
-
 # --- Epsilon Adjoin Semantics ---
 theories/Logic/Base/Epsilon_Adjoint/Base_Syntax.v
 theories/Logic/Base/Epsilon_Adjoint/Base_Syntax_Lemmas.v
 theories/Logic/Hyper/Epsilon_Adjoint/Hyper_Syntax.v
 theories/Logic/Hyper/Epsilon_Adjoint/Hyper_Syntax_Lemmas.v
+theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Fibration.v
+theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Soundness.v
 theories/Semantics/Epsilon_Adjoint/Base_Epsilon_Soundness.v
 theories/Semantics/Epsilon_Adjoint/Base_Epsilon_Completeness.v
 theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Completeness.v
@@ -82,3 +80,24 @@ theories/Semantics/Simple_Ext/Simple_Ext_Fibration.v
 
 # --- Conservativity ---
 theories/Semantics/Conservativity/Model_Expansion.v
+# --- Epsilon Full ---
+theories/Logic/Base/EpsilonFull/Base_Syntax.v
+theories/Logic/Base/EpsilonFull/Base_Syntax_Lemmas.v
+theories/Logic/Hyper/EpsilonFull/Hyper_Syntax.v
+theories/Logic/Hyper/EpsilonFull/Hyper_Syntax_Lemmas.v
+theories/Semantics/EpsilonFull/EpsilonFull_Fibration.v
+theories/Semantics/EpsilonFull/Base_EpsilonFull_Soundness.v
+theories/Semantics/EpsilonFull/Base_EpsilonFull_Completeness.v
+theories/Semantics/EpsilonFull/EpsilonFull_Soundness.v
+theories/Semantics/EpsilonFull/LEM_disproved.v
+
+# --- Individual / iFOLFull ---
+theories/Logic/Base/Individual/Base_Syntax.v
+theories/Logic/Base/Individual/Base_Syntax_Lemmas.v
+theories/Logic/Hyper/Individual/Hyper_Syntax.v
+theories/Semantics/Individual/Individual_Fibration.v
+theories/Semantics/Individual/Individual_Soundness.v
+
+# --- Semantics Metatheory ---
+theories/Semantics/Metatheory/DualDrinker.v
+theories/Semantics/Metatheory/IFOLFull_NonConservativity.v
