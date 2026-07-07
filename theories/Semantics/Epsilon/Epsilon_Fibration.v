@@ -1,10 +1,9 @@
-(*theories/Semantics/Epsilon/Epsilon_Fibration.v*)
+(* theories/Semantics/Epsilon/Epsilon_Fibration.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import List.
 Import ListNotations.
 
-(* Kategóriaelméleti alapok *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
 Require Import HyperLogic.Cat.CCC.
@@ -13,78 +12,84 @@ Require Import HyperLogic.Cat.Functor.
 Require Import HyperLogic.Cat.Adjoint.
 Require Import HyperLogic.Cat.Fibration.
 
-(* Szintaxis és Orákulum *)
 Require Import HyperLogic.Logic.Base.Epsilon.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Epsilon.Hyper_Syntax.
 
 (* ================================================================= *)
-(* 1. BÁZIS SZEMANTIKA (Epszilon Konstansok)                         *)
+(* 1. BASE SEMANTICS                                                 *)
 (* ================================================================= *)
 
-(** A bázis típusok kategóriaelméleti interpretációja. 
-    Ez felelteti meg a szintaktikus b_ty elemeit a kategória objektumainak. *)
-Fixpoint interp_ty {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
+Fixpoint interp_ty {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
   (A : b_ty) : @obj C :=
   match A with
   | b_Unit => terminal
-  | b_S => @S C CC TSC   (* <--- ITT A JAVÍTÁS: Mindent expliciten átadunk! *)
+  | b_S => @S C CC TSC
   | b_Prod A B => prod (interp_ty A) (interp_ty B)
   end.
 
-(** A bázis modellnek csak annyi a dolga, hogy minden Sign-beli szimbólumhoz 
-    (amit a skolem_index generál) hozzárendeljen egy bázismorfizmust. *)
-Class BaseEpsilonModel {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} := {
-  i_const : forall (I A : b_ty) (s : Sign), @hom C (interp_ty I) (interp_ty A)
+Class BaseEpsilonModel
+  {Sign Func : Type} `{FunctionSignature Func}
+  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} := {
+  i_const : forall (I A : b_ty) (s : Sign), @hom C (interp_ty I) (interp_ty A);
+  i_func : forall (f : Func), @hom C (interp_ty (func_dom f)) (interp_ty (func_cod f))
 }.
 
-(** Az interp_tm kiterjesztése az új BT_Const szabállyal. *)
-Fixpoint interp_tm {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C} 
-  {TSC : TwoSortCategory C} {BEM : BaseEpsilonModel} 
-  {I A : b_ty} {f : @b_tm Sign} (d : @base_typing Sign I f A) 
+Fixpoint interp_tm
+  {Sign Func : Type} `{FunctionSignature Func}
+  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
+  {BEM : BaseEpsilonModel}
+  {I A : b_ty} {f : @b_tm Sign Func} (d : @base_typing Sign Func H I f A)
   : @hom C (interp_ty I) (interp_ty A) :=
   match d in (base_typing I' f' A') return (@hom C (interp_ty I') (interp_ty A')) with
-  | @BT_Id _ A' => @id C (interp_ty A')
-  
-  (* JAVÍTVA: Itt a (interp_tm dg) és (interp_tm df) sorrendjét megcseréltük! *)
-  | @BT_Comp _ A' B' C' g' f' dg df => @compose C (interp_ty A') (interp_ty B') (interp_ty C') (interp_tm dg) (interp_tm df)
-  
-  | @BT_Unit _ A' => @terminal_map C CC (interp_ty A')
-  | @BT_Pair _ A' B' C' f' g' df dg => @prod_map C CC (interp_ty A') (interp_ty B') (interp_ty C') (interp_tm df) (interp_tm dg)
-  | @BT_Fst _ A' B' => @prod_fst C CC (interp_ty A') (interp_ty B')
-  | @BT_Snd _ A' B' => @prod_snd C CC (interp_ty A') (interp_ty B')
-  | @BT_Const _ I' A' s => i_const I' A' s
+  | @BT_Id _ _ _ A' => @id C (interp_ty A')
+  | @BT_Comp _ _ _ A' B' C' g' f' dg df =>
+      @compose C (interp_ty A') (interp_ty B') (interp_ty C') (interp_tm dg) (interp_tm df)
+  | @BT_Unit _ _ _ A' => @terminal_map C CC (interp_ty A')
+  | @BT_Pair _ _ _ A' B' C' f' g' df dg =>
+      @prod_map C CC (interp_ty A') (interp_ty B') (interp_ty C') (interp_tm df) (interp_tm dg)
+  | @BT_Fst _ _ _ A' B' => @prod_fst C CC (interp_ty A') (interp_ty B')
+  | @BT_Snd _ _ _ A' B' => @prod_snd C CC (interp_ty A') (interp_ty B')
+  | @BT_Const _ _ _ I' A' s => i_const I' A' s
+  | @BT_Func _ _ _ f' => i_func f'
   end.
-  
+
+Class CoherentBaseModel
+  {Sign Func : Type} `{FunctionSignature Func}
+  {C : SetoidCategory} {CC : CartesianCategory C}
+  {TSC : TwoSortCategory C} {BEM : @BaseEpsilonModel Sign Func H C CC TSC} := {
+  interp_coh : forall {A B : b_ty} {f : @b_tm Sign Func}
+    (d1 d2 : @base_typing Sign Func H A f B),
+    interp_tm d1 ≅ interp_tm d2
+}.
+
 (* ================================================================= *)
-(* 2. HYPER SZEMANTIKA (Atomok és Kvantorok)                         *)
+(* 2. HYPER SEMANTICS                                                *)
 (* ================================================================= *)
 
-(** Az EpsilonHyperModel az atomok interpretációját rögzíti, ahogy a Simple logikában is. *)
-Class EpsilonHyperModel 
-  {Sign : Type} 
-  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
-  {BEM : BaseEpsilonModel}  (* <--- ITT A JAVÍTÁS: Szükségünk van a bázismodellre az interp_tm-hez! *)
+Class EpsilonHyperModel
+  {Sign Func Pred : Type}
+  `{FunctionSignature Func} `{PredicateSignature Pred}
+  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
+  {BEM : BaseEpsilonModel}
   {GF : GoodFibration C} (SGF : StrictGoodFibration C GF) := {
-  
-  i_atom : forall (p : nat) (t : @b_tm Sign) (I : b_ty), @obj (Fiber (interp_ty I)) ;
-  
-  i_atom_pb : forall (p : nat) (t : @b_tm Sign) (I A : b_ty) (f : @b_tm Sign) (df : @base_typing Sign I f A),
-      @fobj _ _ (Pullback (interp_tm df)) (i_atom p t A) ≅O i_atom p (b_comp t f) I;
+  i_atom : forall (p : Pred) (t : @b_tm Sign Func) (I : b_ty), @obj (Fiber (interp_ty I));
 
-  i_atom_cong_global : forall (p : nat) (I_target I_orig A : b_ty) (t1 t2 : b_tm) 
-                              (d1 : base_typing I_orig t1 A) (d2 : base_typing I_orig t2 A),
-                       base_equiv d1 d2 -> i_atom p t1 I_target ≅O i_atom p t2 I_target
-                       (*
-  i_atom_cong : forall (p : nat) (I A : b_ty) (t1 t2 : b_tm) 
-                       (d1 : base_typing I t1 A) (d2 : base_typing I t2 A),
-                base_equiv d1 d2 -> i_atom p t1 I ≅O i_atom p t2 I *)  }.
+  i_atom_pb : forall (p : Pred) (t : @b_tm Sign Func) (I A : b_ty) (f : @b_tm Sign Func)
+    (df : @base_typing Sign Func H I f A),
+    @fobj _ _ (Pullback (interp_tm df)) (i_atom p t A) ≅O i_atom p (b_comp t f) I;
 
-(** A formulák interpretációja, amely már tartalmazza a Ty_All és Ty_Ex kvantorokat is! *)
-Fixpoint interp_h_ty 
-  {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
+  i_atom_cong_global : forall (p : Pred) (I A : b_ty) (t1 t2 : @b_tm Sign Func)
+    (d1 : @base_typing Sign Func H I t1 A) (d2 : @base_typing Sign Func H I t2 A),
+    @base_equiv Sign Func H I A t1 t2 d1 d2 ->
+    i_atom p t1 I ≅O i_atom p t2 I
+}.
+
+Fixpoint interp_h_ty
+  {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred}
+  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
   {EHM : EpsilonHyperModel SGF}
-  (I : b_ty) (Phi : @h_ty Sign) : @obj (Fiber (interp_ty I)) :=
+  (I : b_ty) (Phi : @h_ty Sign Func Pred) : @obj (Fiber (interp_ty I)) :=
   match Phi with
   | Ty_Unit => terminal
   | Ty_Void => initial
@@ -92,55 +97,62 @@ Fixpoint interp_h_ty
   | Ty_Sum A B => coprod (interp_h_ty I A) (interp_h_ty I B)
   | Ty_Arrow A B => exp (interp_h_ty I B) (interp_h_ty I A)
   | Ty_Atom p t => i_atom p t I
-  | Ty_All A Body => 
-      @right_adj_obj _ _ _ pullback_has_right_adjoint 
-                           (interp_h_ty (b_Prod I A) Body)
-  | Ty_Ex A Body => 
-      @left_adj_obj _ _ _ pullback_has_left_adjoint 
-                          (interp_h_ty (b_Prod I A) Body)
-                          end.
+  | Ty_All A Body =>
+      @right_adj_obj _ _ _ pullback_has_right_adjoint (interp_h_ty (b_Prod I A) Body)
+  end.
 
-Fixpoint interp_h_ctx 
-  {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
+Fixpoint interp_h_ctx
+  {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred}
+  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
   {EHM : EpsilonHyperModel SGF}
-  (I : b_ty) (G : @h_context Sign) : @obj (Fiber (interp_ty I)) :=
+  (I : b_ty) (G : @h_context Sign Func Pred) : @obj (Fiber (interp_ty I)) :=
   match G with
   | nil => terminal
   | Phi :: G' => prod (interp_h_ctx I G') (interp_h_ty I Phi)
   end.
 
+Definition eps_instance
+  {Sign Func Pred : Type} `{SkolemMapping Sign Func Pred}
+  (A : b_ty) (Phi : @h_ty Sign Func Pred) : @h_ty Sign Func Pred :=
+  form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi.
+
 (* ================================================================= *)
-(* 3. INTENZIONÁLIS EPSZILON LOGIKA (Pszeudo-Adjungált)              *)
+(* 3. PASQUALI-STYLE EPSILON STRUCTURE                               *)
 (* ================================================================= *)
 
-(** Itt jön a mágia! Nem definiálunk funktort. Csak explicit szintaktikai formulákra 
-    (Phi : @h_ty Sign) követeljük meg az Intro (Unit) és Elim (Frobenius) dedukciós szabályokat,
-    amelyeket a skolem_index orákulum köt a bázishoz. *)
-    
-Class EpsilonGoodFibration 
-  {Sign : Type} {SM : SkolemMapping Sign} 
-  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
+Class EpsilonGoodFibration
+  {Sign Func Pred : Type}
+  `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
+  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
   {EHM : EpsilonHyperModel SGF} := {
 
-  (** 1. EPSILON INTRO (Unit) *)
-  eps_unit : forall (I A : b_ty) (Phi : @h_ty Sign),
-      hom (interp_h_ty (b_Prod I A) Phi)
-          (interp_h_ty (b_Prod I A) 
-             (form_pullback b_fst 
-                (form_pullback (b_pair b_id (b_const A (skolem_index A Phi))) Phi))) ;
+  eps_unit : forall (I A : b_ty) (Phi : @h_ty Sign Func Pred),
+    hom (interp_h_ty (b_Prod I A) Phi)
+        (interp_h_ty (b_Prod I A) (form_subst b_fst (eps_instance A Phi)));
 
-  (** 2. EPSILON ELIM (Frobenius Reciprocitás) *)
-  eps_elim_frobenius : forall (I A : b_ty) (G : @h_context Sign) (Phi Chi : @h_ty Sign),
-      hom (prod (interp_h_ctx (b_Prod I A) (ctx_pullback b_fst G)) (interp_h_ty (b_Prod I A) Phi))
-          (interp_h_ty (b_Prod I A) (form_pullback b_fst Chi)) ->
-      hom (prod (interp_h_ctx I G) 
-                (interp_h_ty I (form_pullback (b_pair b_id (b_const A (skolem_index A Phi))) Phi)))
-          (interp_h_ty I Chi) ;
+  eps_intro : forall (I A : b_ty) (Phi : @h_ty Sign Func Pred) (f : @b_tm Sign Func),
+    base_typing I f A ->
+    hom (interp_h_ty I (form_subst (b_pair b_id f) Phi))
+        (interp_h_ty I (eps_instance A Phi));
 
-          
-  eps_beck_chevalley_iso : forall (I J A : b_ty) (g : b_tm) (dg : base_typing J g I) (Phi : h_ty),
-    interp_h_ty J (form_pullback g (form_pullback (b_pair b_id (b_const A (skolem_index A Phi))) Phi)) ≅O
-    interp_h_ty J (form_pullback (b_pair (b_comp g b_fst) b_snd) Phi .[ ε A, form_pullback (b_pair (b_comp g b_fst) b_snd) Phi ])
+  eps_elim_frobenius : forall (I A : b_ty) (G : @h_context Sign Func Pred)
+      (Phi Chi : @h_ty Sign Func Pred),
+    hom (prod (interp_h_ctx (b_Prod I A) (ctx_subst b_fst G))
+              (interp_h_ty (b_Prod I A) Phi))
+        (interp_h_ty (b_Prod I A) (form_subst b_fst Chi)) ->
+    hom (prod (interp_h_ctx I G) (interp_h_ty I (eps_instance A Phi)))
+        (interp_h_ty I Chi);
+
+  eps_functorial_iso : forall (I A : b_ty) (Phi Psi : @h_ty Sign Func Pred),
+    WellFormed (b_Prod I A) Phi ->
+    WellFormed (b_Prod I A) Psi ->
+    interp_h_ty (b_Prod I A) Phi ≅O interp_h_ty (b_Prod I A) Psi ->
+    interp_h_ty I (eps_instance A Phi) ≅O interp_h_ty I (eps_instance A Psi);
+
+  eps_beck_chevalley_iso : forall (I J A : b_ty) (g : @b_tm Sign Func)
+      (dg : base_typing I g J) (Phi : @h_ty Sign Func Pred),
+    interp_h_ty I (form_subst g (eps_instance A Phi)) ≅O
+    interp_h_ty I (eps_instance A (form_subst (b_subst_ext g) Phi))
 }.

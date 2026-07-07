@@ -202,3 +202,112 @@ Proof.
     + (* 2. f ~ f *)
       reflexivity.
 Defined.
+
+Lemma left_adjoints_unique_pointwise
+  {C D : SetoidCategory}
+  (G : Functor C D)
+  (RA1 RA2 : IsRightAdjoint G) :
+  forall (Y : @obj D),
+    @left_adj_obj C D G RA1 Y ≅O
+    @left_adj_obj C D G RA2 Y.
+Proof.
+  intro Y.
+  refine {|
+    iso_to := @left_adj_mor C D G RA1 Y (@left_adj_obj C D G RA2 Y)
+                (@unit C D G RA2 Y);
+    iso_from := @left_adj_mor C D G RA2 Y (@left_adj_obj C D G RA1 Y)
+                  (@unit C D G RA1 Y)
+  |}.
+  - eapply (@RelationClasses.Equivalence_Transitive
+              _ _
+              (@hom_equiv_equivalence C
+                 (@left_adj_obj C D G RA2 Y)
+                 (@left_adj_obj C D G RA2 Y)))
+      with (y := @left_adj_mor C D G RA2 Y (@left_adj_obj C D G RA2 Y)
+                  (@compose D Y
+                     (@fobj C D G (@left_adj_obj C D G RA2 Y))
+                     (@fobj C D G (@left_adj_obj C D G RA2 Y))
+                     (@fmap C D G
+                        (@left_adj_obj C D G RA2 Y)
+                        (@left_adj_obj C D G RA2 Y)
+                        (@compose C
+                           (@left_adj_obj C D G RA2 Y)
+                           (@left_adj_obj C D G RA1 Y)
+                           (@left_adj_obj C D G RA2 Y)
+                           (@left_adj_mor C D G RA1 Y (@left_adj_obj C D G RA2 Y)
+                              (@unit C D G RA2 Y))
+                           (@left_adj_mor C D G RA2 Y (@left_adj_obj C D G RA1 Y)
+                              (@unit C D G RA1 Y))))
+                     (@unit C D G RA2 Y))).
+    + eapply (@RelationClasses.Equivalence_Symmetric
+                _ _
+                (@hom_equiv_equivalence C
+                   (@left_adj_obj C D G RA2 Y)
+                   (@left_adj_obj C D G RA2 Y))).
+      apply (@lambek_2_dual C D G RA2).
+    + eapply (@RelationClasses.Equivalence_Transitive
+                _ _
+                (@hom_equiv_equivalence C
+                   (@left_adj_obj C D G RA2 Y)
+                   (@left_adj_obj C D G RA2 Y)))
+        with (y := @left_adj_mor C D G RA2 Y (@left_adj_obj C D G RA2 Y)
+                    (@unit C D G RA2 Y)).
+      * apply (@left_adj_mor_proper C D G RA2).
+        rewrite (@fmap_comp C D G).
+        rewrite <- (comp_assoc).
+        rewrite (@lambek_1_dual C D G RA2).
+        apply (@lambek_1_dual C D G RA1).
+      * rewrite <- (@lambek_2_dual C D G RA2 Y
+                     (@left_adj_obj C D G RA2 Y)
+                     (@id C (@left_adj_obj C D G RA2 Y))).
+        apply (@left_adj_mor_proper C D G RA2).
+        rewrite (@fmap_id C D G).
+        rewrite (id_left).
+        reflexivity.
+  - eapply (@RelationClasses.Equivalence_Transitive
+              _ _
+              (@hom_equiv_equivalence C
+                 (@left_adj_obj C D G RA1 Y)
+                 (@left_adj_obj C D G RA1 Y)))
+      with (y := @left_adj_mor C D G RA1 Y (@left_adj_obj C D G RA1 Y)
+                  (@compose D Y
+                     (@fobj C D G (@left_adj_obj C D G RA1 Y))
+                     (@fobj C D G (@left_adj_obj C D G RA1 Y))
+                     (@fmap C D G
+                        (@left_adj_obj C D G RA1 Y)
+                        (@left_adj_obj C D G RA1 Y)
+                        (@compose C
+                           (@left_adj_obj C D G RA1 Y)
+                           (@left_adj_obj C D G RA2 Y)
+                           (@left_adj_obj C D G RA1 Y)
+                           (@left_adj_mor C D G RA2 Y (@left_adj_obj C D G RA1 Y)
+                              (@unit C D G RA1 Y))
+                           (@left_adj_mor C D G RA1 Y (@left_adj_obj C D G RA2 Y)
+                              (@unit C D G RA2 Y))))
+                     (@unit C D G RA1 Y))).
+    + eapply (@RelationClasses.Equivalence_Symmetric
+                _ _
+                (@hom_equiv_equivalence C
+                   (@left_adj_obj C D G RA1 Y)
+                   (@left_adj_obj C D G RA1 Y))).
+      apply (@lambek_2_dual C D G RA1).
+    + eapply (@RelationClasses.Equivalence_Transitive
+                _ _
+                (@hom_equiv_equivalence C
+                   (@left_adj_obj C D G RA1 Y)
+                   (@left_adj_obj C D G RA1 Y)))
+        with (y := @left_adj_mor C D G RA1 Y (@left_adj_obj C D G RA1 Y)
+                    (@unit C D G RA1 Y)).
+      * apply (@left_adj_mor_proper C D G RA1).
+        rewrite (@fmap_comp C D G).
+        rewrite <- (comp_assoc).
+        rewrite (@lambek_1_dual C D G RA1).
+        apply (@lambek_1_dual C D G RA2).
+      * rewrite <- (@lambek_2_dual C D G RA1 Y
+                     (@left_adj_obj C D G RA1 Y)
+                     (@id C (@left_adj_obj C D G RA1 Y))).
+        apply (@left_adj_mor_proper C D G RA1).
+        rewrite (@fmap_id C D G).
+        rewrite (id_left).
+        reflexivity.
+Defined.

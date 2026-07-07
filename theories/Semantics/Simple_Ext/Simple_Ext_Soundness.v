@@ -2,7 +2,7 @@
 
 Require Import Coq.Classes.Morphisms.
 Require Import List Arith PeanoNat Lia.
-Require Import Stdlib.Program.Equality.
+Require Import Coq.Program.Equality.
 Import ListNotations.
 
 (* Kategóriaelméleti alapok *)
