@@ -111,3 +111,4 @@ theories/Semantics/Individual/Individual_Soundness.v
 theories/Semantics/Metatheory/DualDrinker.v
 theories/Semantics/Metatheory/IFOLFull_NonConservativity.v
 theories/Semantics/Metatheory/Pasquali_Epsilon.v
+theories/Semantics/Metatheory/EpsilonFull_Substitutivity.v
