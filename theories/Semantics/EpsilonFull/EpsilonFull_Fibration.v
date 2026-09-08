@@ -140,3 +140,104 @@ Class AdjointEpsilonFullFibration
     ≅O
     interp_h_ty I (form_subst (b_pair b_id (b_const A (skolem_index A Psi))) Psi)
 }.
+
+Lemma eps_functorial_from_eps_is_left_adj_obj
+  {Sign Func Pred : Type}
+  `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
+  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
+  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+  {SGF : StrictGoodFibration C GF}
+  {EHM : EpsilonHyperModel SGF}
+  (eps_obj_iso : forall (I A : b_ty) (Phi : @h_ty Sign Func Pred),
+    WellFormed (b_Prod I A) Phi ->
+    @left_adj_obj _ _ _ pullback_has_left_adjoint (interp_h_ty (b_Prod I A) Phi)
+    ≅O
+    interp_h_ty I (form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi)) :
+  forall (I A : b_ty) (Phi Psi : @h_ty Sign Func Pred),
+    WellFormed (b_Prod I A) Phi ->
+    WellFormed (b_Prod I A) Psi ->
+    interp_h_ty (b_Prod I A) Phi ≅O interp_h_ty (b_Prod I A) Psi ->
+    interp_h_ty I (form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi)
+    ≅O
+    interp_h_ty I (form_subst (b_pair b_id (b_const A (skolem_index A Psi))) Psi).
+Proof.
+  intros I A Phi Psi WFPhi WFPsi HPhiPsi.
+  eapply iso_trans.
+  - apply iso_sym.
+    apply eps_obj_iso.
+    exact WFPhi.
+  - eapply iso_trans.
+    + apply sigma_iso_cong.
+      exact HPhiPsi.
+    + apply eps_obj_iso.
+      exact WFPsi.
+Defined.
+
+(* Epsilon can alternatively be presented as a second left adjoint to the same
+   projection pullback.  By uniqueness of left adjoints, this implies the
+   isomorphism-based [AdjointEpsilonFullFibration] structure above. *)
+Class EpsilonAsSigmaFibration
+  {Sign Func Pred : Type}
+  `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
+  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
+  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+  {SGF : StrictGoodFibration C GF}
+  {EHM : EpsilonHyperModel SGF} := {
+
+  epsilon_sigma_adj : forall (I A : b_ty),
+    IsRightAdjoint (Pullback (@prod_fst C CC (interp_ty I) (interp_ty A)));
+
+  epsilon_sigma_obj : forall (I A : b_ty) (Phi : @h_ty Sign Func Pred),
+    WellFormed (b_Prod I A) Phi ->
+    @left_adj_obj _ _ _ (epsilon_sigma_adj I A) (interp_h_ty (b_Prod I A) Phi)
+    ≅O
+    interp_h_ty I (form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi)
+}.
+
+Lemma eps_is_left_adj_obj_from_epsilon_as_sigma
+  {Sign Func Pred : Type}
+  `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
+  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
+  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+  {SGF : StrictGoodFibration C GF}
+  {EHM : EpsilonHyperModel SGF}
+  {EASF : EpsilonAsSigmaFibration}
+  (I A : b_ty) (Phi : @h_ty Sign Func Pred) :
+  WellFormed (b_Prod I A) Phi ->
+  @left_adj_obj _ _ _ pullback_has_left_adjoint (interp_h_ty (b_Prod I A) Phi)
+  ≅O
+  interp_h_ty I (form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi).
+Proof.
+  intro WFPhi.
+  eapply iso_trans.
+  - exact (@sigma_adjoints_unique_pointwise
+             C CC GF
+             (interp_ty I) (interp_ty A)
+             (epsilon_sigma_adj I A)
+             (interp_h_ty (b_Prod I A) Phi)).
+  - apply epsilon_sigma_obj.
+    exact WFPhi.
+Defined.
+
+Global Instance AdjointEpsilonFullFibration_from_EpsilonAsSigmaFibration
+  {Sign Func Pred : Type}
+  `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
+  {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
+  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+  {SGF : StrictGoodFibration C GF}
+  {EHM : EpsilonHyperModel SGF}
+  {EASF : EpsilonAsSigmaFibration}
+  : AdjointEpsilonFullFibration.
+Proof.
+  refine {|
+    eps_is_left_adj_obj := _;
+    eps_functorial := _
+  |}.
+  - intros I A Phi WFPhi.
+    apply eps_is_left_adj_obj_from_epsilon_as_sigma.
+    exact WFPhi.
+  - eapply eps_functorial_from_eps_is_left_adj_obj.
+    intros I A Phi WFPhi.
+    apply eps_is_left_adj_obj_from_epsilon_as_sigma.
+    exact WFPhi.
+Defined.

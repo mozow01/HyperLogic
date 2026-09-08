@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EpsilonFull: inicialitás és fixponttételek</title>
+  <style>
+    :root {
+      color: #151515;
+      background: #f6f4ef;
+      font-family: "Georgia", "Times New Roman", serif;
+      line-height: 1.48;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    main {
+      max-width: 920px;
+      margin: 0 auto;
+      padding: 48px 36px 72px;
+      background: #fffdf8;
+      min-height: 100vh;
+    }
+    h1, h2, h3 {
+      line-height: 1.18;
+      color: #111;
+    }
+    h1 {
+      font-size: 30px;
+      margin: 0 0 8px;
+      text-align: center;
+    }
+    .subtitle {
+      text-align: center;
+      margin: 0 0 32px;
+      color: #555;
+      font-size: 15px;
+    }
+    h2 {
+      font-size: 22px;
+      margin: 32px 0 12px;
+      border-bottom: 1px solid #d8d2c4;
+      padding-bottom: 5px;
+    }
+    h3 {
+      font-size: 17px;
+      margin: 22px 0 8px;
+    }
+    p {
+      margin: 9px 0;
+    }
+    ul {
+      margin: 8px 0 12px 22px;
+      padding: 0;
+    }
+    li {
+      margin: 4px 0;
+    }
+    code, pre {
+      font-family: "Iosevka", "Cascadia Mono", "DejaVu Sans Mono", monospace;
+      font-size: 13px;
+    }
+    code {
+      background: #f1eee6;
+      padding: 1px 4px;
+      border-radius: 3px;
+    }
+    pre {
+      background: #f3f0e8;
+      border: 1px solid #ded7ca;
+      border-radius: 6px;
+      padding: 12px 14px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .theorem {
+      border-left: 4px solid #333;
+      background: #faf8f1;
+      padding: 10px 14px;
+      margin: 14px 0;
+    }
+    .definition {
+      border-left: 4px solid #6d6253;
+      background: #fbfaf5;
+      padding: 10px 14px;
+      margin: 14px 0;
+    }
+    .statement {
+      margin: 10px 0 12px;
+    }
+    .display {
+      margin: 10px auto;
+      padding: 8px 10px;
+      text-align: center;
+      font-size: 17px;
+      line-height: 1.55;
+      color: #111;
+    }
+    .display.small {
+      font-size: 15px;
+      text-align: left;
+      padding-left: 18px;
+    }
+    .math {
+      font-family: "Georgia", "Times New Roman", serif;
+      font-style: italic;
+      white-space: nowrap;
+    }
+    .math sub, .math sup {
+      font-style: normal;
+    }
+    .coqref {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #333;
+    }
+    .label {
+      font-weight: bold;
+      font-variant: small-caps;
+      letter-spacing: .02em;
+    }
+    .proof {
+      margin: 10px 0 18px;
+    }
+    .proof .label::after {
+      content: ".";
+    }
+    .files {
+      font-size: 13px;
+      color: #444;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 12px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid #d8d2c4;
+      padding: 7px 9px;
+      vertical-align: top;
+    }
+    th {
+      background: #f1eee6;
+      text-align: left;
+    }
+    @media print {
+      :root { background: white; }
+      @page {
+        size: A4;
+        margin: 18mm;
+      }
+      main {
+        max-width: none;
+        padding: 0;
+        background: white;
+      }
+      h2 { break-after: avoid; }
+      pre, .theorem, table { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>EpsilonFull: inicialitás és fixponttételek</h1>
+  <p class="subtitle">Formális összefoglaló a jelenlegi Coq formalizáció alapján, 2026-07-09</p>
+
+  <h2>0. Rögzített paraméterek és fájlok</h2>
+  <p>
+    Végig rögzítünk egy EpsilonFull szignatúrát:
+  </p>
+  <pre><code>Sign Func Pred : Type
+HFunc : FunctionSignature Func
+HPred : PredicateSignature Pred
+SM    : SkolemMapping Sign Func Pred</code></pre>
+
+  <div class="definition">
+    <span class="label">Szintaxisfüggés</span>
+    <p>
+      A modellek osztálya nem abszolút. A Coq-ban a
+      <code>EpsilonFullModel</code> osztály egy olyan szakaszban van
+      definiálva, ahol <code>Sign</code>, <code>Func</code>, <code>Pred</code>,
+      <code>HFunc</code>, <code>HPred</code> és <code>SM</code> már rögzített
+      paraméterek. Ezért minden EpsilonFull szintaxishoz külön modellkategória
+      tartozik.
+    </p>
+    <div class="display">
+      <span class="math">
+        Σ = (Sign,Func,Pred,HFunc,HPred,SM)
+        &nbsp;&mapsto;&nbsp;
+        Mod<sub>εΣ</sub>.
+      </span>
+    </div>
+    <p>
+      Ha a szignatúra változik, akkor a modellfogalom is változik: mások a
+      bázistermek, mások a formulák, mások a bizonyításteremek, mások a
+      típusozási és levezetési relációk, és más Skolem--epsilon választási
+      adat szerepelhet.
+    </p>
+    <div class="display small">
+      <span class="math">
+        base_typing<sub>Σ</sub>(I,t,A),
+        &nbsp;&nbsp;
+        h_derivation<sub>Σ</sub>(I,Γ,p,Φ),
+        &nbsp;&nbsp;
+        skolem_index<sub>Σ</sub>(A,Φ).
+      </span>
+    </div>
+    <p>
+      Ennek megfelelően a fő állítások valójában szignatúra-paraméteres
+      állításcsaládok:
+    </p>
+    <div class="display">
+      <span class="math">
+        ∀Σ,&nbsp;
+        T<sup>mod</sup><sub>Σ</sub> iniciális objektum
+        Mod<sub>εΣ</sub>-ban,
+      </span>
+    </div>
+    <div class="display">
+      <span class="math">
+        ∀Σ,&nbsp;
+        F<sub>Σ</sub>(T<sup>raw</sup><sub>Σ</sub>)
+        ≃ T<sup>raw</sup><sub>Σ</sub>
+        in Raw<sub>εΣ</sub>.
+      </span>
+    </div>
+  </div>
+
+  <p>
+    A három tárgyalt állítás forrásai:
+  </p>
+  <ul class="files">
+    <li><code>theories/Semantics/EpsilonFull/EpsilonFull_ModelCategory.v</code></li>
+    <li><code>theories/Semantics/EpsilonFull/LargeSetoidCategory.v</code></li>
+    <li><code>theories/Semantics/EpsilonFull/EpsilonFull_OneStepFunctor.v</code></li>
+    <li><code>theories/Semantics/EpsilonFull/EpsilonFull_FixedPoint.v</code></li>
+  </ul>
+
+  <h3>Jelölések</h3>
+  <p>
+    A képletekben <span class="math">Mod<sub>εΣ</sub></span> jelöli az
+    adott <span class="math">Σ</span> szintaxishoz tartozó EpsilonFull-modellek
+    large setoid kategóriáját,
+    <span class="math">T<sup>mod</sup><sub>Σ</sub></span>
+    az ugyanahhoz a szintaxishoz tartozó teljes termmodellt, és
+    <span class="math">T<sup>raw</sup><sub>Σ</sub></span>
+    a hozzá tartozó nyers term-hordozót. A jelölés
+    <span class="math">X ≃ Y</span> a megfelelő kategóriában vett izomorfiát
+    jelenti. Ha <span class="math">M</span> modell,
+    akkor
+    <span class="math">⟦I⟧<sub>M</sub></span> a bázistípus
+    interpretációja, <span class="math">Fib<sub>M</sub>(I)</span> pedig a
+    <span class="math">⟦I⟧<sub>M</sub></span> feletti rost.
+  </p>
+  <div class="display small">
+    <span class="math">Hom<sub>Mod</sub>(M,N)</span> =
+    struktúratartó EpsilonFull-modellmorfizmusok
+    <span class="math">M → N</span>,
+    morfizmusegyenlőséggel <span class="math">∼</span>.
+  </div>
+  <p>
+    A nyers hordozók kategóriáját <span class="math">Raw<sub>εΣ</sub></span>
+    jelöli. Egy objektuma <span class="math">X=(X<sub>b</sub>,X<sub>h</sub>)</span>,
+    ahol
+  </p>
+  <div class="display">
+    <span class="math">X<sub>b</sub>(I,t,A) : Type,</span>
+    &nbsp;&nbsp;
+    <span class="math">X<sub>h</sub>(I,Γ,p,Φ) : Type.</span>
+  </div>
+
+  <h2>1. A modellek large setoid kategóriája</h2>
+  <p>
+    Egy <code>EpsilonFullModel</code> objektum a következő adatokat tartalmazza:
+    egy setoid kategóriát, annak karteziánus struktúráját, kétsortú
+    bázisinterpretációt, koherens bázismodellt, jó és strict fibrációt,
+    hiperlogikai modellt, valamint az EpsilonFull adjungált-epszilon
+    fibrációs struktúrát.
+  </p>
+  <p>
+    Fontos: ez az osztály a rögzített <span class="math">Σ</span> szintaxistól
+    függ. Például az objektum adatában szereplő bázismodell
+    <code>BaseEpsilonFullModel Sign Func HFunc</code>, a hiperoldali modell
+    <code>EpsilonHyperModel Sign Func Pred HFunc HPred</code>, az adjungált
+    epszilon-struktúra pedig a konkrét
+    <code>SkolemMapping Sign Func Pred</code> adatra hivatkozik.
+  </p>
+  <pre><code>Class EpsilonFullModel := {
+  efm_cat              : SetoidCategory;
+  efm_cartesian        : CartesianCategory efm_cat;
+  efm_twosort          : TwoSortCategory efm_cat efm_cartesian;
+  efm_base_model       : BaseEpsilonFullModel ...;
+  efm_base_coherent    : CoherentBaseModel ...;
+  efm_good_fibration   : GoodFibration ...;
+  efm_strict_fibration : StrictGoodFibration ...;
+  efm_hyper_model      : EpsilonHyperModel ...;
+  efm_adjoint_epsilon  : AdjointEpsilonFullFibration ...
+}.</code></pre>
+
+  <p>
+    Egy morfizmus <code>F : EpsilonFullModelHom M N</code> nem teljes
+    kategóriafunktor. A formalizációban ez egy struktúratartó interpretációs
+    morfizmus, amely három szinten ad meg térképeket:
+  </p>
+  <ul>
+    <li>bázisnyilakra: <code>efh_base_map</code>;</li>
+    <li>rostbeli formula-homokra: <code>efh_fiber_map</code>;</li>
+    <li>sequent-homokra: <code>efh_sequent_map</code>.</li>
+  </ul>
+  <p>
+    A morfizmus tartalmazza a szükséges properness, identitás- és
+    kompozíciómegőrzési, valamint soundness klauzulákat. A bázisra:
+  </p>
+  <pre><code>efh_base_soundness :
+  forall I A t (dt : base_typing I t A),
+    efh_base_map I A (efm_interp_tm M dt)
+    ≅ efm_interp_tm N dt</code></pre>
+  <p>
+    A hiperoldali soundness:
+  </p>
+  <pre><code>efh_hyper_soundness :
+  forall I G p Phi (d : h_derivation I G p Phi),
+    efh_sequent_map I G Phi ... (efm_soundness M d)
+    ≅ efm_soundness N d</code></pre>
+
+  <h3>Morfizmusegyenlőség</h3>
+  <p>
+    A morfizmusok egyenlősége nem triviális. Nem az szerepel, hogy bármely két
+    morfizmus egyenlő, hanem pontonkénti setoid-hom ekvivalencia mindhárom
+    komponensen:
+  </p>
+  <pre><code>EpsilonFullModelHom_equiv F G :=
+  (forall I A f,
+     efh_base_map F I A f ≅ efh_base_map G I A f)
+  /\
+  (forall I Phi Psi wfPhi wfPsi f,
+     efh_fiber_map F I Phi Psi wfPhi wfPsi f
+     ≅
+     efh_fiber_map G I Phi Psi wfPhi wfPsi f)
+  /\
+  (forall I Gamma Phi wfGamma wfPhi f,
+     efh_sequent_map F I Gamma Phi wfGamma wfPhi f
+     ≅
+     efh_sequent_map G I Gamma Phi wfGamma wfPhi f).</code></pre>
+
+  <p>
+    Ezekkel az adatokkal a modellek large setoid kategóriát alkotnak:
+  </p>
+  <pre><code>EpsilonFullModel_LargeSetoidCategory : LargeSetoidCategory</code></pre>
+
+  <h2>2. Inicialitás</h2>
+  <div class="theorem">
+    <span class="label">Tétel 1. Inicialitás</span>
+    <div class="statement">
+      Minden rögzített <span class="math">Σ</span> EpsilonFull szintaxisra
+      a hozzá tartozó termmodell
+      <span class="math">T<sup>mod</sup><sub>Σ</sub></span> iniciális objektum
+      <span class="math">Mod<sub>εΣ</sub></span>-ban:
+    </div>
+    <div class="display">
+      <span class="math">
+        ∀ M ∈ Ob(Mod<sub>εΣ</sub>)&nbsp;
+        ∃ η<sub>M</sub> ∈
+        Hom<sub>Mod</sub>(T<sup>mod</sup><sub>Σ</sub>,M)
+      </span>
+    </div>
+    <div class="display">
+      <span class="math">
+        ∀ F,G ∈
+        Hom<sub>Mod</sub>(T<sup>mod</sup><sub>Σ</sub>,M),
+        &nbsp; F ∼ G.
+      </span>
+    </div>
+    <p>
+      Másképp: minden <span class="math">Σ</span>-ra és minden
+      <span class="math">M∈Mod<sub>εΣ</sub></span>-ra a hom-setoid
+      <span class="math">Hom<sub>Mod</sub>(T<sup>mod</sup><sub>Σ</sub>,M)</span>
+      kontraktibilis a választott morfizmusegyenlőség szerint.
+    </p>
+    <div class="coqref">Coq-megfelelő:</div>
+    <pre><code>TermModel_to M :
+  EpsilonFullModelHom TermModel_EpsilonFullModel M
+
+TermModel_LargeInitial :
+  LargeInitial TermModel_EpsilonFullModel
+
+TermModel_initial_unique M F G :
+  EpsilonFullModelHom_equiv F G</code></pre>
+  </div>
+
+  <div class="proof">
+    <span class="label">Bizonyításvázlat</span>
+    <p>
+      A létezés a kanonikus interpretációs morfizmus konstrukciója. Bázison
+      egy termmodellbeli nyilat visszaolvasunk a hozzá tartozó jól típusozott
+      bázistermre, majd azt interpretáljuk <code>M</code>-ben:
+    </p>
+    <pre><code>TermModel_to_base_map M f
+  := efm_interp_tm M (deriv_of (term_model_base_hom f)).</code></pre>
+    <p>
+      A fiber- és sequent-komponenseken a termmodellbeli homokat zárt
+      levezetési termekként olvassuk vissza, majd a megfelelő soundness
+      konstrukció adja az <code>M</code>-beli homot.
+    </p>
+    <p>
+      Az egyediség két részre bomlik. A bázis komponensen először bizonyítjuk,
+      hogy minden <code>F : TermModel -> M</code> morfizmus automatikusan
+      egybeesik a kanonikus <code>TermModel_to M</code> báziskomponensével:
+    </p>
+    <pre><code>TermModel_hom_base_preserving :
+  forall M F, TermModelBasePreserving M F</code></pre>
+    <p>
+      Ez a bizonyítás a <code>efh_base_soundness</code> klauzulát és a
+      termmodellbeli reinterpetációs lemmát használja:
+      <code>term_model_base_hom_reinterp_equiv</code>.
+    </p>
+    <p>
+      A fiber- és sequent-komponensek egyedisége a fibráció thinness
+      feltételéből következik:
+    </p>
+    <pre><code>fiber_is_thin : forall I, Thin (Fiber I)</code></pre>
+    <p>
+      Ezután a bázis-, fiber- és sequent-komponens pontonkénti egyenlősége
+      pontosan <code>EpsilonFullModelHom_equiv F G</code>.
+    </p>
+  </div>
+
+  <h2>3. Large-kategóriás szintaxisgenerátor fixpont</h2>
+  <p>
+    Ez az állítás nem a teljes <code>EpsilonFullModel</code>-kategórián
+    definiál endofunktort. A szintaxisgenerátor természetes hordozókategóriája
+    egy segédkategória: a rögzített szintaxis ítéletformái fölötti indexelt
+    típuscsaládok kategóriája.
+  </p>
+
+  <div class="definition">
+    <span class="label">Definíció. Nyers hordozó</span>
+    <p>
+      A <em>nyers hordozó</em> nem szemantikai modell és nem hiperdoktrína.
+      Olyan indexelt típuscsalád-pár, amely a két alapvető szintaktikus
+      ítéletforma fölött ad meg hordozókat:
+    </p>
+    <div class="display">
+      <span class="math">
+        X = (X<sub>b</sub>,X<sub>h</sub>)
+      </span>
+    </div>
+    <div class="display">
+      <span class="math">
+        X<sub>b</sub>(I,t,A) : Type,
+        &nbsp;&nbsp;
+        X<sub>h</sub>(I,Γ,p,Φ) : Type.
+      </span>
+    </div>
+    <p>
+      Itt <span class="math">X<sub>b</sub>(I,t,A)</span> azt jelenti:
+      “az <span class="math">I ⊢ t : A</span> alakú bázisítélethez tartozó
+      adatok típusa”; <span class="math">X<sub>h</sub>(I,Γ,p,Φ)</span>
+      pedig azt jelenti: “az
+      <span class="math">I;Γ ⊢ p : Φ</span> alakú hiperítélethez tartozó
+      adatok típusa”.
+    </p>
+    <p>
+      A “nyers” jelző azt rögzíti, hogy itt még nincs kategóriaszerkezet,
+      nincs kompozíció, nincs rost, nincs pullback, nincs kvóciens és nincs
+      szemantikai egyenlőség. Csak az ítéletformák fölötti hordozócsaládokat
+      tartjuk meg. Ez az a minimális adat, amelyre a szintaktikus
+      szabálygenerátor hatni tud.
+    </p>
+  </div>
+
+  <div class="definition">
+    <span class="label">Definíció. A nyers hordozók kategóriája</span>
+    <p>
+      Jelölje <span class="math">Raw<sub>εΣ</sub></span> azt a large setoid
+      kategóriát, amelynek objektumai a fenti nyers hordozók.
+    </p>
+    <div class="display">
+      <span class="math">
+        Ob(Raw<sub>εΣ</sub>)
+        =
+        { X=(X<sub>b</sub>,X<sub>h</sub>) }.
+      </span>
+    </div>
+    <p>
+      Egy morfizmus <span class="math">u:X→Y</span> indexet szigorúan
+      megtartó függvénypár:
+    </p>
+    <div class="display small">
+      <span class="math">
+        u<sub>b</sub><sup>I,t,A</sup>:
+        X<sub>b</sub>(I,t,A) → Y<sub>b</sub>(I,t,A),
+      </span>
+    </div>
+    <div class="display small">
+      <span class="math">
+        u<sub>h</sub><sup>I,Γ,p,Φ</sup>:
+        X<sub>h</sub>(I,Γ,p,Φ) → Y<sub>h</sub>(I,Γ,p,Φ).
+      </span>
+    </div>
+    <p>
+      A morfizmusok egyenlősége pontonkénti proposicionális egyenlőség:
+    </p>
+    <div class="display small">
+      <span class="math">
+        u ∼ v
+        ⇔
+        (∀ I,t,A,x, u<sub>b</sub>(x)=v<sub>b</sub>(x))
+        ∧
+        (∀ I,Γ,p,Φ,y, u<sub>h</sub>(y)=v<sub>h</sub>(y)).
+      </span>
+    </div>
+    <p>
+      Az identitás és a kompozíció pontonkénti. A kategória azért large, mert
+      objektumai univerzum-szintű típuscsaládok.
+    </p>
+    <div class="coqref">Coq-megfelelő:</div>
+    <pre><code>Class EpsilonFullRawCarrier := {
+  raw_base  : forall I (t : b_tm) A, Type;
+  raw_hyper : forall I G (p : h_tm) Phi, Type
+}.
+
+EpsilonFullRawCarrier_LargeSetoidCategory : LargeSetoidCategory</code></pre>
+  </div>
+
+  <div class="definition">
+    <span class="label">Definíció. Egy-lépéses szintaxisgenerátor</span>
+    <p>
+      Az egy-lépéses szintaxisgenerátor az az endofunktor
+      <span class="math">F<sub>Σ</sub>:Raw<sub>εΣ</sub>→Raw<sub>εΣ</sub></span>,
+      amely egy hordozócsaládból előállítja az összes olyan ítéletet, amely
+      pontosan egy külső szintaktikus szabályalkalmazással keletkezik, miközben
+      a rekurzív premisszák hordozóit az eredeti
+      <span class="math">X</span>-ből veszi.
+    </p>
+    <div class="display">
+      <span class="math">
+        F<sub>Σ</sub>(X)<sub>b</sub>(I,t,A)
+        =
+        RawBaseOneStep(X;I,t,A)
+      </span>
+    </div>
+    <div class="display">
+      <span class="math">
+        F<sub>Σ</sub>(X)<sub>h</sub>(I,Γ,p,Φ)
+        =
+        RawHyperOneStep(X;I,Γ,p,Φ).
+      </span>
+    </div>
+    <p>
+      Például a bázis-kompozíciós konstruktor:
+    </p>
+    <div class="display">
+      <span class="math">
+        X<sub>b</sub>(B,g,C) × X<sub>b</sub>(A,f,B)
+        → F<sub>Σ</sub>(X)<sub>b</sub>(A,g∘f,C).
+      </span>
+    </div>
+    <p>
+      A kvantoros hiper-szabályoknál a hiper-premisszák helyén
+      <span class="math">X<sub>h</sub></span>, a bázispremisszák helyén
+      <span class="math">X<sub>b</sub></span> áll; például:
+    </p>
+    <div class="display small">
+      <span class="math">
+        X<sub>h</sub>(I,Γ,p,∀<sub>A</sub>Φ) × X<sub>b</sub>(I,f,A)
+        → F<sub>Σ</sub>(X)<sub>h</sub>(I,Γ,all_elim(p,f), Φ[(id,f)]).
+      </span>
+    </div>
+    <p>
+      Morfizmusokon <span class="math">F<sub>Σ</sub>(u)</span> ugyanazt a külső
+      konstruktort tartja meg, és csak az azonnali premisszákban alkalmazza
+      <span class="math">u<sub>b</sub></span>-t, illetve
+      <span class="math">u<sub>h</sub></span>-t. Ezért az identitás- és
+      kompozíciómegőrzés pontonkénti konstruktoresetszétválasztással igazolható.
+    </p>
+    <div class="coqref">Coq-megfelelő:</div>
+    <pre><code>EpsilonFullRawOneStep_Endofunctor
+  : LargeEndofunctor EpsilonFullRawCarrier_LargeSetoidCategory</code></pre>
+  </div>
+
+  <div class="theorem">
+    <span class="label">Tétel 2. Nyers szintaktikus fixpont</span>
+    <p>
+      Legyen
+      <span class="math">T<sup>raw</sup><sub>Σ</sub> ∈ Raw<sub>εΣ</sub></span>
+      a rögzített <span class="math">Σ</span> szintaxishoz tartozó nyers
+      term-hordozó:
+    </p>
+    <div class="display">
+      <span class="math">
+        (T<sup>raw</sup><sub>Σ</sub>)<sub>b</sub>(I,t,A)
+        = base_typing<sub>Σ</sub>(I,t,A),
+        &nbsp;&nbsp;
+        (T<sup>raw</sup><sub>Σ</sub>)<sub>h</sub>(I,Γ,p,Φ) =
+        h_derivation<sub>Σ</sub>(I,Γ,p,Φ).
+      </span>
+    </div>
+    <p>
+      Ekkor <span class="math">T<sup>raw</sup><sub>Σ</sub></span> fixpontja a
+      <span class="math">Σ</span>-hoz tartozó egy-lépéses
+      szintaxisgenerátornak:
+    </p>
+    <div class="display">
+      <span class="math">
+        F<sub>Σ</sub>(T<sup>raw</sup><sub>Σ</sub>)
+        ≃ T<sup>raw</sup><sub>Σ</sub>
+      </span>
+      &nbsp; in &nbsp;
+      <span class="math">Raw<sub>εΣ</sub>.</span>
+    </div>
+    <p>
+      Konkrétan léteznek morfizmusok
+      <span class="math">
+        ρ:F<sub>Σ</sub>(T<sup>raw</sup><sub>Σ</sub>)
+        →T<sup>raw</sup><sub>Σ</sub>
+      </span>
+      és
+      <span class="math">
+        υ:T<sup>raw</sup><sub>Σ</sub>
+        →F<sub>Σ</sub>(T<sup>raw</sup><sub>Σ</sub>)
+      </span>,
+      amelyekre
+    </p>
+    <div class="display">
+      <span class="math">
+        ρ ∘ υ ∼ id<sub>TrawΣ</sub>,
+        &nbsp;&nbsp;
+        υ ∘ ρ ∼ id<sub>FΣ(TrawΣ)</sub>.
+      </span>
+    </div>
+    <div class="coqref">Coq-megfelelő:</div>
+    <pre><code>TermModelRawCarrier_OneStepIsomorphism
+  : LargeIsomorphism
+      (RawOneStepCarrier TermModelRawCarrier)
+      TermModelRawCarrier</code></pre>
+    <p>
+      Itt <code>TermModelRawCarrier</code> a
+      <span class="math">T<sup>raw</sup><sub>Σ</sub></span> hordozó,
+      nem a teljes <span class="math">T<sup>mod</sup><sub>Σ</sub></span>
+      EpsilonFull-modell.
+    </p>
+  </div>
+
+  <div class="proof">
+    <span class="label">Bizonyításvázlat</span>
+    <p>
+      Az izomorfizmus két morfizmusa:
+    </p>
+    <pre><code>TermModelRawCarrier_roll
+  : F(Traw_Σ) -> Traw_Σ
+
+TermModelRawCarrier_unroll
+  : Traw_Σ -> F(Traw_Σ)</code></pre>
+    <p>
+      A <code>roll</code> minden <code>RawBaseOneStep</code> konstruktort a
+      megfelelő <code>base_typing</code> konstruktorra, és minden
+      <code>RawHyperOneStep</code> konstruktort a megfelelő
+      <code>h_derivation</code> konstruktorra küld.
+    </p>
+    <p>
+      Az <code>unroll</code> a <code>base_typing</code>, illetve
+      <code>h_derivation</code> levezetés külső konstruktorát bontja le egy
+      one-step objektummá. A két inverztörvény:
+    </p>
+    <pre><code>TermModelRawCarrier_roll_unroll :
+  roll ∘ unroll ≡ id_Traw_Σ
+
+TermModelRawCarrier_unroll_roll :
+  unroll ∘ roll ≡ id_F(Traw_Σ)</code></pre>
+    <p>
+      Mindkét törvény pontonkénti egyenlőség, és konstruktoresetszétválasztás
+      után definicionálisan redukálódik.
+    </p>
+  </div>
+
+  <h2>4. Termmodellbeli szemantikus fixpont</h2>
+  <p>
+    A harmadik állítás ugyanennek a fixpontgondolatnak a tényleges
+    <span class="math">T<sup>mod</sup><sub>Σ</sub></span>-beli homokra emelt
+    változata. Itt nem csak nyers
+    <code>base_typing</code> és <code>h_derivation</code> családokról van szó,
+    hanem a termmodell báziskategóriájának, fiber-kategóriáinak és
+    sequent-objektumainak homjairól.
+  </p>
+
+  <div class="theorem">
+    <span class="label">Tétel 3. Szemantikus roll-unroll fixpont</span>
+    <p>
+      A termmodell tényleges homjai egy-lépéses szintaktikus alakra
+      bonthatók és visszagörgethetők. Pontosabban vannak roll és unroll
+      műveletek a bázis-, fiber- és sequent-szinten úgy, hogy
+    </p>
+    <div class="display">
+      <span class="math">
+        roll(unroll(f)) ≃ f,
+        &nbsp;&nbsp;
+        unroll(roll(s)) ≈ s.
+      </span>
+    </div>
+    <p>
+      Az első egyenlőség mindig a megfelelő termmodellbeli
+      <span class="math">hom_equiv</span>; a második az adott one-step
+      reprezentáción indukált ekvivalencia.
+    </p>
+    <div class="coqref">Összefoglaló Coq-osztály:</div>
+    <pre><code>TermModel_ConcreteOneStepFixedPoint
+  : TermModelConcreteOneStepFixedPoint</code></pre>
+  </div>
+
+  <h3>Bázis komponens</h3>
+  <div class="display small">
+    <span class="math">
+      ∀ f ∈ C<sub>T</sub>(⟦I⟧<sub>T</sub>,⟦A⟧<sub>T</sub>),
+      &nbsp;
+      r<sub>b</sub>(u<sub>b</sub>(f)) ≃ f.
+    </span>
+  </div>
+  <div class="display small">
+    <span class="math">
+      ∀ s ∈ BaseOneStep(I,A),
+      &nbsp;
+      u<sub>b</sub>(r<sub>b</sub>(s)) ≈ s.
+    </span>
+  </div>
+  <pre><code>TermModel_semantic_base_roll_unroll :
+  forall f,
+    term_model_base_onestep_roll
+      (term_model_base_onestep_unroll f)
+    ≅ f</code></pre>
+  <pre><code>TermModel_semantic_base_unroll_roll :
+  forall s,
+    term_model_base_onestep_unroll
+      (term_model_base_onestep_roll s)
+    ≈ s</code></pre>
+
+  <h3>Fiber komponens</h3>
+  <div class="display small">
+    <span class="math">
+      ∀ f ∈ Fib<sub>T</sub>(I)(⟦Φ⟧<sub>T</sub>,⟦Ψ⟧<sub>T</sub>),
+      &nbsp;
+      r<sub>f</sub>(u<sub>f</sub>(f)) ≃ f.
+    </span>
+  </div>
+  <div class="display small">
+    <span class="math">
+      ∀ s ∈ FiberOneStep(I,Φ,Ψ),
+      &nbsp;
+      u<sub>f</sub>(r<sub>f</sub>(s)) ≈ s.
+    </span>
+  </div>
+  <pre><code>TermModel_semantic_fiber_roll_unroll :
+  forall wfPhi wfPsi f,
+    term_model_fiber_onestep_roll
+      (term_model_fiber_onestep_unroll wfPhi wfPsi f)
+    ≅ f</code></pre>
+  <pre><code>TermModel_semantic_fiber_unroll_roll :
+  forall wfPhi wfPsi s,
+    term_model_fiber_onestep_unroll wfPhi wfPsi
+      (term_model_fiber_onestep_roll s)
+    ≈ s</code></pre>
+
+  <h3>Sequent komponens</h3>
+  <div class="display small">
+    <span class="math">
+      ∀ f ∈ Fib<sub>T</sub>(I)(⟦Γ⟧<sub>T</sub>,⟦Φ⟧<sub>T</sub>),
+      &nbsp;
+      r<sub>s</sub>(u<sub>s</sub>(f)) ≃ f.
+    </span>
+  </div>
+  <div class="display small">
+    <span class="math">
+      ∀ s ∈ SequentOneStep(I,Γ,Φ),
+      &nbsp;
+      u<sub>s</sub>(r<sub>s</sub>(s)) ≈ s.
+    </span>
+  </div>
+  <pre><code>TermModel_semantic_sequent_roll_unroll :
+  forall wfG wfPhi f,
+    term_model_sequent_onestep_roll
+      (term_model_sequent_onestep_unroll wfG wfPhi f)
+    ≅ f</code></pre>
+  <pre><code>TermModel_semantic_sequent_unroll_roll :
+  forall wfG wfPhi s,
+    term_model_sequent_onestep_unroll wfG wfPhi
+      (term_model_sequent_onestep_roll s)
+    ≈ s</code></pre>
+
+  <div class="proof">
+    <span class="label">Bizonyításvázlat</span>
+    <p>
+      A bázis komponensben egy termmodellbeli bázishomot először
+      <code>term_model_base_hom</code> olvas vissza szintaktikus bázistermmé.
+      A <code>roll(unroll f) ≅ f</code> állítás az EpsilonFull bázis
+      soundnessének ekvacionális formáját és a termmodellbeli
+      reinterpetációs ekvivalenciát használja.
+    </p>
+    <p>
+      A fiber- és sequent-komponensekben a visszaolvasott egy-lépéses homok
+      zárt hiperlevezetésekből származnak. Az egyenlőségi állítások itt a
+      megfelelő rost thinness tulajdonságából következnek:
+    </p>
+    <pre><code>fiber_is_thin (efm_interp_ty TM I)</code></pre>
+    <p>
+      Az összefogó osztály nem új elvet ad, hanem csomagolja a raw one-step,
+      a szemantikus bázis, a szemantikus fiber és a szemantikus sequent
+      fixpontokat:
+    </p>
+    <pre><code>Class TermModelConcreteOneStepFixedPoint := {
+  term_model_raw_onestep_fixed_point      : EpsilonFullOneStepFixedPoint;
+  term_model_semantic_base_onestep_fixed_point
+      : TermModelSemanticBaseOneStepFixedPoint;
+  term_model_semantic_fiber_onestep_fixed_point
+      : TermModelSemanticFiberOneStepFixedPoint;
+  term_model_semantic_sequent_onestep_fixed_point
+      : TermModelSemanticSequentOneStepFixedPoint
+}.</code></pre>
+  </div>
+
+  <h2>5. A három állítás viszonya</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Állítás</th>
+        <th>Kategória / szint</th>
+        <th>Matematikai tartalom</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Inicialitás</td>
+        <td><code>EpsilonFullModel_LargeSetoidCategory</code></td>
+        <td>
+          Minden rögzített <span class="math">Σ</span> szintaxisra:
+          a teljes termmodellből
+          <span class="math">T<sup>mod</sup><sub>Σ</sub></span>-ból minden
+          <span class="math">Σ</span>-modellbe pontosan egy struktúratartó
+          interpretációs morfizmus vezet, a választott morfizmusegyenlőség
+          szerint.
+        </td>
+      </tr>
+      <tr>
+        <td>Large-kategóriás fixpont</td>
+        <td><code>EpsilonFullRawCarrier_LargeSetoidCategory</code></td>
+        <td>
+          Minden rögzített <span class="math">Σ</span>-ra a
+          <span class="math">Σ</span>-szintaxis, mint nyers bizonyítás-hordozó,
+          izomorf saját egy-lépéses szintaxisgenerátorának képével:
+          <span class="math">
+            F<sub>Σ</sub>(T<sup>raw</sup><sub>Σ</sub>)
+            ≃ T<sup>raw</sup><sub>Σ</sub>
+          </span>.
+        </td>
+      </tr>
+      <tr>
+        <td>Szemantikus termmodell-fixpont</td>
+        <td>A teljes termmodell <span class="math">T<sup>mod</sup><sub>Σ</sub></span> tényleges homjai</td>
+        <td>
+          A teljes termmodell bázis-, fiber- és sequent-homjai visszabonthatók
+          egy-lépéses szintaktikus alakra, majd visszagörgethetők ugyanarra a
+          homra <code>hom_equiv</code> szerint.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>6. Mit állítunk, és mit nem</h2>
+  <ul>
+    <li>
+      Állítjuk, hogy minden rögzített <span class="math">Σ</span> szintaxisra
+      a teljes termmodell
+      <span class="math">T<sup>mod</sup><sub>Σ</sub></span> iniciális az adott
+      szintaxishoz tartozó EpsilonFull modellek large setoid kategóriájában.
+    </li>
+    <li>
+      Állítjuk, hogy minden rögzített <span class="math">Σ</span>-ra az
+      EpsilonFull nyers <span class="math">Σ</span>-szintaxisa,
+      <span class="math">T<sup>raw</sup><sub>Σ</sub></span>, fixpontja egy
+      konkrét large-kategóriás endofunktornak.
+    </li>
+    <li>
+      Állítjuk, hogy a teljes termmodell
+      <span class="math">T<sup>mod</sup><sub>Σ</sub></span> tényleges homjai
+      komponensenként kielégítik a megfelelő roll-unroll fixponttörvényeket.
+    </li>
+    <li>
+      Nem állítunk általános Lambek-lemmát tetszőleges endofunktorra.
+    </li>
+    <li>
+      Nem állítjuk, hogy az egy-lépéses szintaxisgenerátor endofunktor lenne a
+      teljes <code>EpsilonFullModel</code>-kategórián. Az endofunktor a nyers
+      hordozók kategóriáján él.
+    </li>
+    <li>
+      Nem használunk triviális morfizmusegyenlőséget. Mind az inicialitás,
+      mind a kategóriai fixpont a megadott pontonkénti egyenlőségek szerint
+      értendő.
+    </li>
+  </ul>
+
+  <h2>7. Cikkbe emelhető rövid megfogalmazás</h2>
+  <p>
+    A formalizáció minden rögzített EpsilonFull szintaxisra
+    <span class="math">Σ</span> két, egymást kiegészítő metatényt ad a
+    termmodellről. Először, a <span class="math">Σ</span>-termmodell
+    <span class="math">T<sup>mod</sup><sub>Σ</sub></span> iniciális objektum a
+    <span class="math">Σ</span>-hoz tartozó EpsilonFull modellek large setoid
+    kategóriájában. Másodszor, ha a <span class="math">Σ</span>-szintaxis
+    konstruktorait egy endofunktorként szervezzük a nyers indexelt
+    bizonyítás-hordozók <span class="math">Raw<sub>εΣ</sub></span> large
+    kategóriáján, akkor a term hordozó ennek az endofunktornak fixpontja:
+  </p>
+  <div class="display">
+    <span class="math">
+      F<sub>Σ</sub>(T<sup>raw</sup><sub>Σ</sub>)
+      ≃ T<sup>raw</sup><sub>Σ</sub>.
+    </span>
+  </div>
+  <p>
+    Az izomorfizmus a szokásos <code>roll</code>/<code>unroll</code>
+    konstrukciókból áll. A formalizáció továbbá megmutatja, hogy ugyanez a
+    fixpontszerkezet a termmodell tényleges bázis-, fiber- és sequent-homjaira
+    is felemelhető a megfelelő <code>hom_equiv</code> relációk szerint.
+  </p>
+</main>
+</body>
+</html>

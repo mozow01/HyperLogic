@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <title>EpsilonFull termmodell és inicialitás - olvasójegyzet</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --fg: #202124;
+      --muted: #5f6368;
+      --line: #d8dde6;
+      --soft: #f5f7fb;
+      --accent: #2f5fbb;
+      --warn: #7a4a00;
+      --warn-bg: #fff7e6;
+      --ok-bg: #eef8f0;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+      color: var(--fg);
+      background: white;
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 32px 24px 56px;
+    }
+    h1, h2, h3 {
+      line-height: 1.2;
+      margin: 1.4em 0 0.45em;
+    }
+    h1 {
+      margin-top: 0;
+      font-size: 2rem;
+    }
+    h2 {
+      border-top: 1px solid var(--line);
+      padding-top: 1.1em;
+      font-size: 1.35rem;
+    }
+    h3 {
+      font-size: 1.08rem;
+    }
+    p {
+      margin: 0.6em 0;
+    }
+    ul, ol {
+      padding-left: 1.5em;
+    }
+    li {
+      margin: 0.35em 0;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      background: var(--soft);
+      border: 1px solid #e8ebf2;
+      border-radius: 4px;
+      padding: 0.08em 0.28em;
+      font-size: 0.92em;
+    }
+    pre {
+      overflow-x: auto;
+      background: #f8f9fb;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 16px;
+      line-height: 1.45;
+    }
+    pre code {
+      background: transparent;
+      border: 0;
+      padding: 0;
+      font-size: 0.9em;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 1em 0;
+      font-size: 0.96em;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      vertical-align: top;
+    }
+    th {
+      background: var(--soft);
+      text-align: left;
+    }
+    .lead {
+      font-size: 1.08rem;
+      color: #303134;
+    }
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 1em 0;
+      background: var(--soft);
+    }
+    .warn {
+      border-color: #efcf8a;
+      background: var(--warn-bg);
+      color: var(--warn);
+    }
+    .ok {
+      border-color: #b9dfc2;
+      background: var(--ok-bg);
+    }
+    .muted {
+      color: var(--muted);
+    }
+    .diagram {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      white-space: pre;
+      background: #fbfbfc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 14px;
+      overflow-x: auto;
+    }
+    a {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+<main>
+  <h1>EpsilonFull termmodell és inicialitás</h1>
+  <p class="lead">
+    Ez a jegyzet azt magyarázza el, hogy a
+    <code>theories/Semantics/EpsilonFull/EpsilonFull_ModelCategory.v</code>
+    fájlban milyen kategóriáról beszélünk, mik az objektumai, mik a morfizmusai,
+    mi a morfizmusok egyenlősége, és mit jelent a termmodell iniciális jellege.
+  </p>
+
+  <div class="box warn">
+    <strong>Iránykonvenció.</strong>
+    A szokásos kategóriaelméleti konvenció szerint egy <em>iniciális</em>
+    objektum <code>I</code> olyan, hogy minden <code>O</code>-hoz pontosan egy
+    <code>I -&gt; O</code> morfizmus van. A minden <code>O</code>-ból egyetlen
+    <code>O -&gt; I</code> morfizmust kérő állítás a szokásos névvel
+    <em>terminális</em> objektum.
+    <br>
+    Itt a termmodell a szokásos "syntax is initial" irányban szerepel:
+    <code>TermModel -&gt; M</code>. Ha valaki az ellenkező nyílirányt hívja
+    inicialitásnak, akkor ugyanerről az ellenkező kategóriában lehet beszélni.
+  </div>
+
+  <h2>1. Mi a kategória?</h2>
+  <p>
+    Rögzítünk egy szintaxist:
+  </p>
+  <pre><code>Sign Func Pred : Type
+HFunc : FunctionSignature Func
+HPred : PredicateSignature Pred
+SM    : SkolemMapping Sign Func Pred</code></pre>
+  <p>
+    Ezután informálisan van egy modellkategóriánk, jelöljük így:
+  </p>
+  <pre><code>EpsilonFullMod(Sign, Func, Pred, SM)</code></pre>
+  <p>
+    A meglévő kis <code>SetoidCategory</code> fogalomba ezt nem célszerű
+    közvetlenül becsomagolni, mert az objektumai maguk is nagy struktúrák,
+    belül kategóriákat tartalmaznak. Ezért külön fájlban bevezettünk egy
+    univerzumpolimorf large változatot:
+    <code>Semantics/EpsilonFull/LargeSetoidCategory.v</code>.
+  </p>
+  <p>
+    Ebben az EpsilonFull-modellek valóban egy <code>LargeSetoidCategory</code>
+    példányt alkotnak:
+  </p>
+  <pre><code>Instance EpsilonFullModel_LargeSetoidCategory
+  : LargeSetoidCategory</code></pre>
+  <p>
+    Ennek komponensei:
+  </p>
+  <ul>
+    <li>van objektumosztály: <code>EpsilonFullModel</code>;</li>
+    <li>van hom-osztály: <code>EpsilonFullModelHom M N</code>;</li>
+    <li>van identitás és kompozíció;</li>
+    <li>van hom-ekvivalencia, amely mellett ezek a törvények teljesülnek.</li>
+  </ul>
+
+  <h2>2. Mik az objektumok?</h2>
+  <p>
+    Egy objektum egy <code>EpsilonFullModel</code>. Ez nem csak egy halmaz vagy
+    kategória, hanem egy teljes szemantikai csomag:
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Mező</th>
+        <th>Jelentés</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>efm_cat</code></td>
+        <td>A báziskategória, egy <code>SetoidCategory</code>.</td>
+      </tr>
+      <tr>
+        <td><code>efm_cartesian</code></td>
+        <td>A báziskategória kartéziánus szerkezete.</td>
+      </tr>
+      <tr>
+        <td><code>efm_twosort</code></td>
+        <td>A kétfajta bázistípusrendszer interpretációja.</td>
+      </tr>
+      <tr>
+        <td><code>efm_base_model</code></td>
+        <td>Az EpsilonFull bázisnyelv szemantikája.</td>
+      </tr>
+      <tr>
+        <td><code>efm_base_coherent</code></td>
+        <td>Koherenciatörvények a bázisinterpretációhoz.</td>
+      </tr>
+      <tr>
+        <td><code>efm_good_fibration</code></td>
+        <td>Fibráció: minden bázisobjektum felett van egy rostkategória.</td>
+      </tr>
+      <tr>
+        <td><code>efm_strict_fibration</code></td>
+        <td>A fibráció szigorúbb, használhatóbb változata.</td>
+      </tr>
+      <tr>
+        <td><code>efm_hyper_model</code></td>
+        <td>A hiper/logikai nyelv interpretációja a rostokban.</td>
+      </tr>
+      <tr>
+        <td><code>efm_adjoint_epsilon</code></td>
+        <td>Az adjungált epsilon-szerkezet.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    Tehát egy modellobjektum nem csak "egy kategória", hanem egy kategória
+    plusz az összes olyan struktúra, amelyben az EpsilonFull nyelvet
+    interpretálni lehet.
+  </p>
+
+  <h2>3. Mi a termmodell objektum?</h2>
+  <p>
+    A termmodell az a speciális <code>EpsilonFullModel</code>, ahol a bázis- és
+    rostobjektumok szintaktikus objektumokból épülnek. Coq-ban:
+  </p>
+  <pre><code>Instance TermModel_EpsilonFullModel : EpsilonFullModel</code></pre>
+  <p>
+    Ennek tartalma röviden:
+  </p>
+  <ul>
+    <li>a báziskategória a bázistermek szintaktikus kategóriája;</li>
+    <li>a rostok formulákból és bizonyítástermekből épülnek;</li>
+    <li>a képletek interpretációja a termmodellben lényegében maga a képlet;</li>
+    <li>a levezetések interpretációja maga a szintaktikus bizonyítási tartalom.</li>
+  </ul>
+  <p>
+    Ezért lehet a termmodellből minden más modellbe kanonikus interpretációs
+    morfizmust építeni.
+  </p>
+
+  <h2>4. Mik a morfizmusok?</h2>
+  <p>
+    Egy <code>EpsilonFullModelHom M N</code> egy modellmorfizmus
+    <code>M</code>-ből <code>N</code>-be. Ez nem egyetlen Coq-függvény, hanem
+    több komponensből álló struktúra.
+  </p>
+  <table>
+    <thead>
+      <tr>
+        <th>Komponens</th>
+        <th>Jelentés</th>
+        <th>Jelenlegi erősség</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>efh_base_map</code></td>
+        <td>Bázisnyilakat visz <code>M</code>-ből <code>N</code>-be.</td>
+        <td>Proper, és a bázistermek interpretációját az <code>efh_base_soundness</code> mező szerint megőrzi.</td>
+      </tr>
+      <tr>
+        <td><code>efh_base_soundness</code></td>
+        <td>Kimondja, hogy minden jól típusozott bázisterm interpretációja átmegy a célmodellbeli interpretációba.</td>
+        <td>Ez a bázisoldali művelettartás fő törvénye.</td>
+      </tr>
+      <tr>
+        <td><code>efh_fiber_map</code></td>
+        <td>Formula-formula rostnyilakat visz át.</td>
+        <td>Megőrzi az identitást és kompozíciót <code>hom_equiv</code> szerint.</td>
+      </tr>
+      <tr>
+        <td><code>efh_sequent_map</code></td>
+        <td>Teljes sequenseket visz át: kontextusból formulába menő nyilakat.</td>
+        <td>Új mező. Ez kell a logikai levezetések interpretációjának megőrzéséhez.</td>
+      </tr>
+      <tr>
+        <td><code>efh_hyper_soundness</code></td>
+        <td>Kimondja, hogy egy szintaktikus levezetés szemantikus képe megőrződik.</td>
+        <td>Ez a hiper/logikai strictség fő törvénye.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>A legfontosabb új törvény</h3>
+  <p>
+    Ha <code>d : h_derivation I G p Phi</code> egy levezetés, akkor
+    <code>efm_soundness M d</code> a levezetés interpretációja az
+    <code>M</code> modellben:
+  </p>
+  <pre><code>efm_soundness M d :
+  hom (interp_h_ctx M I G) (interp_h_ty M I Phi)</code></pre>
+  <p>
+    A modellmorfizmusnak ezt át kell vinnie az <code>N</code> modellbeli
+    megfelelő interpretációba:
+  </p>
+  <pre><code>efh_sequent_map F (efm_soundness M d)
+  ≅
+efm_soundness N d</code></pre>
+  <p>
+    Ez az a pont, ahol a morfizmus tényleg művelettartóvá válik a logikai
+    szintaxisra nézve.
+  </p>
+
+  <h2>5. Mi az egyenlőség a morfizmusok között?</h2>
+  <p>
+    Korábban a hom-ekvivalencia hibásan túl durva volt:
+  </p>
+  <pre><code>EpsilonFullModelHom_equiv F G := True</code></pre>
+  <p>
+    Ez matematikailag használhatatlan, mert bármely két morfizmust egyenlőnek
+    mond. Ezt lecseréltük extencionális, pontonkénti egyenlőségre.
+  </p>
+  <p>
+    Most <code>F ≈ G</code> azt jelenti, hogy:
+  </p>
+  <ol>
+    <li>minden bázisnyílon ugyanazt adják, a célmodell <code>hom_equiv</code> relációja szerint;</li>
+    <li>minden formula-formula rostnyílon ugyanazt adják;</li>
+    <li>minden sequent-nyílon ugyanazt adják.</li>
+  </ol>
+  <pre><code>EpsilonFullModelHom_equiv F G :=
+  pointwise_equal_on_base_maps /\
+  pointwise_equal_on_fiber_maps /\
+  pointwise_equal_on_sequent_maps</code></pre>
+  <p>
+    Ez már valódi extencionális egyenlőség: két morfizmus akkor egyenlő, ha
+    minden bemeneti nyílon ekvivalens kimenetet ad.
+  </p>
+
+  <h3>Mit fed el ez az egyenlőség?</h3>
+  <ul>
+    <li>Elfed Coq-beli bizonyításterm-különbségeket.</li>
+    <li>Elfed definíciós/cast különbségeket, ha ugyanahhoz a <code>hom_equiv</code>-osztályhoz vezetnek.</li>
+    <li>A rostokban sok különbséget elfed, mert a rostok <code>Thin</code> kategóriák.</li>
+  </ul>
+  <p>
+    A <code>Thin</code> azt jelenti, hogy két párhuzamos nyíl mindig
+    ekvivalens. Emiatt a logikai bizonyítástermek különbségei nem látszanak a
+    rostbeli <code>hom_equiv</code> szinten. Ez nem véletlen: ez a
+    proof-irrelevance jellegű szemantikai döntés.
+  </p>
+
+  <h3>Mit nem fed el?</h3>
+  <ul>
+    <li>Nem teszi automatikusan művelettartóvá a morfizmusokat. A művelettartást külön mezők mondják ki.</li>
+    <li>Nem helyettesíti az <code>efh_base_soundness</code> és <code>efh_hyper_soundness</code> mezőket.</li>
+    <li>Nem azonosít különböző bázisnyilakat, ha a cél báziskategória <code>hom_equiv</code>-ja megkülönbözteti őket.</li>
+  </ul>
+
+  <h2>6. Mi a strictség itt?</h2>
+  <p>
+    A repo kategóriái setoid-kategóriák, ezért a természetes egyenlőség nem a
+    Coq-beli definicionális <code>=</code>, hanem a kategória saját
+    <code>hom_equiv</code> relációja.
+  </p>
+  <div class="box ok">
+    Ebben a fájlban a "strict" gyakorlatilag azt jelenti:
+    a morfizmus megőrzi a releváns interpretációkat a választott
+    <code>hom_equiv</code> szerint.
+  </div>
+  <p>
+    A logikai oldalon most ez bekerült:
+  </p>
+  <pre><code>soundness_M(d)  --F szerint--&gt;  soundness_N(d)</code></pre>
+  <p>
+    A bázisoldalon is bekerült az általános preservation törvény:
+  </p>
+  <pre><code>efh_base_soundness :
+  efh_base_map (interp_tm M dt) ≅ interp_tm N dt</code></pre>
+  <p>
+    Mivel a <code>base_typing</code> tartalmazza az identitást, kompozíciót,
+    terminális nyilat, párosítást, projekciókat, konstansokat és
+    függvényszimbólumokat, ebből külön lemmaként következnek a megfelelő
+    bázis-klauzulák: <code>efh_base_preserves_id</code>,
+    <code>efh_base_preserves_comp</code>, <code>efh_base_preserves_unit</code>,
+    <code>efh_base_preserves_pair</code>, <code>efh_base_preserves_fst</code>,
+    <code>efh_base_preserves_snd</code>, <code>efh_base_preserves_const</code>
+    és <code>efh_base_preserves_func</code>.
+  </p>
+
+  <h2>7. Mi az iniciális állítás?</h2>
+  <p>
+    A szokásos "term model is initial" állítás ebben a környezetben így néz ki:
+  </p>
+  <div class="diagram">                 unique
+TermModel -----------------&gt; M
+             every model M</div>
+  <p>
+    Vagyis:
+  </p>
+  <ol>
+    <li>minden <code>M : EpsilonFullModel</code> modellhez van legalább egy morfizmus <code>TermModel -&gt; M</code>;</li>
+    <li>bármely két ilyen morfizmus egyenlő a modellmorfizmusok extencionális egyenlősége szerint.</li>
+  </ol>
+
+  <h3>Mi van ebből jelenleg bizonyítva?</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Állítás</th>
+        <th>Státusz</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Létezés: <code>TermModel -&gt; M</code></td>
+        <td>Megvan: <code>TermModel_to M</code>, illetve <code>TermModel_weak_initial</code>.</td>
+      </tr>
+      <tr>
+        <td>Logikai/sequent rész művelettartása</td>
+        <td>Most bekerült az <code>efh_hyper_soundness</code> mezővel.</td>
+      </tr>
+      <tr>
+        <td>Morfizmusegyenlőség</td>
+        <td>Megvan pontonkénti, extencionális relációként.</td>
+      </tr>
+      <tr>
+        <td>Teljes uniqueness tetszőleges morfizmusokra</td>
+        <td>Megvan: <code>TermModel_initial_unique</code>.</td>
+      </tr>
+      <tr>
+        <td>Uniqueness bázist tisztelő morfizmusokra</td>
+        <td>A <code>TermModelBasePreserving</code> feltétel automatikus: <code>TermModel_hom_base_preserving</code>.</td>
+      </tr>
+      <tr>
+        <td>Large setoid kategória szerinti inicialitás</td>
+        <td>Megvan: <code>TermModel_LargeInitial</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>8. Mi lett a <code>TermModelBasePreserving</code> szerepe?</h2>
+  <p>
+    A <code>TermModelBasePreserving</code> továbbra is hasznos név arra a
+    tulajdonságra, hogy egy <code>TermModel -&gt; M</code> morfizmus a
+    bázisnyilakat a kanonikus interpretáció szerint viszi:
+  </p>
+  <pre><code>TermModelBasePreserving M F :=
+  forall f, efh_base_map F f ≅ TermModel_to_base_map M f</code></pre>
+  <p>
+    Ez már nem extra feltétel. Az <code>efh_base_soundness</code> miatt minden
+    <code>F : EpsilonFullModelHom TermModel M</code> automatikusan ilyen:
+    ezt mondja ki a <code>TermModel_hom_base_preserving</code> instance.
+  </p>
+  <p>
+    Ennek következménye, hogy a korábbi, feltételes
+    bizonyítás csak segédlemma marad
+    <code>TermModel_initial_unique_from_base_preserving</code> néven.
+    A publikus <code>TermModel_strict_initial_unique</code> és
+    <code>TermModel_initial_unique</code> állítások már feltétel nélküliek.
+  </p>
+
+  <h2>9. Mi az objektumegyenlőség?</h2>
+  <p>
+    Az objektumok, vagyis az <code>EpsilonFullModel</code> csomagok
+    egyenlőségét jelenleg nem definiáltuk külön. Az iniciális állításhoz erre
+    nincs szükség: csak azt használjuk, hogy van egy fix objektum
+    <code>TermModel</code>, és minden <code>M</code> objektumhoz vannak
+    morfizmusok <code>TermModel -&gt; M</code>.
+  </p>
+  <p>
+    Ha később kell objektumegyenlőség, akkor matematikailag természetesebb nem
+    Coq-beli strukturális egyenlőséget kérni, hanem izomorfiát:
+  </p>
+  <pre><code>ModelIso M N :=
+  F : M -> N,
+  G : N -> M,
+  G ∘ F ≈ id_M,
+  F ∘ G ≈ id_N</code></pre>
+  <p>
+    Ez viszont egy következő réteg. A mostani inicialitási állítás nem ezen áll
+    vagy bukik.
+  </p>
+
+  <h2>10. A jelenlegi kép egy mondatban</h2>
+  <div class="box ok">
+    Rögzített szintaxis mellett van egy metanyelvi modellkategória-szerű
+    struktúra. Objektumai teljes EpsilonFull szemantikai modellek. Morfizmusai
+    bázis-, rost- és sequent-térképekből állnak. A morfizmusok egyenlősége
+    pontonkénti <code>hom_equiv</code>. A logikai levezetések interpretációját
+    és a jól típusozott bázistermek interpretációját a morfizmusok megőrzik.
+    A termmodellből minden modellbe van kanonikus morfizmus, és ez a
+    nagy setoid kategóriában iniciális objektum.
+  </div>
+
+  <h2>11. Fixpont tulajdonság</h2>
+  <p>
+    Az inicialitás mellé most egy konkrét, Lambek-stílusú fixpontállítás is
+    formalizált. Ez nem általános tétel tetszőleges endofunktorra, hanem az
+    EpsilonFull konkrét egy-lépéses szintaxisgenerátorára vonatkozik.
+  </p>
+  <p>
+    A lényeges pontosítás: ez az endofunktor nem a teljes szemantikai
+    <code>EpsilonFullModel</code>-kategórián él. Ott egy objektum már komplett
+    kategóriát, fibrationt, interpretációt és megőrzési törvényeket tartalmaz.
+    A szintaxisgenerátor természetes tere ehelyett a nyers, indexelt hordozók
+    nagy kategóriája:
+  </p>
+  <pre><code>X_b(I,t,A)      : Type
+X_h(I,G,p,Phi)  : Type</code></pre>
+  <p>
+    A morfizmusok indexet tartó függvények, vagyis bázisoldalon
+    <code>X_b(I,t,A) -> Y_b(I,t,A)</code>, hyper oldalon pedig
+    <code>X_h(I,G,p,Phi) -> Y_h(I,G,p,Phi)</code>. A nyílegyenlőség
+    pontonkénti proposicionális egyenlőség. Ebből lett Coq-ban:
+  </p>
+  <pre><code>EpsilonFullRawCarrier_LargeSetoidCategory : LargeSetoidCategory</code></pre>
+  <p>
+    Az endofunktor objektumokon az egy-lépéses szabálygyártó:
+  </p>
+  <pre><code>F(X)_b(I,t,A)      = RawBaseOneStep X I t A
+F(X)_h(I,G,p,Phi)  = RawHyperOneStep X I G p Phi</code></pre>
+  <p>
+    Morfizmusokon <code>F(u)</code> úgy hat, hogy az adott külső konstruktor
+    azonnali rekurzív premisszáiban alkalmazza <code>u</code>-t. Ezért ez
+    valódi nagy kategóriabeli endofunktor:
+  </p>
+  <pre><code>EpsilonFullRawOneStep_Endofunctor
+  : LargeEndofunctor EpsilonFullRawCarrier_LargeSetoidCategory</code></pre>
+  <p>
+    A term hordozó:
+  </p>
+  <pre><code>T_b(I,t,A)      = base_typing I t A
+T_h(I,G,p,Phi)  = h_derivation I G p Phi</code></pre>
+  <p>
+    A fixpontállítás ebben a kategóriában egy izomorfizmus:
+  </p>
+  <pre><code>F(T) ≅ T</code></pre>
+  <p>
+    Coq-ban ennek neve:
+  </p>
+  <pre><code>TermModelRawCarrier_OneStepIsomorphism
+  : LargeIsomorphism (RawOneStepCarrier TermModelRawCarrier)
+      TermModelRawCarrier</code></pre>
+  <p>
+    Az izomorfizmus két iránya a <code>roll</code> és az
+    <code>unroll</code>. A <code>roll</code> egy one-step konstruktorból
+    tényleges típusozási/levezetési derivációt készít; az
+    <code>unroll</code> egy derivációt bont szét a külső szabályára.
+    Az inverztörvények a fenti nyílegyenlőség, vagyis pontonkénti egyenlőség
+    szerint állnak.
+  </p>
+  <p>
+    A korábbi <code>EpsilonFull_FixedPoint.v</code> fájl továbbra is fontos:
+    ott ugyanez a gondolat fel van emelve a tényleges termmodellbeli homokra.
+    A felemelt állítások:
+    <code>TermModel_semantic_base_roll_unroll</code>,
+    <code>TermModel_semantic_fiber_roll_unroll</code> és
+    <code>TermModel_semantic_sequent_roll_unroll</code>. Ezek azt mondják,
+    hogy ha egy termmodellbeli bázis-, fiber- vagy sequent-nyilat leolvasunk
+    szintaxisként, egy-lépéses formára bontunk, majd visszagörgetünk, akkor
+    ugyanazt a termmodell-homot kapjuk <code>hom_equiv</code> szerint.
+  </p>
+  <p>
+    Az összefogó név most:
+    <code>TermModel_ConcreteOneStepFixedPoint</code>. Ez a raw one-step
+    fixpontot, a tényleges termmodell-bázis fixpontot, valamint a fiber- és
+    sequent-homokra felemelt fixpontokat csomagolja össze.
+  </p>
+
+  <h2>12. Rövid fogalomtár</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Fogalom</th>
+        <th>Itt ezt jelenti</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>hom_equiv</code></td>
+        <td>Egy setoid-kategória választott nyílegyenlősége.</td>
+      </tr>
+      <tr>
+        <td>Extencionális morfizmusegyenlőség</td>
+        <td>Két modellmorfizmus minden bemeneti nyílon ekvivalens kimenetet ad.</td>
+      </tr>
+      <tr>
+        <td><code>Thin</code> rost</td>
+        <td>Bármely két párhuzamos rostnyíl ekvivalens. Emiatt a rostbeli bizonyításterm-különbségek eltűnnek.</td>
+      </tr>
+      <tr>
+        <td><code>efh_base_soundness</code></td>
+        <td>A bázisoldali művelettartás: a morfizmus megőrzi minden jól típusozott bázisterm interpretációját.</td>
+      </tr>
+      <tr>
+        <td><code>efh_sequent_map</code></td>
+        <td>Kontextusból formulába menő szemantikus nyilak átvitele egyik modellből a másikba.</td>
+      </tr>
+      <tr>
+        <td><code>efh_hyper_soundness</code></td>
+        <td>Azt mondja, hogy a morfizmus megőrzi a hiperlogikai levezetések soundness-interpretációját.</td>
+      </tr>
+      <tr>
+        <td><code>TermModel_to M</code></td>
+        <td>A termmodell kanonikus interpretációs morfizmusa az <code>M</code> modellbe.</td>
+      </tr>
+      <tr>
+        <td><code>TermModelBasePreserving</code></td>
+        <td>Automatikusan bizonyított tulajdonság minden <code>TermModel -&gt; M</code> morfizmusra; nem extra feltétel.</td>
+      </tr>
+      <tr>
+        <td><code>EpsilonFullOneStepFixedPoint</code></td>
+        <td>A konkrét one-step fixpont csomag: bázisnyilak és hiperlevezetések roll/unroll tulajdonságai.</td>
+      </tr>
+      <tr>
+        <td><code>TermModel_ConcreteOneStepFixedPoint</code></td>
+        <td>A raw fixpont, valamint a termmodell bázis-, fiber- és sequent-homjaira felemelt fixpont együtt.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="muted">
+    Kapcsolódó Coq-fájlok:
+    <code>theories/Semantics/EpsilonFull/EpsilonFull_ModelCategory.v</code>,
+    <code>theories/Semantics/EpsilonFull/LargeSetoidCategory.v</code>,
+    <code>theories/Semantics/EpsilonFull/EpsilonFull_FixedPoint.v</code>.
+  </p>
+</main>
+</body>
+</html>

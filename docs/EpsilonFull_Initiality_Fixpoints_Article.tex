@@ -1,0 +1,516 @@
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm}
+
+\newtheorem{theorem}{Tétel}
+\newtheorem{definition}{Definíció}
+\newtheorem{proposition}{Propozíció}
+\newtheorem{remark}{Megjegyzés}
+
+\newenvironment{proofsketch}
+  {\par\noindent\textit{Bizonyításvázlat.}}
+  {\hfill$\square$\par}
+\newenvironment{coqblock}
+  {\begin{quote}\small\ttfamily\obeylines}
+  {\end{quote}}
+
+\newcommand{\SetoidCat}{\mathbf{SetoidCat}}
+\newcommand{\EpsMod}{\mathbf{EpsMod}_{\Sigma}}
+\newcommand{\Raw}{\mathbf{Raw}_{\Sigma}}
+\newcommand{\Step}{\mathsf{Step}}
+\newcommand{\TM}{\mathbb{T}}
+\newcommand{\Hom}{\operatorname{Hom}}
+\newcommand{\Obj}{\operatorname{Obj}}
+\newcommand{\Ty}{\operatorname{Ty}}
+\newcommand{\Ctx}{\operatorname{Ctx}}
+\newcommand{\BT}{\operatorname{BT}}
+\newcommand{\HD}{\operatorname{HD}}
+\newcommand{\WF}{\operatorname{WF}}
+\newcommand{\AWF}{\operatorname{AWF}}
+\newcommand{\Fib}{\operatorname{Fib}}
+\newcommand{\sem}[1]{[\![#1]\!]}
+\newcommand{\id}{\operatorname{id}}
+\newcommand{\comp}{\mathbin{\circ}}
+\newcommand{\eps}{\varepsilon}
+
+\title{Inicialitás és fixponttételek az EpsilonFull termmodellre}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Rögzített szignatúra}
+
+Legyen rögzítve egy EpsilonFull szignatúra
+\[
+  \Sigma=(\mathsf{Sign},\mathsf{Func},\mathsf{Pred},
+          \mathsf{HFunc},\mathsf{HPred},\mathsf{SM}),
+\]
+ahol $\mathsf{HFunc}$ a függvényjelek, $\mathsf{HPred}$ a
+predikátumjelek, $\mathsf{SM}$ pedig a Skolem--epsilon választások
+szignatúraadata. Az alábbi állítások erre a rögzített szignatúrára
+vonatkoznak.
+
+\section{Az EpsilonFull-modellek kategóriája}
+
+\begin{definition}[EpsilonFull-modell]
+Egy EpsilonFull-modell $M$ a formalizációban a következő adatokból áll:
+\[
+\begin{gathered}
+  \mathcal C_M \text{ setoid kategória}, \qquad
+  \mathcal C_M \text{ karteziánus struktúrával},                                    \\
+  \text{kétsortú bázisinterpretáció},\quad
+  \text{koherens bázismodell},                                                       \\
+  p_M:\mathcal E_M\to \mathcal C_M
+  \text{ jó és strict fibráció},                                                     \\
+  \text{hiperlogikai interpretáció},\quad
+  \text{AdjointEpsilonFullFibration struktúra}.
+\end{gathered}
+\]
+Coq-ban ez a \texttt{EpsilonFullModel} osztály.
+\end{definition}
+
+Ha $I$ bázistípus, akkor $\sem{I}_M$ jelöli az $I$ interpretációját
+$\mathcal C_M$-ben. Ha $\varphi$ formula $I$ felett, akkor
+$\sem{\varphi}_M\in \Fib_M(I)$, ahol
+\[
+  \Fib_M(I)=\mathcal E_M{}_{\sem{I}_M}
+\]
+a megfelelő rostkategória.
+
+\begin{definition}[Modellmorfizmus]
+Legyen $M,N$ két EpsilonFull-modell. Egy
+$F:M\to N$ morfizmus három pontonként definiált térképcsaládból áll:
+\[
+\begin{aligned}
+F_b^{I,A} &: \mathcal C_M(\sem I_M,\sem A_M)
+          \longrightarrow
+          \mathcal C_N(\sem I_N,\sem A_N),\\
+F_f^{I,\varphi,\psi} &: \Fib_M(I)(\sem\varphi_M,\sem\psi_M)
+          \longrightarrow
+          \Fib_N(I)(\sem\varphi_N,\sem\psi_N),\\
+F_s^{I,\Gamma,\varphi} &: \Fib_M(I)(\sem\Gamma_M,\sem\varphi_M)
+          \longrightarrow
+          \Fib_N(I)(\sem\Gamma_N,\sem\varphi_N).
+\end{aligned}
+\]
+Ezek proper térképek a megfelelő setoid-hom ekvivalenciákra nézve. A
+fiber-komponens megőrzi az identitást és a kompozíciót, a bázis- és
+hiperoldalon pedig teljesíti a soundness feltételeket:
+\[
+  F_b^{I,A}(\sem{t}_{M,d})\simeq \sem{t}_{N,d}
+  \qquad
+  (d:\BT(I,t,A)),
+\]
+illetve
+\[
+  F_s^{I,\Gamma,\varphi}(\sem{p}_{M,d})
+  \simeq
+  \sem{p}_{N,d}
+  \qquad
+  (d:\HD(I,\Gamma,p,\varphi)).
+\]
+\end{definition}
+
+\begin{definition}[Morfizmusegyenlőség]
+Két morfizmus $F,G:M\to N$ ekvivalens, jelölésben $F\sim G$, ha
+mindhárom komponensen pontonként egyenlők a célbeli hom-ekvivalencia
+szerint:
+\[
+\begin{aligned}
+&\forall I,A,f,\quad
+  F_b^{I,A}(f)\simeq G_b^{I,A}(f),\\
+&\forall I,\varphi,\psi,f,\quad
+  F_f^{I,\varphi,\psi}(f)\simeq G_f^{I,\varphi,\psi}(f),\\
+&\forall I,\Gamma,\varphi,f,\quad
+  F_s^{I,\Gamma,\varphi}(f)\simeq G_s^{I,\Gamma,\varphi}(f).
+\end{aligned}
+\]
+Ez a Coq-beli \texttt{EpsilonFullModelHom\_equiv}. Ez nem triviális
+reláció.
+\end{definition}
+
+\begin{proposition}
+Az EpsilonFull-modellek, a fenti morfizmusok és a fenti
+morfizmusegyenlőség large setoid kategóriát alkotnak:
+\[
+  \EpsMod.
+\]
+Coq-ban:
+\begin{coqblock}
+EpsilonFullModel\_LargeSetoidCategory
+\end{coqblock}
+\end{proposition}
+
+\section{Inicialitás}
+
+Jelölje $\TM$ a termmodellt
+(\texttt{TermModel\_EpsilonFullModel}).
+
+\begin{theorem}[A termmodell inicialitása]
+A termmodell iniciális objektum az EpsilonFull-modellek large setoid
+kategóriájában:
+\[
+  \TM \text{ iniciális objektum } \EpsMod\text{-ban}.
+\]
+Formálisan, minden $M\in\Obj(\EpsMod)$ modellre létezik morfizmus
+\[
+  \eta_M:\TM\longrightarrow M,
+\]
+és ha $F,G:\TM\to M$, akkor
+\[
+  F\sim G.
+\]
+Coq-ban:
+\begin{coqblock}
+TermModel\_to M : EpsilonFullModelHom TermModel M
+TermModel\_LargeInitial : LargeInitial TermModel
+TermModel\_initial\_unique :
+  forall M F G, EpsilonFullModelHom\_equiv F G
+\end{coqblock}
+\end{theorem}
+
+\begin{proofsketch}
+Először megadjuk a kanonikus morfizmust $\eta_M:\TM\to M$.
+Bázison egy termmodellbeli nyilat visszaolvasunk egy jól típusozott
+bázistermmé, majd ezt interpretáljuk $M$-ben:
+\[
+  (\eta_M)_b(f)
+  =
+  \sem{\operatorname{deriv}(\operatorname{read}_b(f))}_M.
+\]
+A fiber- és sequent-komponensek hasonlóan keletkeznek: a termmodellbeli
+homot zárt hiperlevezetési termként olvassuk vissza, majd az EpsilonFull
+soundness adja az $M$-beli homot.
+
+Az egyediséghez legyen $F:\TM\to M$ tetszőleges morfizmus. A bázis
+komponensen a formalizáció bizonyítja
+\[
+  F_b^{I,A}(f)\simeq (\eta_M)_b^{I,A}(f).
+\]
+Ennek két összetevője van. Egyrészt minden termmodellbeli bázishom
+ekvivalens a visszaolvasott derivációjának termmodellbeli
+interpretációjával:
+\[
+  f\simeq \sem{\operatorname{deriv}(\operatorname{read}_b(f))}_{\TM}.
+\]
+Másrészt $F$ bázis-soundness klauzulája a visszaolvasott deriváció
+interpretációját $M$-beli interpretációba viszi.
+
+A fiber- és sequent-komponenseken az egyediség a jó fibráció részét képező
+thinness feltételből következik:
+\[
+  \forall I,\quad \Fib_M(I)\text{ thin}.
+\]
+Ezért azonos forrás és cél között bármely két rostbeli hom ekvivalens.
+Összegezve a három pontonkénti komponensekvivalenciát kapjuk, vagyis
+$F\sim G$.
+\end{proofsketch}
+
+\section{A nyers hordozók kategóriája és a szintaxisgenerátor}
+
+\begin{definition}[Nyers hordozó]
+Egy nyers EpsilonFull-hordozó egy pár
+\[
+  X=(X_b,X_h),
+\]
+ahol
+\[
+  X_b(I,t,A):\mathsf{Type},
+  \qquad
+  X_h(I,\Gamma,p,\varphi):\mathsf{Type}.
+\]
+Itt $X_b(I,t,A)$ az $I\vdash t:A$ alakú bázisadatok, míg
+$X_h(I,\Gamma,p,\varphi)$ az
+$I;\Gamma\vdash p:\varphi$ alakú hiperadatok hordozója.
+\end{definition}
+
+\begin{definition}[Nyers hordozók morfizmusa]
+Egy $u:X\to Y$ morfizmus indexet tartó függvénypár:
+\[
+\begin{aligned}
+u_b^{I,t,A} &: X_b(I,t,A)\to Y_b(I,t,A),\\
+u_h^{I,\Gamma,p,\varphi} &: X_h(I,\Gamma,p,\varphi)\to
+                           Y_h(I,\Gamma,p,\varphi).
+\end{aligned}
+\]
+Két ilyen morfizmus akkor egyenlő, ha ezek a függvények minden indexen
+pontonként proposicionálisan egyenlők.
+\end{definition}
+
+\begin{proposition}
+A nyers hordozók large setoid kategóriát alkotnak:
+\[
+  \Raw.
+\]
+Coq-ban:
+\begin{coqblock}
+EpsilonFullRawCarrier\_LargeSetoidCategory
+\end{coqblock}
+\end{proposition}
+
+\begin{definition}[Az egy-lépéses szintaxisgenerátor]
+Definiáljuk a
+\[
+  \Step:\Raw\longrightarrow\Raw
+\]
+endofunktort objektumokon a következőképpen:
+\[
+\begin{aligned}
+  (\Step X)_b(I,t,A) &= \mathsf{BaseStep}_X(I,t,A),\\
+  (\Step X)_h(I,\Gamma,p,\varphi) &= \mathsf{HyperStep}_X(I,\Gamma,p,\varphi).
+\end{aligned}
+\]
+A $\mathsf{BaseStep}_X$ családot a bázisszabályok egyetlen külső
+alkalmazásai generálják:
+\[
+\begin{array}{rcl}
+\mathsf{id}      &:& \mathsf{BaseStep}_X(A,\mathsf{id},A),\\
+\mathsf{comp}    &:& X_b(B,g,C)\times X_b(A,f,B)
+                  \to \mathsf{BaseStep}_X(A,g\circ f,C),\\
+\mathsf{unit}    &:& \mathsf{BaseStep}_X(A,\mathsf{unit},1),\\
+\mathsf{pair}    &:& X_b(A,f,B)\times X_b(A,g,C)
+                  \to \mathsf{BaseStep}_X(A,\langle f,g\rangle,B\times C),\\
+\mathsf{fst}     &:& \mathsf{BaseStep}_X(A\times B,\pi_1,A),\\
+\mathsf{snd}     &:& \mathsf{BaseStep}_X(A\times B,\pi_2,B),\\
+\mathsf{const}   &:& \mathsf{BaseStep}_X(I,\mathsf{const}_A(s),A),\\
+\mathsf{func}    &:& \mathsf{BaseStep}_X(\operatorname{dom}(f),
+                         \mathsf{func}(f),\operatorname{cod}(f)).
+\end{array}
+\]
+A $\mathsf{HyperStep}_X$ családot a hiperlevezetési szabályok egyetlen
+külső alkalmazásai generálják. A rekurzív hiper-premisszák helyén $X_h$,
+a bázispremisszák helyén $X_b$ szerepel. Például:
+\[
+\begin{aligned}
+\mathsf{app} &: X_h(I,\Gamma,p,\varphi\Rightarrow\psi)
+               \times X_h(I,\Gamma,q,\varphi)
+               \to X_h'(I,\Gamma,p\,q,\psi),\\
+\forall\mathsf{E} &: X_h(I,\Gamma,p,\forall_A\varphi)
+               \times X_b(I,f,A)
+               \to X_h'(I,\Gamma,p[f],\varphi[(\id,f)]),\\
+\exists\mathsf{I} &: X_b(I,f,A)
+               \times X_h(I,\Gamma,p,\varphi[(\id,f)])
+               \to X_h'(I,\Gamma,\exists\mathsf{I}(f,p),\exists_A\varphi),\\
+\eps\mathsf{I} &: X_b(I,f,A)
+               \times X_h(I,\Gamma,p,\varphi[(\id,f)])
+               \to
+               X_h'(I,\Gamma,\eps\mathsf{I}(f,p),
+                    \varphi[(\id,\eps_{A,\varphi})]).
+\end{aligned}
+\]
+Itt $X_h'$ rövidítés a $(\Step X)_h$ családra. A többi konstruktor
+pontosan a \texttt{h\_derivation} megfelelő szabályának egy-lépéses
+változata.
+\end{definition}
+
+Morfizmusokon $\Step(u)$ úgy hat, hogy az egy-lépéses konstruktorok
+azonnali rekurzív premisszáiban alkalmazza $u_b$-t, illetve $u_h$-t.
+Így $\Step$ megőrzi az identitást és a kompozíciót. Coq-ban:
+\begin{coqblock}
+EpsilonFullRawOneStep\_Endofunctor :
+  LargeEndofunctor EpsilonFullRawCarrier\_LargeSetoidCategory
+\end{coqblock}
+
+\section{A nyers szintaxis fixponttétele}
+
+Definiáljuk a term hordozót $T\in\Raw$:
+\[
+  T_b(I,t,A)=\BT(I,t,A),
+  \qquad
+  T_h(I,\Gamma,p,\varphi)=\HD(I,\Gamma,p,\varphi).
+\]
+Coq-ban ez a \texttt{TermModelRawCarrier}.
+
+\begin{theorem}[A nyers term hordozó fixpont]
+A term hordozó izomorf az egy-lépéses szintaxisgenerátor szerinti képével:
+\[
+  \Step(T)\cong T
+  \qquad\text{a }\Raw\text{ large setoid kategóriában.}
+\]
+Coq-ban:
+\begin{coqblock}
+TermModelRawCarrier\_OneStepIsomorphism
+\end{coqblock}
+\end{theorem}
+
+\begin{proofsketch}
+Az izomorfizmus két iránya
+\[
+  \rho:\Step(T)\to T,
+  \qquad
+  \upsilon:T\to \Step(T).
+\]
+A $\rho$ morfizmus a \texttt{RawBaseOneStep} konstruktorokat a megfelelő
+\texttt{base\_typing} konstruktorokra, a \texttt{RawHyperOneStep}
+konstruktorokat pedig a megfelelő \texttt{h\_derivation} konstruktorokra
+küldi.
+
+Az $\upsilon$ morfizmus egy adott \texttt{base\_typing}, illetve
+\texttt{h\_derivation} derivációt a külső konstruktorán esetszétválasztva
+egy one-step objektummá bont.
+
+Az inverztörvények:
+\[
+  \rho\circ\upsilon \sim \id_T,
+  \qquad
+  \upsilon\circ\rho \sim \id_{\Step(T)}.
+\]
+Mindkét egyenlőség a $\Raw$ kategória pontonkénti
+morfizmusegyenlősége szerint értendő. A bizonyítás konstruktor szerinti
+esetszétválasztás után definicionális redukció.
+\end{proofsketch}
+
+\begin{remark}
+Ez Lambek-típusú állítás egy konkrét endofunktorra. A formalizáció itt nem
+állít általános Lambek-lemmát tetszőleges kategóriára és tetszőleges
+endofunktorra.
+\end{remark}
+
+\section{A termmodell hom-szintű fixponttétele}
+
+A nyers fixponttétel mellett a formalizáció a termmodell tényleges homjaira
+is kimondja a roll--unroll tulajdonságot.
+
+\subsection{Bázis}
+
+Legyen
+\[
+  \Hom_b^{\TM}(I,A)
+  =
+  \mathcal C_{\TM}(\sem I_{\TM},\sem A_{\TM}).
+\]
+Van egy one-step típus $\mathsf{BaseOneStepHom}(I,A)$, valamint térképek
+\[
+  r_b:\mathsf{BaseOneStepHom}(I,A)\to \Hom_b^{\TM}(I,A),
+  \qquad
+  u_b:\Hom_b^{\TM}(I,A)\to \mathsf{BaseOneStepHom}(I,A).
+\]
+
+\begin{theorem}[Szemantikus bázis fixpont]
+Minden $f\in \Hom_b^{\TM}(I,A)$ esetén
+\[
+  r_b(u_b(f))\simeq f.
+\]
+Továbbá minden $s\in \mathsf{BaseOneStepHom}(I,A)$ esetén
+\[
+  u_b(r_b(s))\approx s,
+\]
+ahol az utóbbi ekvivalencia a roll által indukált one-step ekvivalencia.
+Coq-ban:
+\begin{coqblock}
+TermModel\_semantic\_base\_roll\_unroll
+TermModel\_semantic\_base\_unroll\_roll
+\end{coqblock}
+\end{theorem}
+
+\begin{proofsketch}
+Egy termmodellbeli bázishomot a \texttt{term\_model\_base\_hom}
+visszaolvas jól típusozott bázistermmé. A
+$r_b(u_b(f))\simeq f$ állítás a bázis soundness ekvacionális alakját és a
+termmodell reinterpetációs lemmáját használja. A másik irány ebből következik
+a one-step ekvivalencia definíciója szerint.
+\end{proofsketch}
+
+\subsection{Fiber és sequent}
+
+Legyen
+\[
+  \Hom_f^{\TM}(I,\varphi,\psi)
+  =
+  \Fib_{\TM}(I)(\sem\varphi_{\TM},\sem\psi_{\TM})
+\]
+és
+\[
+  \Hom_s^{\TM}(I,\Gamma,\varphi)
+  =
+  \Fib_{\TM}(I)(\sem\Gamma_{\TM},\sem\varphi_{\TM}).
+\]
+A formalizáció definiál one-step típusokat
+\[
+  \mathsf{FiberOneStep}(I,\varphi,\psi),
+  \qquad
+  \mathsf{SequentOneStep}(I,\Gamma,\varphi),
+\]
+és a megfelelő roll--unroll térképeket.
+
+\begin{theorem}[Szemantikus fiber és sequent fixpont]
+Jólformáltsági feltételek mellett minden fiber-homra
+\[
+  r_f(u_f(f))\simeq f,
+  \qquad
+  u_f(r_f(s))\approx s,
+\]
+és minden sequent-homra
+\[
+  r_s(u_s(f))\simeq f,
+  \qquad
+  u_s(r_s(s))\approx s.
+\]
+Coq-ban:
+\begin{coqblock}
+TermModel\_semantic\_fiber\_roll\_unroll
+TermModel\_semantic\_fiber\_unroll\_roll
+TermModel\_semantic\_sequent\_roll\_unroll
+TermModel\_semantic\_sequent\_unroll\_roll
+\end{coqblock}
+\end{theorem}
+
+\begin{proofsketch}
+A fiber- és sequent-homok one-step reprezentációja zárt hiperlevezetési
+termekkel történik. Az egyenlőségi állítások a termmodell megfelelő
+rostjainak thinness tulajdonságából következnek:
+\[
+  \Fib_{\TM}(I)\text{ thin}.
+\]
+Ez pontosan a \texttt{fiber\_is\_thin} feltétel termmodellre specializált
+alakja.
+\end{proofsketch}
+
+\begin{proposition}[Összefoglaló Coq-osztály]
+A három szemantikus komponens és a raw one-step fixpont együtt:
+\begin{coqblock}
+TermModel\_ConcreteOneStepFixedPoint :
+  TermModelConcreteOneStepFixedPoint
+\end{coqblock}
+\end{proposition}
+
+\section{A három eredmény viszonya}
+
+Az inicialitás és a fixponttételek különböző kategóriákban élnek, de ugyanazt
+a matematikai képet támasztják alá.
+
+\begin{enumerate}
+\item Az inicialitás a teljes EpsilonFull szemantikai modellek kategóriájában
+áll:
+\[
+  \TM \text{ iniciális } \EpsMod\text{-ban}.
+\]
+Ez az interpretációk univerzális tulajdonsága.
+
+\item A kategóriai fixpont a nyers, indexelt bizonyítás-hordozók
+kategóriájában áll:
+\[
+  \Step(T)\cong T \quad \text{a }\Raw\text{-ban}.
+\]
+Ez a szintaxisgenerálás algebrai fixponttulajdonsága.
+
+\item A szemantikus fixpont a termmodell tényleges homjaira vonatkozik:
+a bázis-, fiber- és sequent-homok egy-lépéses szintaktikus alakra bonthatók,
+majd visszagörgethetők a megfelelő hom-ekvivalencia szerint.
+\end{enumerate}
+
+Fontos negatív állítások:
+\[
+\begin{gathered}
+\text{nem használunk triviális morfizmusegyenlőséget;}\\
+\text{nem állítunk általános Lambek-lemmát;}\\
+\text{a }\Step\text{ endofunktor nem a teljes }\EpsMod\text{ kategórián él,}\\
+\text{hanem a nyers hordozók }\Raw\text{ kategóriáján.}
+\end{gathered}
+\]
+
+\end{document}

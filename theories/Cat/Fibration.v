@@ -285,3 +285,46 @@ Proof.
   - apply (fiber_is_thin I).
   - apply (fiber_is_thin I).
 Defined.
+
+Lemma sigma_adjoints_unique_pointwise :
+  forall {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B}
+         {I A : @obj B}
+         (RA2 : IsRightAdjoint (Pullback (@prod_fst B CB I A)))
+         (X : @obj (Fiber (@prod B CB I A))),
+    @left_adj_obj _ _ _ (@pullback_has_left_adjoint B CB GF I A) X ≅O
+    @left_adj_obj _ _ _ RA2 X.
+Proof.
+  intros B CB GF I A RA2 X.
+  exact (@left_adjoints_unique_pointwise
+           (Fiber I)
+           (Fiber (@prod B CB I A))
+           (Pullback (@prod_fst B CB I A))
+           (@pullback_has_left_adjoint B CB GF I A)
+           RA2
+           X).
+Defined.
+
+Lemma sigma_adjoints_beck_chevalley_transfer :
+  forall {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B}
+         {I J K : @obj B}
+         (f : hom K I)
+         (RA_IJ : IsRightAdjoint (Pullback (@prod_fst B CB I J)))
+         (RA_KJ : IsRightAdjoint (Pullback (@prod_fst B CB K J)))
+         (X : @obj (Fiber (@prod B CB I J))),
+    @fobj _ _ (Pullback f)
+      (@left_adj_obj _ _ _ RA_IJ X)
+    ≅O
+    @left_adj_obj _ _ _ RA_KJ
+      (@fobj _ _ (Pullback (@prod_map B CB (prod K J) I J
+                              (compose f (@prod_fst B CB K J))
+                              (@prod_snd B CB K J))) X).
+Proof.
+  intros B CB GF I J K f RA_IJ RA_KJ X.
+  eapply iso_trans.
+  - apply functor_iso_cong.
+    apply iso_sym.
+    apply sigma_adjoints_unique_pointwise.
+  - eapply iso_trans.
+    + apply beck_chevalley_sigma.
+    + apply sigma_adjoints_unique_pointwise.
+Defined.
