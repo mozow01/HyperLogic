@@ -530,7 +530,6 @@ Proof.
   apply embed_form_pullback.
 Qed.
 
-(*
 
 Theorem embed_derivation : forall I G p Phi,
   S_Hyper.h_derivation I G p Phi ->
@@ -551,9 +550,18 @@ Proof.
     eauto 10 using embed_wf, embed_b_typing, embed_wf_ctx
   ].
   
-  (* HD_VarS *)
-  - eexists. eapply SE_Hyper.HD_VarS. exact D_ext. apply embed_wf; eassumption.
+  (* HD_Var0 *)
+  - eexists (SE_Hyper.tm_var 0).
+    eapply SE_Hyper.HD_Var0.
+    + apply embed_wf_ctx; assumption.
+    + apply embed_wf; assumption.
   
+  (* HD_VarS *)
+  - eexists (SE_Hyper.tm_var (S i)).
+    eapply SE_Hyper.HD_VarS.
+    + exact D_ext.
+    + apply embed_wf; assumption.
+
   (* HD_All_Intro *)
   - eexists. eapply SE_Hyper.HD_All_Intro. apply embed_wf_ctx; eassumption. exact D_ext.
   
@@ -568,5 +576,3 @@ Proof.
     (* Ha itt elakad a ctx_equiv miatt, definiálni kell hozzá egy embed_ctx_equiv híd-lemmát, ahogy a wf_ctx-hez is. *)
     eauto. eauto.
 Qed.
-
-*)

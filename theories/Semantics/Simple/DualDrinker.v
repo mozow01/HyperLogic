@@ -466,7 +466,7 @@ Proof.
     pullback_has_left_adjoint := fun X Y => Fin_Subst_IsRightAdjoint _;
     pullback_has_right_adjoint := fun X Y => Fin_Subst_IsLeftAdjoint _
   |}.
-  Unshelve.
+  Unshelve.(interp_F Y -> H5)
  (* ÚJ TAKTIKA: A triviális izomorfizmusok bizonyításához *)
   (* Ezzel soha semmi nem kerül a polcra, mindent azonnal megoldunk! *)
  (* ÚJ TAKTIKA: A triviális izomorfizmusok bizonyításához *)
