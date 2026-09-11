@@ -100,7 +100,20 @@ theories/Semantics/EpsilonFull/EpsilonFull_OneStepFunctor.v
 theories/Semantics/EpsilonFull/EpsilonFull_FixedPoint.v
 theories/Semantics/EpsilonFull/LEM_disproved.v
 
-# --- Individual / iFOLFull ---
+# --- Standalone iFOL ---
+theories/Logic/Base/IFOL/Base_Syntax.v
+theories/Logic/Base/IFOL/Base_Syntax_Lemmas.v
+theories/Logic/Hyper/IFOL/Hyper_Syntax.v
+theories/Logic/Hyper/IFOL/Hyper_Syntax_Lemmas.v
+theories/Semantics/IFOL/IFOL_Fibration.v
+theories/Semantics/IFOL/Base_IFOL_Soundness.v
+theories/Semantics/IFOL/Base_IFOL_Completeness.v
+theories/Semantics/IFOL/IFOL_Soundness.v
+theories/Semantics/IFOL/IFOL_Completeness.v
+theories/Semantics/IFOL/DualDrinker.v
+theories/Semantics/Metatheory/IFOL_EpsilonFull_Translation.v
+
+# --- Legacy Individual compatibility paths ---
 theories/Logic/Base/Individual/Base_Syntax.v
 theories/Logic/Base/Individual/Base_Syntax_Lemmas.v
 theories/Logic/Hyper/Individual/Hyper_Syntax.v

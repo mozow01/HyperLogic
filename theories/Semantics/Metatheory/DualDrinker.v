@@ -7,7 +7,6 @@ Require Import HyperLogic.Logic.Base.EpsilonFull.Base_Syntax.
 Require Import HyperLogic.Logic.Base.EpsilonFull.Base_Syntax_Lemmas.
 Require Import HyperLogic.Logic.Hyper.EpsilonFull.Hyper_Syntax.
 Require Import HyperLogic.Logic.Hyper.EpsilonFull.Hyper_Syntax_Lemmas.
-Require Import HyperLogic.Logic.Hyper.Individual.Hyper_Syntax.
 
 Definition T_ifol_to_epsilonfull {Sign Func Pred : Type}
   (Phi : @h_ty Sign Func Pred) : @h_ty Sign Func Pred := Phi.

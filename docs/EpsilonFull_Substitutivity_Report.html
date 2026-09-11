@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Substitutivitás az EpsilonFull-ban</title>
+  <style>
+    @page { size: A4; margin: 22mm 20mm 22mm 20mm; }
+    :root {
+      --ink: #182126;
+      --muted: #52616b;
+      --rule: #b9c4c9;
+      --accent: #0b5f6d;
+      --paper: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Libertinus Serif", "Linux Libertine", Georgia, serif;
+      font-size: 11pt;
+      line-height: 1.43;
+      margin: 0;
+    }
+    header { border-bottom: 1.2pt solid var(--accent); margin-bottom: 1.4em; padding-bottom: .8em; }
+    h1 { font-size: 21pt; font-weight: 600; line-height: 1.16; margin: 0 0 .25em; }
+    h2 { color: var(--accent); font-size: 14pt; font-weight: 600; margin: 1.35em 0 .42em; }
+    h3 { font-size: 11.5pt; font-weight: 600; margin: 1em 0 .25em; }
+    p { margin: .52em 0; }
+    .subtitle { color: var(--muted); font-size: 11.2pt; margin: 0; }
+    .source { color: var(--muted); font-family: "Libertinus Sans", Arial, sans-serif; font-size: 9.4pt; margin-top: .65em; }
+    .abstract { border-left: 3pt solid var(--accent); margin: 1.2em 0; padding: .15em 0 .15em 1em; }
+    .abstract b { color: var(--accent); }
+    .math {
+      font-family: "Libertinus Math", "Cambria Math", "STIX Two Math", serif;
+      letter-spacing: .01em;
+    }
+    .display {
+      margin: .72em 1.4em;
+      text-align: center;
+      font-size: 12pt;
+      line-height: 1.55;
+    }
+    .boxed {
+      background: #f3f7f7;
+      border: 1px solid #c5d4d5;
+      border-radius: 2px;
+      margin: .9em 0;
+      padding: .7em .9em;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .boxed strong { color: var(--accent); }
+    .result { border-left-color: #176b49; background: #f2f8f4; }
+    .future { border-left-color: #8a5a00; background: #fcf7ed; }
+    ol { margin: .4em 0 .6em 1.35em; padding: 0; }
+    li { margin: .25em 0; }
+    .small { color: var(--muted); font-size: 9.7pt; }
+    .pagebreak { break-before: page; page-break-before: always; }
+    footer { border-top: 1px solid var(--rule); color: var(--muted); font-family: "Libertinus Sans", Arial, sans-serif; font-size: 8.8pt; margin-top: 1.7em; padding-top: .5em; }
+    @media print { a { color: inherit; text-decoration: none; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Substitutivitás az EpsilonFull-ban</h1>
+    <p class="subtitle">Rövid jelentés az <span class="math">E</span>-Sub konkrét szemantikai szeparációjáról és a relatív equacionális teljesség tervéről</p>
+    <p class="source">Forrás: <span class="math">theories/Semantics/Metatheory/EpsilonFull_Substitutivity.v</span></p>
+  </header>
+
+  <section>
+    <div class="abstract">
+      <p><b>Összefoglalás.</b> A formalizáció egy konkrét epsilon-substitúciós bázisegyenletre ad teljes EpsilonFull ellenmodellt. Következményként az egyenlet nem vezethető le az eredeti EpsilonFull bázisegyenleti kalkulusban. Ugyanerre a példányra készül egy modell, amelyben az egyenlet teljesül. A következő lépés egy új, <span class="math">EpsilonFullEq</span> rendszer felépítése: ebben az epsilon-substitúciót bázisegyenleti sémaként tesszük az elmélet részévé, majd termmodellel mutatjuk meg a substitutív modellekre vett relatív equacionális teljességet.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>1. A vizsgált egyenlet</h2>
+    <p>Legyen <span class="math">Φ</span> formula a <span class="math">J × A</span> paraméter- és választási környezetben, és legyen <span class="math">g : I → J</span> bázisnyíl. A <span class="math">g↑ = g × id<sub>A</sub></span> nyíl a formula kontextusának megfelelő emelése. A substitutivitás bázisszintű egyenlete:</p>
+    <div class="display math">
+      ε<sub>Φ[g↑]</sub> ≃ ε<sub>Φ</sub> ∘ g : I → A.
+      <span style="color:#52616b; font-size:9.5pt">(E-Sub)</span>
+    </div>
+    <p>Ez nem az epsilon-extenzionalitás. Nem azt követeli, hogy két azonos predikátumhoz ugyanaz a választás tartozzon. Egyetlen formula reindexelését kapcsolja össze a hozzá tartozó epsilon-nyíl előkompozíciójával.</p>
+    <p>Egy EpsilonFull-modell <span class="math">M</span> substitutív, ha az (E-Sub) minden jól formált <span class="math">Φ</span>-re és minden <span class="math">g</span>-re teljesül az interpretált báziskategóriában:</p>
+    <div class="display math">
+      ⟦ε<sub>Φ[g↑]</sub>⟧<sub>M</sub>
+      ≃
+      ⟦ε<sub>Φ</sub>⟧<sub>M</sub> ∘ ⟦g⟧<sub>M</sub>.
+    </div>
+    <p>Set-alapú olvasatban ez a megszokott substitúciós állítás: ha előbb behelyettesítjük a paramétereket a formulába, majd epsilon-tanút választunk, ugyanazt kapjuk, mint amikor az eredeti választást a behelyettesített paramétereken értékeljük.</p>
+  </section>
+
+  <section>
+    <h2>2. A formalizált szeparáló példa</h2>
+    <p>A fájl egy minimális tesztszignatúrát használ. A bázisban van egységobjektum <span class="math">1</span>, individuumsort <span class="math">S</span> és szorzat; nincs közönséges függvényjel. Van egy <span class="math">S</span>-re értelmezett atomi predikátum. Válasszuk</p>
+    <div class="display math">
+      I = 1,&emsp; J = A = S,
+    </div>
+    <p>továbbá legyen <span class="math">g : 1 → S</span> maga egy epsilon-konstans, és <span class="math">Φ(s,a)</span> az atomi predikátum az első koordinátán. Ekkor a két összehasonlított bázisterm:</p>
+    <div class="display math">
+      e<sub>L</sub> = ε<sub>Φ[g↑]</sub> : 1 → S,
+      &emsp;
+      e<sub>R</sub> = ε<sub>Φ</sub> ∘ g : 1 → S.
+    </div>
+
+    <div class="boxed result">
+      <strong>Szemantikai ellenmodell, szintaktikai következménnyel.</strong> Van olyan teljes EpsilonFull-modell, amelyben <span class="math">e<sub>L</sub></span> és <span class="math">e<sub>R</sub></span> nem izomorfak. A bázis soundness miatt ebből következik a szintaktikai nemlevezethetőség:
+      <div class="display math" style="margin-bottom:0;">
+        ¬(1 ⊢ e<sub>L</sub> = e<sub>R</sub> : S).
+      </div>
+    </div>
+
+    <p>A modell bázisa a véges halmazok kis kartéziánus kategóriája: <span class="math">S</span> hordozója <span class="math">{false, true}</span>, a szorzatok pedig a megfelelő Descartes-szorzatok. A választott epsilon-konstansok interpretációja szándékosan eltér:</p>
+    <div class="display math">
+      ⟦e<sub>L</sub>⟧(*) = true,
+      &emsp;
+      ⟦e<sub>R</sub>⟧(*) = false.
+    </div>
+    <p>A hiperlogikai oldal egy konstans <span class="math">H3</span>-fibráció. Ez teljesíti az EpsilonFull fibrációs és epsilon-adjunkciós interfészét, miközben nem tesz további egyenlőségi korlátozást a bázisbeli epsilon-konstansokra. A bázis soundness tétele ezért közvetlenül átemeli a szemantikai szeparációt szintaktikai nemlevezethetőségbe.</p>
+
+    <p>Ugyanazon tesztpéldányra a fájl egy második, uniformizált modellt is épít: minden epsilon-konstans az adott típus rögzített alapértelmezett elemére megy. Ebben</p>
+    <div class="display math">
+      ⟦e<sub>L</sub>⟧ ≃ ⟦e<sub>R</sub>⟧.
+    </div>
+    <div class="boxed">
+      <strong>Szemantikai függetlenség a tesztpéldányra.</strong> Ha <span class="math">M<sub>−</sub></span> a szeparáló és <span class="math">M<sub>+</sub></span> az uniformizált modell, akkor
+      <div class="display math" style="margin-bottom:0;">
+        M<sub>−</sub> ⊭ (e<sub>L</sub> = e<sub>R</sub>)
+        &emsp;
+        és
+        &emsp;
+        M<sub>+</sub> ⊨ (e<sub>L</sub> = e<sub>R</sub>).
+      </div>
+    </div>
+    <p>Így a vizsgált (E-Sub)-példány EpsilonFull-kompatibilis, de nem EpsilonFull-következmény. A két modell a szemantikai változékonyságot mutatja; a szeparáló modell és a bázis soundness adja a szintaktikai nemlevezethetőséget.</p>
+    <p class="small">A két állítás nem szimmetrikus szintaktikailag. A jelenlegi bázisnyelvben nincs olyan belső formula, amely a bázistermek egyenlőtlenségét fejezné ki. Ezért a <span class="math">M<sub>+</sub></span> modellből nem egy második szintaktikai nemlevezethetőséget, hanem csak az egyenlet EpsilonFull-kompatibilitását kapjuk.</p>
+  </section>
+
+  <section>
+    <h2>3. Mit karakterizál az (E-Sub)?</h2>
+    <p>A substitutivitás szemantikailag az epsilon-választás természetessége a paraméterkörnyezetben. A figyelemre méltó pont az, hogy ez a hiperlogikai-naturáltsági feltétel teljesen a bázisnyilak egyenlőségi elméletében fejezhető ki.</p>
+    <div class="boxed">
+      <strong>Bázisegyenleti karakterizáció.</strong> Egy modell substitutív pontosan akkor, ha minden <span class="math">Φ</span> és <span class="math">g</span> esetén validálja az (E-Sub) bázisegyenletet.
+    </div>
+    <p>Ez a megfogalmazás azért tartalmas, mert nincs szükség további extensionalitási elvre, új formulaoperátorra vagy erősebb Beck--Chevalley-feltételre. A substitutív viselkedés pontosan az epsilon-nyilak konkrét reindexelési egyenletcsaládjára száll le.</p>
+    <p>Molnár-féle terminológiával az (E-Sub) a substitúció és a Skolem--epsilon választás kommutációját fejezi ki. Egy mátrix-parametrikus, a paraméterkörnyezetben természetes választóoperátor automatikusan teljesítené ezt a feltételt. A megfordítás, vagyis egy ilyen intrinszikus mátrixszemantika karakterizációja, külön és erősebb kutatási kérdés.</p>
+  </section>
+
+  <section>
+    <h2>4. A tervezett EpsilonFullEq és a relatív teljesség</h2>
+    <p>Az <span class="math">EpsilonFullEq</span> nem az eredeti rendszer refaktorja, hanem új szintaktikai modell. A bázissetoid-egyenlőséget az eredeti kartéziánus egyenletekhez hozzáadott (E-Sub)-sémával bővítjük:</p>
+    <div class="display math">
+      ───────────────────────────────────────────────<br>
+      I ⊢ ε<sub>Φ[g↑]</sub> = ε<sub>Φ</sub> ∘ g : A
+      &emsp;(g : I → J, Φ : J × A).
+    </div>
+    <p>Legyen <span class="math">𝓜<sub>Sub</sub></span> az összes substitutív EpsilonFull-modell osztálya. A cél a következő bázisegyenleti relatív teljesség:</p>
+    <div class="display math">
+      T<sub>EFull</sub> + E-Sub ⊢ I ⊢ t = s : A
+      &emsp;↔&emsp;
+      ∀M ∈ 𝓜<sub>Sub</sub>.
+      ⟦t⟧<sub>M</sub> ≃ ⟦s⟧<sub>M</sub>.
+      <span style="color:#52616b; font-size:9.5pt">(RC)</span>
+    </div>
+
+    <div class="boxed future">
+      <strong>Tervezett bizonyítás.</strong>
+      <ol>
+        <li>Új bázisegyenlőséget definiálunk mint az eredeti egyenletek és az (E-Sub) legkisebb típusos kartéziánus kongruenciáját.</li>
+        <li>Az atomformulák kongruenciáját ehhez az új bázissetoidhoz igazítjuk, majd felépítjük a megfelelő hiper-szintaxist.</li>
+        <li>Felépítjük az <span class="math">EpsilonFullEq</span> termmodellt és igazoljuk rajta a jó fibrációt, valamint az epsilon-adjunkciót.</li>
+        <li>A termmodell definíció szerint substitutív lesz. Bázisbeli hom-egyenlősége pontosan az új szintaktikai egyenlőség.</li>
+        <li>Soundness adja a balról jobbra irányt; ha <span class="math">t = s</span> nem vezethető le, maga a substitutív termmodell szeparálja őket, ami a jobbról balra irányt adja.</li>
+      </ol>
+    </div>
+
+    <p>Az (RC) bizonyítási mintája általános equacionális kvóciensmodell-érv. Az itt érdekes tartalom azonban az, hogy a konkrét kategorikus substitutivitási feltételnek pontosan ez az egy bázisegyenleti prezentációja van. Az <span class="math">EpsilonFullEq</span> termmodellje ennek a substitutív választási viselkedésnek a szabad modellje lesz.</p>
+
+    <div class="boxed">
+      <strong>Megjegyzés az általános <span class="math">C</span>-s sémáról.</strong> Legyen <span class="math">C</span> jól formált bázisterm-egyenletek tetszőleges családja,
+      <div class="display math">
+        I<sub>α</sub> ⊢ u<sub>α</sub> = v<sub>α</sub> : A<sub>α</sub>,
+      </div>
+      és jelölje <span class="math">𝓜<sub>C</sub></span> pontosan azokat az EpsilonFull-modelleket, amelyekben ezeknek a bázisnyilaknak az interpretációi izomorfak. Ekkor a szokásos equacionális kvóciensmodell-érv a következő relatív teljességet adja:
+      <div class="display math">
+        T<sub>EFull</sub> + C ⊢ I ⊢ t = s : A
+        &emsp;↔&emsp;
+        ∀M ∈ 𝓜<sub>C</sub>. ⟦t⟧<sub>M</sub> ≃ ⟦s⟧<sub>M</sub>.
+      </div>
+      A bázistermeket a <span class="math">T<sub>EFull</sub> + C</span> által generált legkisebb típusos kartéziánus kongruenciával kvótientáljuk. A kapott szintaktikai modell maga <span class="math">C</span>-modell; ha <span class="math">t = s</span> nem vezethető le, ez a modell szeparálja őket. Ezért e relatív teljesség matematikailag nem <span class="math">E</span>-Sub-specifikus: az <span class="math">E</span>-Sub csak egy konkrét, epsilonokat említő <span class="math">C</span>-séma.
+      <p style="margin-bottom:0;">Az ekvivalencia akkor nem automatikus, ha nem az <em>összes</em> <span class="math">C</span>-modellt, hanem egy külsőleg megszorított modellcsaládot vizsgálunk, vagy ha <span class="math">C</span> nem szintaktikai egyenletséma, hanem külső szemantikai feltétel. Az (E-Sub) egyik kivétel sem: tiszta bázisterm-egyenletséma. A Coq-beli munka ezért nem az állítás bizonytalanságából, hanem a teljes új szintaxis, formulakongruencia és termmodell megépítéséből ered.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. Jelenlegi státusz</h2>
+    <p>A szeparáló és az uniformizált tesztmodell a <span class="math">EpsilonFull_Substitutivity.v</span> fájlban elkészült és Coq-val ellenőrzött. Az (E-Sub) teljes sémáját axiomatizáló <span class="math">EpsilonFullEq</span> szintaxis, annak termmodellje és az (RC) tétel még nincs implementálva; ez a következő, önálló metateoretikus feladat.</p>
+    <p class="small">Technikai megjegyzés: a nemlevezethetőségi tétel a bázis soundness tételén keresztül a konkrét véges modellbeli szeparációra redukálódik. A jelenlegi Coq-objektum a függő típusú derivációk azonosságának kezelésén keresztül a szokásos UIP/K elvet örökli; ez a formalizációs függőség nem része a matematikai állításnak.</p>
+  </section>
+
+  <footer>HyperLogic &middot; EpsilonFull substitutivitási jelentés</footer>
+</body>
+</html>

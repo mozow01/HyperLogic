@@ -1,3 +1,3 @@
-(* theories/Logic/Base/Individual/Base_Syntax.v *)
+(* Deprecated compatibility path.  Canonical iFOL base syntax lives in IFOL. *)
 
-Require Export HyperLogic.Logic.Base.EpsilonFull.Base_Syntax.
+Require Export HyperLogic.Logic.Base.IFOL.Base_Syntax.

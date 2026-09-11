@@ -1,3 +1,3 @@
-(* theories/Logic/Base/Individual/Base_Syntax_Lemmas.v *)
+(* Deprecated compatibility path.  Canonical iFOL base lemmas live in IFOL. *)
 
-Require Export HyperLogic.Logic.Base.EpsilonFull.Base_Syntax_Lemmas.
+Require Export HyperLogic.Logic.Base.IFOL.Base_Syntax_Lemmas.

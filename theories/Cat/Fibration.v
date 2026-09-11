@@ -5,6 +5,7 @@ Require Import HyperLogic.Cat.BCCC.
 Require Import HyperLogic.Cat.Functor.
 Require Import HyperLogic.Cat.Adjoint.
 Require Import Coq.Classes.Morphisms.
+Require Import Coq.Classes.RelationClasses.
 
 (** * 1. The Core Fibration (Hyperdoctrine) *)
 
@@ -101,6 +102,223 @@ Global Instance GF_Fiber_BCCC
 Global Instance GF_Fiber_Thin
   {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B} (I : @obj B)
   : Thin (Fiber I) := fiber_is_thin I.
+
+(** ** BiCCC-valued view of a fibration *)
+
+(** [Iso] is Type-valued, while [SetoidCategory] expects Prop-valued
+    hom-equivalences.  This wrapper is the Prop-valued reading of object
+    isomorphism used below. *)
+Inductive IsoProp {C : SetoidCategory} (A B : @obj C) : Prop :=
+| iso_prop_intro : A ≅O B -> IsoProp A B.
+
+(** The opposite of a setoid category. *)
+Definition OppositeCategory (C : SetoidCategory) : SetoidCategory.
+Proof.
+  refine {|
+    obj := @obj C;
+    hom := fun x y => @hom C y x;
+    id := fun x => @id C x;
+    compose := fun x y z f g => @compose C z y x g f;
+    hom_equiv := fun x y f g => @hom_equiv C y x f g;
+    hom_equiv_equivalence := fun x y => @hom_equiv_equivalence C y x;
+
+    comp_assoc := _;
+    id_right := _;
+    id_left := _;
+    comp_proper := _
+  |}.
+  - intros x y z w f g h. symmetry. apply comp_assoc.
+  - intros x y f. apply id_left.
+  - intros x y f. apply id_right.
+  - intros x y z f g h i Hfg Hhi.
+    apply comp_proper; [exact Hhi | exact Hfg].
+Defined.
+
+(** A BiCCC object packages a setoid category with chosen BiCCC structure. *)
+Record BiCCCObject := mk_BiCCCObject {
+  biccc_cat : SetoidCategory;
+  biccc_cartesian : CartesianCategory biccc_cat;
+  biccc_closed : @CartesianClosedCategory biccc_cat biccc_cartesian;
+  biccc_biclosed : @BiCartesianClosedCategory biccc_cat biccc_cartesian biccc_closed
+}.
+
+(** A morphism of BiCCC objects is a functor preserving the BiCCC structure up
+    to the object isomorphisms already used throughout [GoodFibration]. *)
+Record BiCCCFunctor (X Y : BiCCCObject) := mk_BiCCCFunctor {
+  biccc_functor : Functor (biccc_cat X) (biccc_cat Y);
+
+  biccc_pres_terminal :
+    @fobj _ _ biccc_functor (@terminal (biccc_cat X) (biccc_cartesian X)) ≅O
+    @terminal (biccc_cat Y) (biccc_cartesian Y);
+
+  biccc_pres_prod : forall (A B : @obj (biccc_cat X)),
+    @fobj _ _ biccc_functor (@prod (biccc_cat X) (biccc_cartesian X) A B) ≅O
+    @prod (biccc_cat Y) (biccc_cartesian Y)
+      (@fobj _ _ biccc_functor A)
+      (@fobj _ _ biccc_functor B);
+
+  biccc_pres_initial :
+    @fobj _ _ biccc_functor
+      (@initial (biccc_cat X) (biccc_cartesian X) (biccc_closed X) (biccc_biclosed X)) ≅O
+    @initial (biccc_cat Y) (biccc_cartesian Y) (biccc_closed Y) (biccc_biclosed Y);
+
+  biccc_pres_coprod : forall (A B : @obj (biccc_cat X)),
+    @fobj _ _ biccc_functor
+      (@coprod (biccc_cat X) (biccc_cartesian X) (biccc_closed X) (biccc_biclosed X) A B) ≅O
+    @coprod (biccc_cat Y) (biccc_cartesian Y) (biccc_closed Y) (biccc_biclosed Y)
+      (@fobj _ _ biccc_functor A)
+      (@fobj _ _ biccc_functor B);
+
+  biccc_pres_exp : forall (A B : @obj (biccc_cat X)),
+    @fobj _ _ biccc_functor
+      (@exp (biccc_cat X) (biccc_cartesian X) (biccc_closed X) A B) ≅O
+    @exp (biccc_cat Y) (biccc_cartesian Y) (biccc_closed Y)
+      (@fobj _ _ biccc_functor A)
+      (@fobj _ _ biccc_functor B)
+}.
+
+Arguments biccc_functor {X Y} _.
+Arguments biccc_pres_terminal {X Y} _.
+Arguments biccc_pres_prod {X Y} _ _ _.
+Arguments biccc_pres_initial {X Y} _.
+Arguments biccc_pres_coprod {X Y} _ _ _.
+Arguments biccc_pres_exp {X Y} _ _ _.
+
+Definition BiCCCFunctor_equiv {X Y : BiCCCObject}
+  (F G : BiCCCFunctor X Y) : Prop :=
+  forall A : @obj (biccc_cat X),
+    IsoProp (@fobj _ _ (biccc_functor F) A)
+            (@fobj _ _ (biccc_functor G) A).
+
+Instance BiCCCFunctor_equiv_equivalence {X Y : BiCCCObject}
+  : Equivalence (@BiCCCFunctor_equiv X Y).
+Proof.
+  split.
+  - intros F A. constructor. reflexivity.
+  - intros F G HFG A.
+    destruct (HFG A) as [HI].
+    constructor. symmetry. exact HI.
+  - intros F G H HFG HGH A.
+    destruct (HFG A) as [HI1].
+    destruct (HGH A) as [HI2].
+    constructor.
+    transitivity (@fobj _ _ (biccc_functor G) A).
+    + exact HI1.
+    + exact HI2.
+Defined.
+
+Definition BiCCC_id (X : BiCCCObject) : BiCCCFunctor X X.
+Proof.
+  refine (mk_BiCCCFunctor X X (IdFunctor (biccc_cat X)) _ _ _ _ _);
+  simpl; try intros; reflexivity.
+Defined.
+
+Definition BiCCC_comp {X Y Z : BiCCCObject}
+  (G : BiCCCFunctor Y Z) (F : BiCCCFunctor X Y) : BiCCCFunctor X Z.
+Proof.
+  refine (mk_BiCCCFunctor X Z
+    (ComposeFunctors (biccc_functor G) (biccc_functor F))
+    _ _ _ _ _).
+  - exact (iso_trans
+      (functor_iso_cong (biccc_functor G) (biccc_pres_terminal F))
+      (biccc_pres_terminal G)).
+  - intros A B0.
+    exact (iso_trans
+      (functor_iso_cong (biccc_functor G) (biccc_pres_prod F A B0))
+      (biccc_pres_prod G (@fobj _ _ (biccc_functor F) A) (@fobj _ _ (biccc_functor F) B0))).
+  - exact (iso_trans
+      (functor_iso_cong (biccc_functor G) (biccc_pres_initial F))
+      (biccc_pres_initial G)).
+  - intros A B0.
+    exact (iso_trans
+      (functor_iso_cong (biccc_functor G) (biccc_pres_coprod F A B0))
+      (biccc_pres_coprod G (@fobj _ _ (biccc_functor F) A) (@fobj _ _ (biccc_functor F) B0))).
+  - intros A B0.
+    exact (iso_trans
+      (functor_iso_cong (biccc_functor G) (biccc_pres_exp F A B0))
+      (biccc_pres_exp G (@fobj _ _ (biccc_functor F) A) (@fobj _ _ (biccc_functor F) B0))).
+Defined.
+
+(** [SetoidCategory] is monomorphic in this development, so the literal
+    category of all BiCCCs is one universe too large.  This small coded version
+    is enough for ordinary functors: choose a small type of codes and decode
+    each code as a BiCCC object. *)
+Definition BiCCC_SetoidCategory_on
+  (ObjCode : Type) (decode : ObjCode -> BiCCCObject) : SetoidCategory.
+Proof.
+  refine {|
+    obj := ObjCode;
+    hom := fun X Y => BiCCCFunctor (decode X) (decode Y);
+    id := fun X => BiCCC_id (decode X);
+    compose := fun X Y Z G F => BiCCC_comp G F;
+    hom_equiv := fun X Y => @BiCCCFunctor_equiv (decode X) (decode Y);
+    hom_equiv_equivalence := fun X Y => @BiCCCFunctor_equiv_equivalence (decode X) (decode Y);
+
+    comp_assoc := _;
+    id_right := _;
+    id_left := _;
+    comp_proper := _
+  |}.
+  - intros X Y Z W F G H A. constructor. simpl. reflexivity.
+  - intros X Y F A. constructor. simpl. reflexivity.
+  - intros X Y F A. constructor. simpl. reflexivity.
+  - intros X Y Z F G H I HFG HHI A.
+    destruct (HFG (@fobj _ _ (biccc_functor H) A)) as [HI1].
+    destruct (HHI A) as [HI2].
+    constructor. simpl.
+    eapply iso_trans.
+    + exact HI1.
+    + apply functor_iso_cong. exact HI2.
+Defined.
+
+Definition Fiber_BiCCCObject
+  {B : SetoidCategory} {CB : CartesianCategory B}
+  {GF : GoodFibration B} (I : @obj B) : BiCCCObject :=
+  mk_BiCCCObject
+    (Fiber I)
+    (Fiber_is_Cartesian I)
+    (Fiber_is_Closed I)
+    (Fiber_is_BiClosed I).
+
+Definition Pullback_BiCCCFunctor
+  {B : SetoidCategory} {CB : CartesianCategory B}
+  {GF : GoodFibration B} {I J : @obj B} (f : hom I J)
+  : BiCCCFunctor (Fiber_BiCCCObject J) (Fiber_BiCCCObject I).
+Proof.
+  refine (@mk_BiCCCFunctor
+    (Fiber_BiCCCObject J)
+    (Fiber_BiCCCObject I)
+    (Pullback f) _ _ _ _ _).
+  - exact (pb_term_iso f).
+  - intros A B0. exact (pb_prod_iso f A B0).
+  - exact (pb_init_iso f).
+  - intros A B0. exact (pb_coprod_iso f A B0).
+  - intros A B0. exact (pb_exp_iso f A B0).
+Defined.
+
+Definition Fiber_BiCCC_SetoidCategory
+  {B : SetoidCategory} {CB : CartesianCategory B}
+  {GF : GoodFibration B} : SetoidCategory :=
+  BiCCC_SetoidCategory_on (@obj B) (@Fiber_BiCCCObject B CB GF).
+
+Definition Fiber_ContravariantFunctor
+  {B : SetoidCategory} {CB : CartesianCategory B}
+  {GF : GoodFibration B}
+  : Functor (OppositeCategory B) (@Fiber_BiCCC_SetoidCategory B CB GF).
+Proof.
+  refine (mk_Functor
+    (OppositeCategory B)
+    (@Fiber_BiCCC_SetoidCategory B CB GF)
+    (fun I => I)
+    (fun I J f => @Pullback_BiCCCFunctor B CB GF J I f)
+    _ _ _).
+  - intros I J f g Hfg A.
+    constructor. exact (@pb_iso B CB GF J I f g Hfg A).
+  - intros I A.
+    constructor. exact (@pullback_id_iso B CB GF I A).
+  - intros I J K f g A.
+    constructor. exact (@pullback_comp_iso B CB GF K J I f g A).
+Defined.
 
 
 (** * 2. The Total Category (Grothendieck Construction) *)
