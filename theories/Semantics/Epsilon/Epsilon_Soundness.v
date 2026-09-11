@@ -163,7 +163,7 @@ Proof.
           (interp_tm df) (interp_tm dg) (base_equiv_sound df dg b)
           (interp_h_ty J Phi)).
       * exact (iso_sym (form_subst_iso I J g dg Phi)).
-  - symmetry. eapply eps_beck_chevalley_iso. exact dt.
+  - symmetry. eapply eps_beck_chevalley_iso; eassumption.
 Defined.
 
 Lemma interp_ctx_equiv :
@@ -254,11 +254,19 @@ Proof.
               ** apply (@iso_from _ _ _ (pullback_id_iso (interp_h_ty I (Ty_All A Phi)))).
               ** exact IHH_der.
   - eapply compose.
-    + apply eps_intro. exact b.
+    + apply eps_intro.
+      * eapply h_derivation_wf_inv; eassumption.
+      * exact b.
     + exact IHH_der.
   - eapply compose.
     + apply (eps_elim_frobenius I A G Phi Chi).
-      exact IHH_der2.
+      * eapply meta_ctx_wf. exact H_der1.
+      * exact (@h_derivation_wf_inv Sign Func Pred HFunc HPred SM
+          I A G p Phi (b_const A (skolem_index A Phi))
+          (@BT_Const Sign Func HFunc I A (skolem_index A Phi)) H_der1).
+      * eapply form_wf_fst_inv.
+        eapply meta_type_wf. exact H_der2.
+      * exact IHH_der2.
     + apply prod_map.
       * apply id.
       * exact IHH_der1.

@@ -151,11 +151,12 @@ Lemma pasquali_epsilon_category_condition_semantic :
     {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
     {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration}
     (I A : b_ty) (Phi : @h_ty Sign Func Pred),
+  WellFormed (b_Prod I A) Phi ->
   hom (interp_h_ty (b_Prod I A) Phi)
       (interp_h_ty (b_Prod I A) (form_subst b_fst (pasquali_eps_exists A Phi))).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF I A Phi.
-  apply eps_unit.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF I A Phi Hwf.
+  apply eps_unit. exact Hwf.
 Defined.
 
 (* Pasquali 2019, Definition 2.1: "has enough epsilon terms".
@@ -177,6 +178,8 @@ Class PasqualiEnoughEpsilonTerms
 
   pasquali_enough_epsilon_terms :
     forall (I A : b_ty) (Phi Theta : @h_ty Sign Func Pred),
+    WellFormed (b_Prod I A) Phi ->
+    WellFormed I Theta ->
     ((hom (interp_h_ty I (pasquali_eps_exists A Phi))
           (interp_h_ty I Theta) ->
       hom (interp_h_ty (b_Prod I A) Phi)
@@ -197,7 +200,7 @@ Instance PasqualiEnoughEpsilonTerms_from_EpsilonGoodFibration :
 Proof.
   intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF.
   constructor.
-  intros I A Phi Theta.
+  intros I A Phi Theta HwfPhi HwfTheta.
   split.
   - intros H_eps_theta.
     eapply compose.
@@ -213,13 +216,16 @@ Proof.
              (form_subst_iso (b_Prod I A) I b_fst
                (BT_Fst (Sign:=Sign) (Func:=Func) (A:=I) (B:=A))
                (pasquali_eps_exists A Phi))).
-        -- apply eps_unit.
+        -- apply eps_unit. exact HwfPhi.
   - intros H_phi_theta.
     eapply compose.
     + apply (eps_elim_frobenius I A [] Phi Theta).
-      eapply compose.
-      * exact H_phi_theta.
-      * apply prod_snd.
+      * apply AWF_Nil.
+      * exact HwfPhi.
+      * exact HwfTheta.
+      * eapply compose.
+        -- exact H_phi_theta.
+        -- apply prod_snd.
     + apply prod_map.
       * apply terminal_map.
       * apply id.
@@ -232,6 +238,8 @@ Lemma pasquali_has_enough_epsilon_terms_semantic :
     {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
     {EHM : EpsilonHyperModel SGF} {PEET : PasqualiEnoughEpsilonTerms}
     (I A : b_ty) (Phi Theta : @h_ty Sign Func Pred),
+  WellFormed (b_Prod I A) Phi ->
+  WellFormed I Theta ->
   ((hom (interp_h_ty I (pasquali_eps_exists A Phi))
         (interp_h_ty I Theta) ->
     hom (interp_h_ty (b_Prod I A) Phi)
@@ -241,8 +249,9 @@ Lemma pasquali_has_enough_epsilon_terms_semantic :
     hom (interp_h_ty I (pasquali_eps_exists A Phi))
         (interp_h_ty I Theta)))%type.
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM PEET I A Phi Theta.
-  apply pasquali_enough_epsilon_terms.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM PEET
+    I A Phi Theta HwfPhi HwfTheta.
+  apply pasquali_enough_epsilon_terms; assumption.
 Defined.
 
 (* Pasquali 2016, Definition 2.1, epsilon-I, and Pasquali 2019, Lemma 2.4:
@@ -257,13 +266,14 @@ Lemma pasquali_eps_intro_semantic :
     {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
     {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration}
     (I A : b_ty) (Phi : @h_ty Sign Func Pred) (f : @b_tm Sign Func),
+  WellFormed (b_Prod I A) Phi ->
   base_typing I f A ->
   hom (interp_h_ty I (form_subst (b_pair b_id f) Phi))
       (interp_h_ty I (pasquali_eps_exists A Phi)).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF I A Phi f df.
-  apply eps_intro.
-  exact df.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF
+    I A Phi f Hwf df.
+  apply eps_intro; assumption.
 Defined.
 
 (* Pasquali 2016, Definition 2.1, epsilon-E, and Pasquali 2019, Proposition
@@ -277,15 +287,18 @@ Lemma pasquali_eps_elim_semantic :
     {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
     {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration}
     (I A : b_ty) (G : @h_context Sign Func Pred) (Phi Chi : @h_ty Sign Func Pred),
+  All_WellFormed I G ->
+  WellFormed (b_Prod I A) Phi ->
+  WellFormed I Chi ->
   hom (prod (interp_h_ctx (b_Prod I A) (ctx_subst b_fst G))
             (interp_h_ty (b_Prod I A) Phi))
       (interp_h_ty (b_Prod I A) (form_subst b_fst Chi)) ->
   hom (prod (interp_h_ctx I G) (interp_h_ty I (pasquali_eps_exists A Phi)))
       (interp_h_ty I Chi).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF I A G Phi Chi H.
-  apply eps_elim_frobenius.
-  exact H.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF
+    I A G Phi Chi HwfG HwfPhi HwfChi H.
+  apply eps_elim_frobenius; assumption.
 Defined.
 
 (* Pasquali 2016, Definition 6.1: epsilon terms are attached to subobjects.
@@ -319,10 +332,12 @@ Lemma pasquali_eps_beck_chevalley :
     {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration}
     (I J A : b_ty) (g : @b_tm Sign Func) (dg : base_typing I g J)
     (Phi : @h_ty Sign Func Pred),
+  WellFormed (b_Prod J A) Phi ->
   interp_h_ty I (pasquali_eps_exists A (form_subst (b_subst_ext g) Phi)) ≅O
   interp_h_ty I (form_subst g (pasquali_eps_exists A Phi)).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF I J A g dg Phi.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF
+    I J A g dg Phi Hwf.
   symmetry.
-  exact (eps_beck_chevalley_iso I J A g dg Phi).
+  exact (eps_beck_chevalley_iso I J A g dg Phi Hwf).
 Defined.

@@ -21,6 +21,7 @@ theories/Logic/Hyper/Epsilon/Notations.v
 theories/Logic/Hyper/Epsilon/Epsilon_Syntax_Lemmas.v 
 theories/Semantics/Epsilon/Epsilon_Fibration.v
 theories/Semantics/Epsilon/Epsilon_Soundness.v
+theories/Semantics/Epsilon/Base_Epsilon_Completeness.v
 theories/Semantics/Epsilon/Epsilon_Completeness.v
 theories/Logic/Metatheory/EpsilonFull_Translation.v
 theories/Logic/Metatheory/EpsilonFull_Erasure.v

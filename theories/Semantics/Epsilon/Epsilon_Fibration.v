@@ -128,17 +128,25 @@ Class EpsilonGoodFibration
   {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
   {EHM : EpsilonHyperModel SGF} := {
 
+  (* Raw formulas may contain ill-typed atoms, so epsilon structure is only
+     required on the well-formed fragment interpreted by derivations. *)
+
   eps_unit : forall (I A : b_ty) (Phi : @h_ty Sign Func Pred),
+    WellFormed (b_Prod I A) Phi ->
     hom (interp_h_ty (b_Prod I A) Phi)
         (interp_h_ty (b_Prod I A) (form_subst b_fst (eps_instance A Phi)));
 
   eps_intro : forall (I A : b_ty) (Phi : @h_ty Sign Func Pred) (f : @b_tm Sign Func),
+    WellFormed (b_Prod I A) Phi ->
     base_typing I f A ->
     hom (interp_h_ty I (form_subst (b_pair b_id f) Phi))
         (interp_h_ty I (eps_instance A Phi));
 
   eps_elim_frobenius : forall (I A : b_ty) (G : @h_context Sign Func Pred)
       (Phi Chi : @h_ty Sign Func Pred),
+    All_WellFormed I G ->
+    WellFormed (b_Prod I A) Phi ->
+    WellFormed I Chi ->
     hom (prod (interp_h_ctx (b_Prod I A) (ctx_subst b_fst G))
               (interp_h_ty (b_Prod I A) Phi))
         (interp_h_ty (b_Prod I A) (form_subst b_fst Chi)) ->
@@ -153,6 +161,7 @@ Class EpsilonGoodFibration
 
   eps_beck_chevalley_iso : forall (I J A : b_ty) (g : @b_tm Sign Func)
       (dg : base_typing I g J) (Phi : @h_ty Sign Func Pred),
+    WellFormed (b_Prod J A) Phi ->
     interp_h_ty I (form_subst g (eps_instance A Phi)) ≅O
     interp_h_ty I (eps_instance A (form_subst (b_subst_ext g) Phi))
 }.
