@@ -11,9 +11,6 @@ theories/Cat/Adjoint.v
 theories/Cat/Fibration.v
 theories/Cat/Monad.v
 
-theories/Logic/Base/Simple/Base_Syntax.v
-theories/Logic/Hyper/Simple/Hyper_Syntax.v
-theories/Logic/Hyper/Simple/Hyper_Lemmas.v
 theories/Logic/Base/Epsilon/Base_Syntax.v
 theories/Logic/Base/Epsilon/Base_Syntax_Lemmas.v
 theories/Logic/Hyper/Epsilon/Hyper_Syntax.v
@@ -47,15 +44,6 @@ theories/Semantics/STLC_PI/STLC_PI_Completeness.v
 theories/Semantics/STLC_PI_Sum/STLC_PI_Sum_Soundness.v
 theories/Semantics/STLC_PI_Sum/STLC_PI_Sum_Completeness.v
 
-# --- Simple Semantics ---
-theories/Semantics/Simple/Base_Simple_Soundness.v
-theories/Semantics/Simple/Base_Simple_Completeness.v
-theories/Semantics/Simple/Simple_Soundness.v
-theories/Semantics/Simple/Simple_Completeness.v
-theories/Semantics/Simple/LEM.v
-theories/Semantics/Simple/DualDrinker.v
-theories/Semantics/Simple/Examples.v
-
 # --- Epsilon Adjoin Semantics ---
 theories/Logic/Base/Epsilon_Adjoint/Base_Syntax.v
 theories/Logic/Base/Epsilon_Adjoint/Base_Syntax_Lemmas.v
@@ -69,24 +57,8 @@ theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Completeness.v
 theories/Semantics/Epsilon_Adjoint/LEM_disproved.v
 theories/Logic/Hyper/Epsilon_Adjoint/Curvature.v
 
-# --- Simple Extended Logic ---
-theories/Logic/Base/Simple_Ext/Base_Syntax.v
-theories/Logic/Base/Simple_Ext/Base_Syntax_Lemmas.v
-theories/Logic/Hyper/Simple_Ext/Hyper_Syntax.v
-theories/Logic/Hyper/Simple_Ext/Hyper_Lemmas.v
-theories/Logic/Hyper/Simple_Ext/Hyper_Lifting.v
-theories/Logic/Hyper/Simple_Ext/Notations.v
-theories/Logic/Hyper/Simple_Ext/DualDrinker_WF.v
+# --- Legacy Simple and Simple_Ext sources are excluded from the supported build ---
 
-# --- Simple Extended Semantics ---
-theories/Semantics/Simple_Ext/Base_Epsilon_Completeness.v
-theories/Semantics/Simple_Ext/Base_Epsilon_Soundness.v
-theories/Semantics/Simple_Ext/Simple_Ext_Completeness.v
-theories/Semantics/Simple_Ext/Simple_Ext_Soundness.v
-theories/Semantics/Simple_Ext/Simple_Ext_Fibration.v
-
-# --- Conservativity ---
-theories/Semantics/Conservativity/Model_Expansion.v
 # --- Epsilon Full ---
 theories/Logic/Base/EpsilonFull/Base_Syntax.v
 theories/Logic/Base/EpsilonFull/Base_Syntax_Lemmas.v
