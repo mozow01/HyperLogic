@@ -2577,6 +2577,106 @@ Proof.
       exact HwfPhi.
 Defined.
 
+Lemma term_model_inhabited_to_derivation :
+  forall {Sign Func Pred : Type}
+    `{HFunc : FunctionSignature Func} `{HPred : PredicateSignature Pred}
+    {SM : SkolemMapping Sign Func Pred}
+    {I : b_ty} {G : @h_context Sign Func Pred}
+    {Phi : @h_ty Sign Func Pred}
+    (wfc : All_WellFormed I G)
+    (wf_Phi : WellFormed I Phi),
+  inhabited
+    (@hom
+      (@Fiber
+        (Base_SetoidCategory Sign Func)
+        (Base_CartesianCategory Sign Func)
+        (@TermModel_GoodFibration Sign Func Pred HFunc HPred SM)
+        (@interp_ty
+          (Base_SetoidCategory Sign Func)
+          (Base_CartesianCategory Sign Func)
+          (Base_TwoSortCategory Sign Func) I))
+      (@interp_h_ctx Sign Func Pred HFunc HPred
+        (Base_SetoidCategory Sign Func)
+        (Base_CartesianCategory Sign Func)
+        (Base_TwoSortCategory Sign Func)
+        (Base_SyntacticEpsilonFullModel Sign Func)
+        TermModel_GoodFibration
+        TermModel_StrictGoodFibration
+        (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
+        I G)
+      (@interp_h_ty Sign Func Pred HFunc HPred
+        (Base_SetoidCategory Sign Func)
+        (Base_CartesianCategory Sign Func)
+        (Base_TwoSortCategory Sign Func)
+        (Base_SyntacticEpsilonFullModel Sign Func)
+        TermModel_GoodFibration
+        TermModel_StrictGoodFibration
+        (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
+        I Phi)) ->
+  exists p : @h_tm Sign Func Pred,
+    inhabited (h_derivation I G p Phi).
+Proof.
+  intros Sign Func Pred HFunc HPred SM I G Phi wfc wf_Phi H_term.
+  destruct H_term as [m_syn].
+  destruct m_syn as [p_syn dp_syn].
+
+  assert (H_ctx :
+    projT1
+      (@interp_h_ctx Sign Func Pred HFunc HPred
+        (Base_SetoidCategory Sign Func)
+        (Base_CartesianCategory Sign Func)
+        (Base_TwoSortCategory Sign Func)
+        (Base_SyntacticEpsilonFullModel Sign Func)
+        TermModel_GoodFibration
+        TermModel_StrictGoodFibration
+        (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
+        I G)
+    = h_make_ctx_ty G).
+  {
+    apply term_model_interp_ctx_id.
+    exact wfc.
+  }
+
+  assert (H_phi :
+    projT1
+      (@interp_h_ty Sign Func Pred HFunc HPred
+        (Base_SetoidCategory Sign Func)
+        (Base_CartesianCategory Sign Func)
+        (Base_TwoSortCategory Sign Func)
+        (Base_SyntacticEpsilonFullModel Sign Func)
+        TermModel_GoodFibration
+        TermModel_StrictGoodFibration
+        (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
+        I Phi)
+    = Phi).
+  {
+    apply term_model_interp_id.
+    exact wf_Phi.
+  }
+
+  rewrite H_ctx in dp_syn.
+  rewrite H_phi in dp_syn.
+  rewrite (interp_ty_id Sign Func I) in dp_syn.
+
+  assert (H_fun :
+    h_derivation I G p_syn (Ty_Arrow (h_make_ctx_ty G) Phi)).
+  {
+    change (h_derivation I (nil ++ G) p_syn
+      (Ty_Arrow (h_make_ctx_ty G) Phi)).
+    eapply (@h_derivation_append Sign Func Pred HFunc HPred SM
+      I nil G p_syn (Ty_Arrow (h_make_ctx_ty G) Phi)).
+    - exact dp_syn.
+    - exact wfc.
+  }
+
+  exists (tm_app p_syn (h_reify_ctx G)).
+  constructor.
+  eapply HD_App.
+  - exact H_fun.
+  - apply h_reify_ctx_typing.
+    exact wfc.
+Defined.
+
 Theorem epsilon_adjoint_completeness_inhabitational_gen :
   forall {Sign Func Pred : Type} `{HFunc : FunctionSignature Func} `{HPred : PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
          {I : b_ty} {G : @h_context Sign Func Pred} {Phi : @h_ty Sign Func Pred}
@@ -2609,75 +2709,8 @@ Proof.
        TermModel_StrictGoodFibration
        TermModel_EpsilonHyperModel
        TermModel_AdjointEpsilonFullFibration) as H_term.
-
-  (* 2. Kinyerjük a termmodellbeli morfizmust. *)
-  destruct H_term as [m_syn].
-  destruct m_syn as [p_syn dp_syn].
-
-  (* 3. A forráskontextus interpretációját lehúzzuk tiszta szintaxisra. *)
-  assert (H_ctx :
-    projT1
-      (@interp_h_ctx Sign Func Pred HFunc HPred
-         (Base_SetoidCategory Sign Func)
-         (Base_CartesianCategory Sign Func)
-         (Base_TwoSortCategory Sign Func)
-         (Base_SyntacticEpsilonFullModel Sign Func)
-         TermModel_GoodFibration
-         TermModel_StrictGoodFibration
-         (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
-         I G)
-    = h_make_ctx_ty G).
-  {
-    apply term_model_interp_ctx_id.
-    exact wfc.
-  }
-
-  (* 4. A célformula interpretációját is lehúzzuk tiszta szintaxisra. *)
-  assert (H_phi :
-    projT1
-      (@interp_h_ty Sign Func Pred HFunc HPred
-         (Base_SetoidCategory Sign Func)
-         (Base_CartesianCategory Sign Func)
-         (Base_TwoSortCategory Sign Func)
-         (Base_SyntacticEpsilonFullModel Sign Func)
-         TermModel_GoodFibration
-         TermModel_StrictGoodFibration
-         (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
-         I Phi)
-    = Phi).
-  {
-    apply term_model_interp_id.
-    exact wf_Phi.
-  }
-
-  rewrite H_ctx in dp_syn.
-  rewrite H_phi in dp_syn.
-
-  (* 5. A termmodellben interp_ty I = I. 
-        Ezt csak most írjuk át, miután a projT1/interp_h_ty részek már eltűntek. *)
-  rewrite (interp_ty_id Sign Func I) in dp_syn.
-
-  (* 6. A zárt nyíltermet átvisszük a G kontextusba. *)
-  assert (H_fun :
-    h_derivation I G p_syn (Ty_Arrow (h_make_ctx_ty G) Phi)).
-  {
-    change (h_derivation I (nil ++ G) p_syn (Ty_Arrow (h_make_ctx_ty G) Phi)).
-    eapply (@h_derivation_append Sign Func Pred HFunc HPred SM
-              I
-              nil
-              G
-              p_syn
-              (Ty_Arrow (h_make_ctx_ty G) Phi)).
-    - exact dp_syn.
-    - exact wfc.
-  }
-
-  (* 7. A G kontextust reifikáljuk egy terméktípusú termmé. *)
-  exists (tm_app p_syn (h_reify_ctx G)).
-  constructor.
-
-  eapply HD_App.
-  - exact H_fun.
-  - apply h_reify_ctx_typing.
-    exact wfc.
+  eapply term_model_inhabited_to_derivation.
+  - exact wfc.
+  - exact wf_Phi.
+  - exact H_term.
 Defined.   

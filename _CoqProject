@@ -9,6 +9,7 @@ theories/Cat/BCCC.v
 theories/Cat/Functor.v
 theories/Cat/Adjoint.v
 theories/Cat/Fibration.v
+theories/Cat/EpsilonSelection.v
 theories/Cat/Monad.v
 
 theories/Logic/Base/Epsilon/Base_Syntax.v
@@ -71,6 +72,7 @@ theories/Semantics/EpsilonFull/Base_EpsilonFull_Soundness.v
 theories/Semantics/EpsilonFull/Base_EpsilonFull_Completeness.v
 theories/Semantics/EpsilonFull/EpsilonFull_Soundness.v
 theories/Semantics/EpsilonFull/EpsilonFull_Completeness.v
+theories/Semantics/EpsilonFull/EpsilonFull_AllPredicates.v
 theories/Semantics/EpsilonFull/EpsilonFull_ModelCategory.v
 theories/Semantics/EpsilonFull/Canonical_EpsilonFull.v
 theories/Semantics/EpsilonFull/LargeSetoidCategory.v

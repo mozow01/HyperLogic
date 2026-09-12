@@ -4,6 +4,7 @@ Require Import HyperLogic.Logic.Hyper.EpsilonFull.Canonical_Skolem.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_Soundness.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_Completeness.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_ModelCategory.
+Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_AllPredicates.
 
 Module CanonicalEpsilonFullSemantics.
 
@@ -15,6 +16,8 @@ Module Fibration := HyperLogic.Semantics.EpsilonFull.EpsilonFull_Fibration.
 Module Soundness := HyperLogic.Semantics.EpsilonFull.EpsilonFull_Soundness.
 Module Completeness := HyperLogic.Semantics.EpsilonFull.EpsilonFull_Completeness.
 Module Models := HyperLogic.Semantics.EpsilonFull.EpsilonFull_ModelCategory.
+Module AllPredicates :=
+  HyperLogic.Semantics.EpsilonFull.EpsilonFull_AllPredicates.
 
 Definition Sign (Func Pred : Type) : Type :=
   Labels.EpsilonLabel Func Pred.
@@ -43,6 +46,18 @@ Definition soundness :=
 
 Definition completeness :=
   @Completeness.epsilon_adjoint_completeness_inhabitational_gen
+    (Sign Func Pred) Func Pred HFunc HPred (SkolemMapping Func Pred).
+
+Definition all_predicate_valid :=
+  @AllPredicates.all_predicate_epsilonfull_valid
+    (Sign Func Pred) Func Pred HFunc HPred (SkolemMapping Func Pred).
+
+Definition all_predicate_soundness_completeness :=
+  @AllPredicates.all_predicate_epsilonfull_soundness_completeness
+    (Sign Func Pred) Func Pred HFunc HPred (SkolemMapping Func Pred).
+
+Definition TermModel_all_predicate_model :=
+  @AllPredicates.TermModel_AllPredicateEpsilonFullModel
     (Sign Func Pred) Func Pred HFunc HPred (SkolemMapping Func Pred).
 
 Definition TermModel_to (M : Model) :
