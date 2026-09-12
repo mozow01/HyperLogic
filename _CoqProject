@@ -17,14 +17,17 @@ theories/Logic/Hyper/Simple/Hyper_Lemmas.v
 theories/Logic/Base/Epsilon/Base_Syntax.v
 theories/Logic/Base/Epsilon/Base_Syntax_Lemmas.v
 theories/Logic/Hyper/Epsilon/Hyper_Syntax.v
+theories/Logic/Hyper/Epsilon/Canonical_Skolem.v
 theories/Logic/Hyper/Epsilon/Notations.v
 theories/Logic/Hyper/Epsilon/Epsilon_Syntax_Lemmas.v 
 theories/Semantics/Epsilon/Epsilon_Fibration.v
 theories/Semantics/Epsilon/Epsilon_Soundness.v
 theories/Semantics/Epsilon/Base_Epsilon_Completeness.v
 theories/Semantics/Epsilon/Epsilon_Completeness.v
+theories/Semantics/Epsilon/Canonical_Epsilon.v
 theories/Logic/Metatheory/EpsilonFull_Translation.v
 theories/Logic/Metatheory/EpsilonFull_Erasure.v
+theories/Logic/Metatheory/Canonical_Epsilon_Comparison.v
 theories/Logic/Metatheory/Epsilon_Conservativity.v
 
 # --- STLC Logic (STLC_PI) ---
@@ -88,6 +91,7 @@ theories/Semantics/Conservativity/Model_Expansion.v
 theories/Logic/Base/EpsilonFull/Base_Syntax.v
 theories/Logic/Base/EpsilonFull/Base_Syntax_Lemmas.v
 theories/Logic/Hyper/EpsilonFull/Hyper_Syntax.v
+theories/Logic/Hyper/EpsilonFull/Canonical_Skolem.v
 theories/Logic/Hyper/EpsilonFull/Hyper_Syntax_Lemmas.v
 theories/Logic/Hyper/EpsilonFull/LEM_DNE.v
 theories/Semantics/EpsilonFull/EpsilonFull_Fibration.v
@@ -96,6 +100,7 @@ theories/Semantics/EpsilonFull/Base_EpsilonFull_Completeness.v
 theories/Semantics/EpsilonFull/EpsilonFull_Soundness.v
 theories/Semantics/EpsilonFull/EpsilonFull_Completeness.v
 theories/Semantics/EpsilonFull/EpsilonFull_ModelCategory.v
+theories/Semantics/EpsilonFull/Canonical_EpsilonFull.v
 theories/Semantics/EpsilonFull/LargeSetoidCategory.v
 theories/Semantics/EpsilonFull/EpsilonFull_OneStepFunctor.v
 theories/Semantics/EpsilonFull/EpsilonFull_FixedPoint.v

@@ -2,6 +2,7 @@
 
 Require Import HyperLogic.Logic.Metatheory.EpsilonFull_Translation.
 Require Import HyperLogic.Logic.Metatheory.EpsilonFull_Erasure.
+Require Export HyperLogic.Logic.Metatheory.Canonical_Epsilon_Comparison.
 
 Section EpsilonConservativity.
 

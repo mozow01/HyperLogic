@@ -15,6 +15,7 @@ Require Import HyperLogic.Cat.Fibration.
 
 Require Import HyperLogic.Logic.Base.EpsilonFull.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.EpsilonFull.Hyper_Syntax.
+Require Import HyperLogic.Logic.Hyper.EpsilonFull.Canonical_Skolem.
 Require Import HyperLogic.Semantics.EpsilonFull.Base_EpsilonFull_Soundness.
 Require Import HyperLogic.Semantics.EpsilonFull.Base_EpsilonFull_Completeness.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_Fibration.
@@ -22,6 +23,9 @@ Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_ModelCategory.
 Require Import HyperLogic.Semantics.EpsilonFull.LEM_disproved.
 
 Module EpsilonFullSubstitutivity.
+
+Module CanonicalLabels :=
+  HyperLogic.Logic.Hyper.EpsilonFull.Canonical_Skolem.CanonicalEpsilonFull.
 
 Inductive TestFunc : Type := .
 
@@ -34,17 +38,14 @@ Instance TestFunctionSignature : FunctionSignature TestFunc :=
 Instance TestPredicateSignature : PredicateSignature Datatypes.unit :=
   {| pred_dom _ := b_S |}.
 
-(* The epsilon signature is the inductive closure of formula-indexed names. *)
-Inductive TestSign : Type :=
-| test_skolem : forall (A : b_ty), @h_ty TestSign TestFunc Datatypes.unit -> TestSign.
+(* The test uses the general canonical closure, specialized to its signature. *)
+Definition TestSign : Type :=
+  CanonicalLabels.EpsilonLabel TestFunc Datatypes.unit.
 
-Instance TestSkolemMapping : SkolemMapping TestSign TestFunc Datatypes.unit.
-Proof.
-  refine {| skolem_index := test_skolem |}.
-  intros A B Phi Psi H.
-  inversion H.
-  split; reflexivity.
-Defined.
+Notation test_skolem := CanonicalLabels.epsilon_label.
+
+Instance TestSkolemMapping : SkolemMapping TestSign TestFunc Datatypes.unit :=
+  CanonicalLabels.CanonicalSkolemMapping TestFunc Datatypes.unit.
 
 Definition test_g : @b_tm TestSign TestFunc :=
   b_const b_S (skolem_index b_S Ty_Unit).
