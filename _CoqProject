@@ -73,7 +73,9 @@ theories/Semantics/EpsilonFull/Base_EpsilonFull_Completeness.v
 theories/Semantics/EpsilonFull/EpsilonFull_Soundness.v
 theories/Semantics/EpsilonFull/EpsilonFull_Completeness.v
 theories/Semantics/EpsilonFull/EpsilonFull_AllPredicates.v
+theories/Semantics/EpsilonFull/FiniteHeytingPredicates.v
 theories/Semantics/EpsilonFull/EpsilonFull_ModelCategory.v
+theories/Semantics/EpsilonFull/Canonical_FiniteChain_Model.v
 theories/Semantics/EpsilonFull/Canonical_EpsilonFull.v
 theories/Semantics/EpsilonFull/LargeSetoidCategory.v
 theories/Semantics/EpsilonFull/EpsilonFull_OneStepFunctor.v
@@ -91,6 +93,7 @@ theories/Semantics/IFOL/Base_IFOL_Completeness.v
 theories/Semantics/IFOL/IFOL_Soundness.v
 theories/Semantics/IFOL/IFOL_Completeness.v
 theories/Semantics/IFOL/DualDrinker.v
+theories/Semantics/EpsilonFull/FiniteHeytingExamples.v
 theories/Semantics/Metatheory/IFOL_EpsilonFull_Translation.v
 
 # --- Legacy Individual compatibility paths ---

@@ -5,6 +5,8 @@ Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_Soundness.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_Completeness.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_ModelCategory.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_AllPredicates.
+Require Import HyperLogic.Semantics.EpsilonFull.FiniteHeytingPredicates.
+Require Import HyperLogic.Semantics.EpsilonFull.Canonical_FiniteChain_Model.
 
 Module CanonicalEpsilonFullSemantics.
 
@@ -18,6 +20,10 @@ Module Completeness := HyperLogic.Semantics.EpsilonFull.EpsilonFull_Completeness
 Module Models := HyperLogic.Semantics.EpsilonFull.EpsilonFull_ModelCategory.
 Module AllPredicates :=
   HyperLogic.Semantics.EpsilonFull.EpsilonFull_AllPredicates.
+Module FinitePredicates :=
+  HyperLogic.Semantics.EpsilonFull.FiniteHeytingPredicates.
+Module FiniteChainModels :=
+  HyperLogic.Semantics.EpsilonFull.Canonical_FiniteChain_Model.
 
 Definition Sign (Func Pred : Type) : Type :=
   Labels.EpsilonLabel Func Pred.
