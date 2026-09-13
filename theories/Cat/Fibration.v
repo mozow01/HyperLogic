@@ -358,31 +358,25 @@ Definition TotalHom_equiv {B : SetoidCategory} {CB : CartesianCategory B} {GF : 
     h_fib M1 ≅ 
     compose (@iso_to _ _ _ (pb_iso (h_base M2) (h_base M1) H_base (t_fib Y))) (h_fib M2).
 
-
-(** * 3. Global Proof Irrelevance (Strictness) *)
-
-(** WHAT IT IS:
-  An extension class on top of [GoodFibration] that enforces Global Coherence.
-  It states that if two morphisms in the Total Category cover the same base 
-  path (Setoid equivalence in B), the entire morphisms must be equivalent.
-
-  WHY WE CHOSE THIS SOLUTION:
-  This is the cornerstone of our formalization. In dependent type theory and 
-  fibrations, manipulating proofs across substitutions (fibers) is notoriously 
-  difficult (coherence hell). By asserting [global_pi], we tell Coq that 
-  fiber-level transports are strictly coherent. This reduces complex fiber 
-  equivalences into simple base-level equivalences, acting as an ultra-powerful 
-  rewrite rule.
-*)
-
-Class StrictGoodFibration (B : SetoidCategory) {CB : CartesianCategory B} (GF : GoodFibration B) := {
-  global_pi : forall (X Y : TotalObj GF) (M1 M2 : TotalHom X Y),
-    h_base M1 ≅ h_base M2 -> 
-    TotalHom_equiv M1 M2
-}.
+(** In thin fibers, equivalence of total morphisms is determined by their base
+    components.  The required transport is supplied by [pb_iso], and the two
+    resulting fiber arrows are equivalent by thinness. *)
+Lemma global_pi {B : SetoidCategory} {CB : CartesianCategory B}
+  {GF : GoodFibration B} (X Y : TotalObj GF) (M1 M2 : TotalHom X Y) :
+  h_base M1 ≅ h_base M2 -> TotalHom_equiv M1 M2.
+Proof.
+  intro Hbase.
+  unfold TotalHom_equiv.
+  assert (Hback : h_base M2 ≅ h_base M1).
+  { symmetry. exact Hbase. }
+  exists Hback.
+  exact (@thin_unique
+    (@Fiber B CB GF (t_base X))
+    (@fiber_is_thin B CB GF (t_base X)) _ _ _ _).
+Defined.
 
 
-(** * 4. Constructing the Total Setoid Category *)
+(** * 3. Constructing the Total Setoid Category *)
 
 (** WHAT IT IS:
   The formal instantiation of [SetoidCategory] for the Total Space.
@@ -392,8 +386,8 @@ Class StrictGoodFibration (B : SetoidCategory) {CB : CartesianCategory B} (GF : 
   (using the @ symbol). This prevents Coq's unification from guessing wrong 
   implicits for the fibered functors. We use the 'refine' tactic to construct 
   the category, allowing us to interactively prove the category laws (Assoc, 
-  IdL, IdR). Thanks to our [global_pi] axiom, these proofs take exactly 
-  two lines each.
+  IdL, IdR). The derived [global_pi] lemma reduces these laws to their base
+  components.
 *)
 
 Definition total_id {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B} 
@@ -415,7 +409,7 @@ Definition total_comp {B : SetoidCategory} {CB : CartesianCategory B} {GF : Good
           (h_fib M1))).
 
 Instance TotalHom_Equivalence {B : SetoidCategory} {CB : CartesianCategory B} 
-  {GF : GoodFibration B} {SGF : StrictGoodFibration B GF} {X Y : TotalObj GF} 
+  {GF : GoodFibration B} {X Y : TotalObj GF}
   : Equivalence (@TotalHom_equiv B CB GF X Y).
 Proof.
   split.
@@ -427,7 +421,7 @@ Proof.
 Defined.
 
 Instance TotalCategory {B : SetoidCategory} {CB : CartesianCategory B} 
-  (GF : GoodFibration B) (SGF : StrictGoodFibration B GF) : SetoidCategory.
+  (GF : GoodFibration B) : SetoidCategory.
 Proof.
   refine {|
     obj := TotalObj GF;
@@ -435,7 +429,7 @@ Proof.
     id := @total_id B CB GF;
     compose := @total_comp B CB GF;
     hom_equiv := @TotalHom_equiv B CB GF;
-    hom_equiv_equivalence := @TotalHom_Equivalence B CB GF SGF;
+    hom_equiv_equivalence := @TotalHom_Equivalence B CB GF;
     
     comp_assoc := _;
     id_right := _;
@@ -453,7 +447,7 @@ Proof.
 Defined.
 
 
-(** * 5. Logical Quantifiers and the Base Individual Type *)
+(** * 4. Logical Quantifiers and the Base Individual Type *)
 
 (** The Category representing two sorts: the standard terminal object and 
   the sort of individuals (S).

@@ -71,7 +71,7 @@ Class EpsilonHyperModel
   `{FunctionSignature Func} `{PredicateSignature Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
   {BEM : BaseEpsilonModel}
-  {GF : GoodFibration C} (SGF : StrictGoodFibration C GF) := {
+  {GF : GoodFibration C} := {
   i_atom : forall (p : Pred) (t : @b_tm Sign Func) (I : b_ty), @obj (Fiber (interp_ty I));
 
   i_atom_pb : forall (p : Pred) (t : @b_tm Sign Func) (I A : b_ty) (f : @b_tm Sign Func)
@@ -87,8 +87,8 @@ Class EpsilonHyperModel
 Fixpoint interp_h_ty
   {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF}
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel}
   (I : b_ty) (Phi : @h_ty Sign Func Pred) : @obj (Fiber (interp_ty I)) :=
   match Phi with
   | Ty_Unit => terminal
@@ -104,8 +104,8 @@ Fixpoint interp_h_ty
 Fixpoint interp_h_ctx
   {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF}
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel}
   (I : b_ty) (G : @h_context Sign Func Pred) : @obj (Fiber (interp_ty I)) :=
   match G with
   | nil => terminal
@@ -125,8 +125,8 @@ Class EpsilonGoodFibration
   {Sign Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF} := {
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel} := {
 
   (* Raw formulas may contain ill-typed atoms, so epsilon structure is only
      required on the well-formed fragment interpreted by derivations. *)

@@ -44,17 +44,15 @@ Class EpsilonFullModel := mk_EpsilonFullModel {
 
   efm_good_fibration :
     @GoodFibration efm_cat efm_cartesian;
-  efm_strict_fibration :
-    @StrictGoodFibration efm_cat efm_cartesian efm_good_fibration;
 
   efm_hyper_model :
     @EpsilonHyperModel Sign Func Pred HFunc HPred
       efm_cat efm_cartesian efm_twosort efm_base_model
-      efm_good_fibration efm_strict_fibration;
+      efm_good_fibration;
   efm_adjoint_epsilon :
     @AdjointEpsilonFullFibration Sign Func Pred HFunc HPred SM
       efm_cat efm_cartesian efm_twosort efm_base_model
-      efm_good_fibration efm_strict_fibration efm_hyper_model
+      efm_good_fibration efm_hyper_model
 }.
 
 Definition efm_interp_ty (M : EpsilonFullModel) (I : b_ty) : @obj (@efm_cat M) :=
@@ -70,7 +68,7 @@ Definition efm_interp_h_ty
   @interp_h_ty Sign Func Pred HFunc HPred
     (@efm_cat M) (@efm_cartesian M) (@efm_twosort M)
     (@efm_base_model M) (@efm_good_fibration M)
-    (@efm_strict_fibration M) (@efm_hyper_model M) I Phi.
+    (@efm_hyper_model M) I Phi.
 
 Definition efm_interp_h_ctx
   (M : EpsilonFullModel) (I : b_ty) (G : @h_context Sign Func Pred)
@@ -78,7 +76,7 @@ Definition efm_interp_h_ctx
   @interp_h_ctx Sign Func Pred HFunc HPred
     (@efm_cat M) (@efm_cartesian M) (@efm_twosort M)
     (@efm_base_model M) (@efm_good_fibration M)
-    (@efm_strict_fibration M) (@efm_hyper_model M) I G.
+    (@efm_hyper_model M) I G.
 
 Definition efm_interp_tm
   (M : EpsilonFullModel) {I A : b_ty} {t : @b_tm Sign Func}
@@ -96,7 +94,7 @@ Definition efm_soundness
   @soundness Sign Func Pred HFunc HPred SM
     (@efm_cat M) (@efm_cartesian M) (@efm_twosort M)
     (@efm_base_model M) (@efm_good_fibration M)
-    (@efm_strict_fibration M) (@efm_hyper_model M)
+    (@efm_hyper_model M)
     (@efm_adjoint_epsilon M) I G p Phi d.
 
 Class EpsilonFullModelHom (M N : EpsilonFullModel) := mk_EpsilonFullModelHom {
@@ -505,7 +503,6 @@ Proof.
     (Base_SyntacticEpsilonFullModel Sign Func)
     (Base_SyntacticCoherentModel Sign Func)
     TermModel_GoodFibration
-    TermModel_StrictGoodFibration
     TermModel_EpsilonHyperModel
     TermModel_AdjointEpsilonFullFibration).
 Defined.

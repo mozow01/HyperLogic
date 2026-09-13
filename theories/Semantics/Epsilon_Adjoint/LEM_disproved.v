@@ -166,21 +166,17 @@ Proof.
   all: intros; h3_crush. all: reflexivity.
 Defined.
 
-Instance H3_StrictGoodFibration {Sign : Type} {SM : SkolemMapping Sign} : StrictGoodFibration (Base_SetoidCategory Sign) H3_GoodFibration.
-Proof.
-  econstructor. 
-  intros X Y M1 M2 H.
-  assert (H_sym : h_base M2 ≅ h_base M1). { symmetry. exact H. }
-  exists H_sym.
-  exact I.
-Defined.
-
 (* ================================================================= *)
 (* 4. A H3 EPSZILON HIPERMODELL                                      *)
 (* ================================================================= *)
 
 Instance H3_EpsilonHyperModel {Sign : Type} {SM : SkolemMapping Sign}
-  : EpsilonHyperModel H3_StrictGoodFibration.
+  : @EpsilonHyperModel Sign
+      (Base_SetoidCategory Sign)
+      (Base_CartesianCategory Sign)
+      (Base_TwoSortCategory Sign)
+      (Base_SyntacticEpsilonModel Sign)
+      H3_GoodFibration.
 Proof.
   unshelve econstructor.
 
@@ -212,7 +208,6 @@ Lemma H3_interp_h_ty_subst_const :
     (Base_TwoSortCategory Sign)
     (Base_SyntacticEpsilonModel Sign)
     H3_GoodFibration
-    H3_StrictGoodFibration
     H3_EpsilonHyperModel
     I
     (form_subst f Phi)
@@ -224,7 +219,6 @@ Lemma H3_interp_h_ty_subst_const :
     (Base_TwoSortCategory Sign)
     (Base_SyntacticEpsilonModel Sign)
     H3_GoodFibration
-    H3_StrictGoodFibration
     H3_EpsilonHyperModel
     J
     Phi.
@@ -271,7 +265,6 @@ Instance H3_AdjointEpsilonFibration {Sign : Type} {SM : SkolemMapping Sign}
       (Base_TwoSortCategory Sign)
       (Base_SyntacticEpsilonModel Sign)
       H3_GoodFibration
-      H3_StrictGoodFibration
       H3_EpsilonHyperModel.
 Proof.
   constructor.
@@ -354,14 +347,13 @@ Theorem LEM_Refuted_WF :
             (TSC : TwoSortCategory C)
             (BEM : @BaseEpsilonModel Sign C CC TSC)
             (GF : GoodFibration C)
-            (SGF : StrictGoodFibration C GF)
-            (HM : @EpsilonHyperModel Sign C CC TSC BEM GF SGF)
-            (AdEHM : @AdjointEpsilonFibration Sign SM C CC TSC BEM GF SGF HM)
+            (HM : @EpsilonHyperModel Sign C CC TSC BEM GF)
+            (AdEHM : @AdjointEpsilonFibration Sign SM C CC TSC BEM GF HM)
             (I : b_ty),
        inhabited
          (@hom (Fiber (interp_ty I))
-               (@interp_h_ctx Sign C CC TSC BEM GF SGF HM I nil)
-               (@interp_h_ty  Sign C CC TSC BEM GF SGF HM I (LEM_Formula I)))).
+               (@interp_h_ctx Sign C CC TSC BEM GF HM I nil)
+               (@interp_h_ty  Sign C CC TSC BEM GF HM I (LEM_Formula I)))).
 Proof.
   intros Sign SM H_univ.
 
@@ -372,7 +364,6 @@ Proof.
        (Base_TwoSortCategory Sign)
        (Base_SyntacticEpsilonModel Sign)
        H3_GoodFibration
-       H3_StrictGoodFibration
        H3_EpsilonHyperModel
        H3_AdjointEpsilonFibration
        b_Unit).
@@ -393,7 +384,7 @@ Proof.
 
   apply LEM_Refuted_WF.
 
-  intros C CC TSC BEM GF SGF HM AdEHM I_any.
+  intros C CC TSC BEM GF HM AdEHM I_any.
 
   destruct (H_all_der I_any) as [p H_der].
 
@@ -402,7 +393,7 @@ Proof.
   exact (@soundness
            Sign SM
            C CC
-           TSC BEM GF SGF HM AdEHM
+           TSC BEM GF HM AdEHM
            I_any nil p (LEM_Formula I_any)
            H_der).
 Defined.

@@ -1596,34 +1596,6 @@ Proof.
 Defined.
 
 (* ================================================================= *)
-(* KANONIKUS MODELL: STRICT GOOD FIBRATION                           *)
-(* ================================================================= *)
-
-Instance TermModel_StrictGoodFibration {Sign : Type} {SM : SkolemMapping Sign} : 
-  StrictGoodFibration (Base_SetoidCategory Sign) TermModel_GoodFibration.
-Proof.
-  constructor.
-  intros X Y M1 M2 Heq.
-  
-  (* Mivel nem tudom, hogyan definiáltad a TotalHom_equiv-et a 
-     függvénytáradban, kezdd azzal, hogy kibontod. 
-     Általában ez csak a bázis-egyenlőség (Heq) továbbadása. *)
-  unfold TotalHom_equiv. 
-(* Bizonyítjuk a szimmetrikus bázis-egyenlőséget *)
-  assert (Hsym : h_base M2 ≅ h_base M1). {
-    symmetry. exact Heq.
-  }
-  
-  (* Ezt az egyenlőséget adjuk meg az egzisztenciális (exists) célnak *)
-  exists Hsym.
-  
-  (* A maradék cél a szálkategória morfizmusainak egyenlősége.
-     Mivel a szálkategóriád Thin, ez teljesen automatikusan megoldódik! *)
-  unfold fiber_equiv; constructor.
-Defined.
-
-  
-(* ================================================================= *)
 (* KANONIKUS MODELL: EPSILON HYPER MODEL                             *)
 (* ================================================================= *)
 
@@ -1677,7 +1649,12 @@ Defined.
 (* ================================================================= *)
 
 Instance TermModel_EpsilonHyperModel {Sign : Type} {SM : SkolemMapping Sign} : 
-  EpsilonHyperModel TermModel_StrictGoodFibration.
+  @EpsilonHyperModel Sign
+    (Base_SetoidCategory Sign)
+    (Base_CartesianCategory Sign)
+    (Base_TwoSortCategory Sign)
+    (Base_SyntacticEpsilonModel Sign)
+    TermModel_GoodFibration.
 Proof.
   refine (@Build_EpsilonHyperModel Sign 
     (Base_SetoidCategory Sign) 
@@ -1685,7 +1662,6 @@ Proof.
     (Base_TwoSortCategory Sign) 
     (Base_SyntacticEpsilonModel Sign)
     TermModel_GoodFibration 
-    TermModel_StrictGoodFibration 
     term_model_i_atom
     _ 
     _).
@@ -1770,7 +1746,6 @@ Lemma term_model_interp_id : forall {Sign : Type} {SM : SkolemMapping Sign} (ctx
             (Base_TwoSortCategory Sign) 
             (Base_SyntacticEpsilonModel Sign) 
             TermModel_GoodFibration 
-            TermModel_StrictGoodFibration 
             TermModel_EpsilonHyperModel 
             ctx X) = X.
 Proof. 
@@ -1856,7 +1831,6 @@ Instance TermModel_AdjointEpsilonFibration {Sign : Type} {SM : SkolemMapping Sig
     (Base_TwoSortCategory Sign) 
     (Base_SyntacticEpsilonModel Sign) 
     TermModel_GoodFibration 
-    TermModel_StrictGoodFibration 
     TermModel_EpsilonHyperModel.
 Proof.
   constructor.
@@ -2500,7 +2474,6 @@ Lemma term_model_interp_ctx_id : forall {Sign : Type} {SM : SkolemMapping Sign}
        (Base_TwoSortCategory Sign)
        (Base_SyntacticEpsilonModel Sign)
        TermModel_GoodFibration
-       TermModel_StrictGoodFibration
        TermModel_EpsilonHyperModel
        I G)
   = h_make_ctx_ty G.
@@ -2524,13 +2497,12 @@ Theorem epsilon_adjoint_completeness_inhabitational_gen :
           (TSC : TwoSortCategory C)
           (BEM : @BaseEpsilonModel Sign C CC TSC)
           (GF : GoodFibration C)
-          (SGF : StrictGoodFibration C GF)
-          (EHM : @EpsilonHyperModel Sign C CC TSC BEM GF SGF)
-          (AEF : @AdjointEpsilonFibration Sign SM C CC TSC BEM GF SGF EHM),
+          (EHM : @EpsilonHyperModel Sign C CC TSC BEM GF)
+          (AEF : @AdjointEpsilonFibration Sign SM C CC TSC BEM GF EHM),
      inhabited
        (@hom (Fiber (interp_ty I))
-             (@interp_h_ctx Sign C CC TSC BEM GF SGF EHM I G)
-             (@interp_h_ty  Sign C CC TSC BEM GF SGF EHM I Phi))) ->
+             (@interp_h_ctx Sign C CC TSC BEM GF EHM I G)
+             (@interp_h_ty  Sign C CC TSC BEM GF EHM I Phi))) ->
   exists (p : @h_tm Sign),
     inhabited (h_derivation I G p Phi).
 Proof.
@@ -2544,7 +2516,6 @@ Proof.
        (Base_TwoSortCategory Sign)
        (Base_SyntacticEpsilonModel Sign)
        TermModel_GoodFibration
-       TermModel_StrictGoodFibration
        TermModel_EpsilonHyperModel
        TermModel_AdjointEpsilonFibration) as H_term.
 
@@ -2561,7 +2532,6 @@ Proof.
          (Base_TwoSortCategory Sign)
          (Base_SyntacticEpsilonModel Sign)
          TermModel_GoodFibration
-         TermModel_StrictGoodFibration
          TermModel_EpsilonHyperModel
          I G)
     = h_make_ctx_ty G).
@@ -2579,7 +2549,6 @@ Proof.
          (Base_TwoSortCategory Sign)
          (Base_SyntacticEpsilonModel Sign)
          TermModel_GoodFibration
-         TermModel_StrictGoodFibration
          TermModel_EpsilonHyperModel
          I Phi)
     = Phi).

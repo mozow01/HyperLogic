@@ -37,12 +37,12 @@ Defined.
 Lemma form_subst_iso : 
   forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF}
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel}
   (I A : b_ty) (f : @b_tm Sign) (df : base_typing I f A) (Phi : @h_ty Sign),
   interp_h_ty I (form_subst f Phi) ≅O @fobj _ _ (Pullback (interp_tm df)) (interp_h_ty A Phi).
 Proof.
-  intros Sign SM C CC TSC BEM GF SGF EHM.
+  intros Sign SM C CC TSC BEM GF EHM.
   (* Mivel a Phi a lemma végén van, revertáljuk a többit, hogy az indukciós hipotézis (IH) 
      megkapja az I, A, f, df paramétereket (hogy a kvantorok ágaiban frissülhessenek a kontextusok). *)
   intros I A f df Phi.
@@ -77,12 +77,12 @@ Defined.
 Lemma ctx_subst_iso : 
   forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF}
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel}
   (I A : b_ty) (G : @h_context Sign),
   interp_h_ctx (b_Prod I A) (ctx_subst b_fst G) ≅O @fobj _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (interp_h_ctx I G).
 Proof.
-  intros Sign SM C CC TSC BEM GF SGF EHM I A G.
+  intros Sign SM C CC TSC BEM GF EHM I A G.
   induction G as [| Phi G' IHG']; simpl.
   - (* Báziseset: Üres kontextus (terminális objektum) visszahúzása *)
     symmetry. apply pb_term_iso.
@@ -103,14 +103,14 @@ Defined.
 Lemma interp_subst_cong : forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C} 
   {TSC : TwoSortCategory C} 
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF} (I J : b_ty) (f g : @b_tm Sign) (Phi : @h_ty Sign)
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel} (I J : b_ty) (f g : @b_tm Sign) (Phi : @h_ty Sign)
   (df : base_typing I f J) (dg : base_typing I g J),
   base_equiv df dg ->
   WellFormed J Phi ->
   (interp_h_ty I (form_subst f Phi)) ≅O (interp_h_ty I (form_subst g Phi)).
 Proof. 
-  intros Sign SM C CC TSC BEM GF SGF EHM I J f g Phi df dg Heq Hwf.
+  intros Sign SM C CC TSC BEM GF EHM I J f g Phi df dg Heq Hwf.
   revert I f g df dg Heq.
   induction Hwf; intros I' f' g' df' dg' Heq'; simpl.
   
@@ -135,12 +135,12 @@ Defined.
 Lemma interp_subst_id : forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C} 
   {TSC : TwoSortCategory C} 
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF} (I : b_ty) (Phi : @h_ty Sign),
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel} (I : b_ty) (Phi : @h_ty Sign),
   WellFormed I Phi ->
   (interp_h_ty I (form_subst b_id Phi)) ≅O (interp_h_ty I Phi).
 Proof. 
-  intros Sign SM C CC TSC BEM GF SGF EHM I Phi Hwf.
+  intros Sign SM C CC TSC BEM GF EHM I Phi Hwf.
   induction Hwf.
   - simpl. apply iso_refl.
   - simpl. apply iso_refl.
@@ -171,13 +171,13 @@ Defined.
 Lemma interp_subst_comp : forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C} 
   {TSC : TwoSortCategory C} 
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF} (I J K: b_ty) (f g : @b_tm Sign) (Phi : @h_ty Sign)
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel} (I J K: b_ty) (f g : @b_tm Sign) (Phi : @h_ty Sign)
   (df : base_typing J f K) (dg : base_typing I g J),
   WellFormed K Phi ->
   (interp_h_ty I (form_subst (b_comp f g) Phi)) ≅O (interp_h_ty I (form_subst g (form_subst f Phi))).
 Proof.
-  intros Sign SM C CC TSC BEM GF SGF EHM I J K f g Phi df dg Hwf.
+  intros Sign SM C CC TSC BEM GF EHM I J K f g Phi df dg Hwf.
   revert I J f g df dg.
   induction Hwf; intros I0 J0 f0 g0 df0 dg0; simpl.
   - apply iso_refl.
@@ -240,14 +240,14 @@ Defined.
 Lemma interp_form_equiv : 
   forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C}
-  {TSC : TwoSortCategory C} {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF}
-  {AdEHM : @AdjointEpsilonFibration Sign SM C CC TSC BEM GF SGF EHM},
+  {TSC : TwoSortCategory C} {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel}
+  {AdEHM : @AdjointEpsilonFibration Sign SM C CC TSC BEM GF EHM},
   forall (I : b_ty) (Phi Psi : @h_ty Sign),
   form_equiv I Phi Psi -> 
   interp_h_ty I Phi ≅O interp_h_ty I Psi.
 Proof. 
-  intros Sign SM C CC TSC BEM GF SGF EHM AdEHM I Phi Psi Heq.
+  intros Sign SM C CC TSC BEM GF EHM AdEHM I Phi Psi Heq.
   induction Heq; simpl.
 
   - (* FE_Atom *) eapply i_atom_cong_global. exact b.
@@ -334,14 +334,14 @@ Defined.
 Lemma interp_ctx_equiv : 
   forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C}
-  {TSC : TwoSortCategory C} {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF}
-  {AdEHM : @AdjointEpsilonFibration Sign SM C CC TSC BEM GF SGF EHM},
+  {TSC : TwoSortCategory C} {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel}
+  {AdEHM : @AdjointEpsilonFibration Sign SM C CC TSC BEM GF EHM},
   forall (I : b_ty) (G1 G2 : @h_context Sign),
   ctx_equiv I G1 G2 -> 
   interp_h_ctx I G1 ≅O interp_h_ctx I G2.
 Proof.
-  intros Sign SM C CC TSC BEM GF SGF EHM AdEHM I G1 G2 H_ctx.
+  intros Sign SM C CC TSC BEM GF EHM AdEHM I G1 G2 H_ctx.
   induction H_ctx; simpl. 
   - apply iso_refl.
   - apply prod_iso_cong.
@@ -358,13 +358,13 @@ Theorem soundness :
   forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C}
   {TSC : TwoSortCategory C} {BEM : BaseEpsilonModel} {GF : GoodFibration C} 
-  {SGF : StrictGoodFibration C GF} {EHM : EpsilonHyperModel SGF}
-  {AdEHM : @AdjointEpsilonFibration Sign SM C CC TSC BEM GF SGF EHM},
+  {EHM : EpsilonHyperModel}
+  {AdEHM : @AdjointEpsilonFibration Sign SM C CC TSC BEM GF EHM},
   forall (I : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi : @h_ty Sign),
   h_derivation I G p Phi -> 
   hom (interp_h_ctx I G) (interp_h_ty I Phi).
 Proof.
-  intros Sign SM C CC TSC BEM GF SGF EHM AdEHM I G p Phi H_der.
+  intros Sign SM C CC TSC BEM GF EHM AdEHM I G p Phi H_der.
   induction H_der.
   
   (* VÁLTOZÓK ÉS STRUKTURÁLIS SZABÁLYOK *)

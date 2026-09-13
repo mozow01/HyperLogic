@@ -402,13 +402,6 @@ Proof.
     intro x. cbn. apply f_equal. apply Hfg.
 Defined.
 
-Global Instance FHStrictGoodFibration :
-  StrictGoodFibration FHBaseCategory FHGoodFibration.
-Proof.
-  constructor. intros X Y M1 M2 Hbase.
-  exists (fun x => eq_sym (Hbase x)). exact I.
-Defined.
-
 (** The selector is executable and does not inspect a proof in Prop. *)
 Fixpoint FHArgmax (A : b_ty)
   (P : fh_base_denote A -> fh_carrier) : fh_base_denote A :=

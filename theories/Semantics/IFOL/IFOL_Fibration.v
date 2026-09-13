@@ -57,8 +57,7 @@ Class CoherentBaseIFOLModel {Func : Type} `{FunctionSignature Func}
 Class IFOLHyperModel {Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BIM : BaseIFOLModel} {GF : GoodFibration C}
-  (SGF : StrictGoodFibration C GF) := {
+  {BIM : BaseIFOLModel} {GF : GoodFibration C} := {
   i_atom : forall (p : Pred) (t : @b_tm Func) (I : b_ty),
     @obj (Fiber (interp_ty I));
 
@@ -75,8 +74,8 @@ Class IFOLHyperModel {Func Pred : Type}
 Fixpoint interp_h_ty {Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BIM : BaseIFOLModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-  {IHM : IFOLHyperModel SGF}
+  {BIM : BaseIFOLModel} {GF : GoodFibration C}
+  {IHM : IFOLHyperModel}
   (I : b_ty) (Phi : @h_ty Func Pred) : @obj (Fiber (interp_ty I)) :=
   match Phi with
   | Ty_Unit => terminal
@@ -92,8 +91,8 @@ Fixpoint interp_h_ty {Func Pred : Type}
 Fixpoint interp_h_ctx {Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BIM : BaseIFOLModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-  {IHM : IFOLHyperModel SGF}
+  {BIM : BaseIFOLModel} {GF : GoodFibration C}
+  {IHM : IFOLHyperModel}
   (I : b_ty) (G : @h_context Func Pred) : @obj (Fiber (interp_ty I)) :=
   match G with
   | nil => terminal

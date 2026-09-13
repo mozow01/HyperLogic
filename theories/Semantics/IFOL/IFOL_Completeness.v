@@ -1473,34 +1473,6 @@ Proof.
 Defined.
 
 (* ================================================================= *)
-(* KANONIKUS MODELL: STRICT GOOD FIBRATION                           *)
-(* ================================================================= *)
-
-Instance TermModel_StrictGoodFibration {Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred}  : 
-  StrictGoodFibration (Base_SetoidCategory Func) TermModel_GoodFibration.
-Proof.
-  constructor.
-  intros X Y M1 M2 Heq.
-  
-  (* Mivel nem tudom, hogyan definiáltad a TotalHom_equiv-et a 
-     függvénytáradban, kezdd azzal, hogy kibontod. 
-     Általában ez csak a bázis-egyenlőség (Heq) továbbadása. *)
-  unfold TotalHom_equiv. 
-(* Bizonyítjuk a szimmetrikus bázis-egyenlőséget *)
-  assert (Hsym : h_base M2 ≅ h_base M1). {
-    symmetry. exact Heq.
-  }
-  
-  (* Ezt az egyenlőséget adjuk meg az egzisztenciális (exists) célnak *)
-  exists Hsym.
-  
-  (* A maradék cél a szálkategória morfizmusainak egyenlősége.
-     Mivel a szálkategóriád Thin, ez teljesen automatikusan megoldódik! *)
-  unfold fiber_equiv; constructor.
-Defined.
-
-  
-(* ================================================================= *)
 (* CANONICAL MODEL: ATOMIC PREDICATE INTERPRETATION                  *)
 (* ================================================================= *)
 
@@ -1555,7 +1527,12 @@ Defined.
 (* ================================================================= *)
 
 Instance TermModel_IFOLHyperModel {Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred}  : 
-  IFOLHyperModel TermModel_StrictGoodFibration.
+  @IFOLHyperModel Func Pred H H0
+    (Base_SetoidCategory Func)
+    (Base_CartesianCategory Func)
+    (Base_TwoSortCategory Func)
+    (Base_SyntacticIFOLModel Func)
+    TermModel_GoodFibration.
 Proof.
   refine (@Build_IFOLHyperModel Func Pred H H0
     (Base_SetoidCategory Func) 
@@ -1563,7 +1540,6 @@ Proof.
     (Base_TwoSortCategory Func) 
     (Base_SyntacticIFOLModel Func)
     TermModel_GoodFibration 
-    TermModel_StrictGoodFibration 
     term_model_i_atom
     _ 
     _).
@@ -1697,7 +1673,6 @@ Lemma term_model_interp_id : forall {Func Pred : Type} `{HFunc : FunctionSignatu
             (Base_TwoSortCategory Func)
             (Base_SyntacticIFOLModel Func)
             TermModel_GoodFibration
-            TermModel_StrictGoodFibration
             (@TermModel_IFOLHyperModel Func Pred HFunc HPred )
             ctx X) = X.
 Proof. 
@@ -2131,7 +2106,6 @@ Lemma term_model_interp_ctx_id : forall {Func Pred : Type} `{HFunc : FunctionSig
        (Base_TwoSortCategory Func)
        (Base_SyntacticIFOLModel Func)
        TermModel_GoodFibration
-       TermModel_StrictGoodFibration
        (@TermModel_IFOLHyperModel Func Pred HFunc HPred )
        I G)
   = h_make_ctx_ty G.
@@ -2155,12 +2129,11 @@ Theorem ifol_completeness_inhabitational_gen :
           (TSC : TwoSortCategory C)
           (BEM : @BaseIFOLModel Func HFunc C CC TSC)
           (GF : GoodFibration C)
-          (SGF : StrictGoodFibration C GF)
-          (EHM : @IFOLHyperModel Func Pred HFunc HPred C CC TSC BEM GF SGF),
+          (EHM : @IFOLHyperModel Func Pred HFunc HPred C CC TSC BEM GF),
      inhabited
        (@hom (Fiber (interp_ty I))
-             (@interp_h_ctx Func Pred HFunc HPred C CC TSC BEM GF SGF EHM I G)
-             (@interp_h_ty  Func Pred HFunc HPred C CC TSC BEM GF SGF EHM I Phi))) ->
+             (@interp_h_ctx Func Pred HFunc HPred C CC TSC BEM GF EHM I G)
+             (@interp_h_ty  Func Pred HFunc HPred C CC TSC BEM GF EHM I Phi))) ->
   exists (p : @h_tm Func Pred),
     inhabited (h_derivation I G p Phi).
 Proof.
@@ -2174,7 +2147,6 @@ Proof.
        (Base_TwoSortCategory Func)
        (Base_SyntacticIFOLModel Func)
        TermModel_GoodFibration
-       TermModel_StrictGoodFibration
        TermModel_IFOLHyperModel) as H_term.
 
   (* 2. Kinyerjük a termmodellbeli morfizmust. *)
@@ -2190,7 +2162,6 @@ Proof.
          (Base_TwoSortCategory Func)
          (Base_SyntacticIFOLModel Func)
          TermModel_GoodFibration
-         TermModel_StrictGoodFibration
          (@TermModel_IFOLHyperModel Func Pred HFunc HPred )
          I G)
     = h_make_ctx_ty G).
@@ -2208,7 +2179,6 @@ Proof.
          (Base_TwoSortCategory Func)
          (Base_SyntacticIFOLModel Func)
          TermModel_GoodFibration
-         TermModel_StrictGoodFibration
          (@TermModel_IFOLHyperModel Func Pred HFunc HPred )
          I Phi)
     = Phi).

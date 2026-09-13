@@ -310,23 +310,13 @@ Proof.
   Unshelve. all: intros; h3_crush. all: reflexivity.
 Defined.
 
-Instance Fin_H3_StrictGoodFibration :
-  StrictGoodFibration Fin_Setoid Fin_H3_GoodFibration.
-Proof.
-  econstructor.
-  intros X Y M1 M2 Heq.
-  assert (H_sym : h_base M2 ≅ h_base M1) by (symmetry; exact Heq).
-  exists H_sym.
-  exact I.
-Defined.
-
 Definition Fin_H3_EpsilonHyperModel_for
   (BEM : @BaseEpsilonFullModel TestSign TestFunc TestFunctionSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort) :
   @EpsilonHyperModel TestSign TestFunc Datatypes.unit
     TestFunctionSignature TestPredicateSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort BEM
-    Fin_H3_GoodFibration Fin_H3_StrictGoodFibration.
+    Fin_H3_GoodFibration.
 Proof.
   unshelve econstructor.
   - exact (fun _ _ _ => HMid).
@@ -338,7 +328,7 @@ Instance Fin_H3_EpsilonHyperModel :
   @EpsilonHyperModel TestSign TestFunc Datatypes.unit
     TestFunctionSignature TestPredicateSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort Fin_BaseModel
-    Fin_H3_GoodFibration Fin_H3_StrictGoodFibration :=
+    Fin_H3_GoodFibration :=
   Fin_H3_EpsilonHyperModel_for Fin_BaseModel.
 
 Lemma fin_H3_interp_h_ty_subst_const
@@ -349,14 +339,14 @@ Lemma fin_H3_interp_h_ty_subst_const
   @interp_h_ty TestSign TestFunc Datatypes.unit
     TestFunctionSignature TestPredicateSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort BEM
-    Fin_H3_GoodFibration Fin_H3_StrictGoodFibration
+    Fin_H3_GoodFibration
     (Fin_H3_EpsilonHyperModel_for BEM)
     I (form_subst f Phi)
   =
   @interp_h_ty TestSign TestFunc Datatypes.unit
     TestFunctionSignature TestPredicateSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort BEM
-    Fin_H3_GoodFibration Fin_H3_StrictGoodFibration
+    Fin_H3_GoodFibration
     (Fin_H3_EpsilonHyperModel_for BEM)
     J Phi.
 Proof.
@@ -387,7 +377,7 @@ Definition Fin_H3_AdjointEpsilonFullFibration_for
   @AdjointEpsilonFullFibration TestSign TestFunc Datatypes.unit
     TestFunctionSignature TestPredicateSignature TestSkolemMapping
     Fin_Setoid Fin_Cartesian Fin_TwoSort BEM
-    Fin_H3_GoodFibration Fin_H3_StrictGoodFibration
+    Fin_H3_GoodFibration
     (Fin_H3_EpsilonHyperModel_for BEM).
 Proof.
   constructor.
@@ -412,7 +402,7 @@ Instance Fin_H3_AdjointEpsilonFullFibration :
   @AdjointEpsilonFullFibration TestSign TestFunc Datatypes.unit
     TestFunctionSignature TestPredicateSignature TestSkolemMapping
     Fin_Setoid Fin_Cartesian Fin_TwoSort Fin_BaseModel
-    Fin_H3_GoodFibration Fin_H3_StrictGoodFibration Fin_H3_EpsilonHyperModel :=
+    Fin_H3_GoodFibration Fin_H3_EpsilonHyperModel :=
   Fin_H3_AdjointEpsilonFullFibration_for
     Fin_BaseModel.
 
@@ -425,7 +415,6 @@ Definition separating_EpsilonFullModel :
      efm_base_model := Fin_BaseModel;
      efm_base_coherent := Fin_CoherentBaseModel;
      efm_good_fibration := Fin_H3_GoodFibration;
-     efm_strict_fibration := Fin_H3_StrictGoodFibration;
      efm_hyper_model := Fin_H3_EpsilonHyperModel;
      efm_adjoint_epsilon := Fin_H3_AdjointEpsilonFullFibration |}.
 
@@ -495,14 +484,14 @@ Definition UniformFin_H3_EpsilonHyperModel :
   @EpsilonHyperModel TestSign TestFunc Datatypes.unit
     TestFunctionSignature TestPredicateSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort UniformFin_BaseModel
-    Fin_H3_GoodFibration Fin_H3_StrictGoodFibration :=
+    Fin_H3_GoodFibration :=
   Fin_H3_EpsilonHyperModel_for UniformFin_BaseModel.
 
 Definition UniformFin_H3_AdjointEpsilonFullFibration :
   @AdjointEpsilonFullFibration TestSign TestFunc Datatypes.unit
     TestFunctionSignature TestPredicateSignature TestSkolemMapping
     Fin_Setoid Fin_Cartesian Fin_TwoSort UniformFin_BaseModel
-    Fin_H3_GoodFibration Fin_H3_StrictGoodFibration
+    Fin_H3_GoodFibration
     UniformFin_H3_EpsilonHyperModel :=
   Fin_H3_AdjointEpsilonFullFibration_for UniformFin_BaseModel.
 
@@ -515,7 +504,6 @@ Definition uniform_EpsilonFullModel :
      efm_base_model := UniformFin_BaseModel;
      efm_base_coherent := UniformFin_CoherentBaseModel;
      efm_good_fibration := Fin_H3_GoodFibration;
-     efm_strict_fibration := Fin_H3_StrictGoodFibration;
      efm_hyper_model := UniformFin_H3_EpsilonHyperModel;
      efm_adjoint_epsilon := UniformFin_H3_AdjointEpsilonFullFibration |}.
 

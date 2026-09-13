@@ -64,7 +64,7 @@ Class EpsilonHyperModel
   {Sign : Type} 
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
   {BEM : BaseEpsilonModel} 
-  {GF : GoodFibration C} (SGF : StrictGoodFibration C GF) := {
+  {GF : GoodFibration C} := {
   
   i_atom : forall (p : nat) (t : @b_tm Sign) (I : b_ty), @obj (Fiber (interp_ty I)) ;
   
@@ -77,8 +77,8 @@ Class EpsilonHyperModel
 
 Fixpoint interp_h_ty 
   {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF}
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel}
   (I : b_ty) (Phi : @h_ty Sign) : @obj (Fiber (interp_ty I)) :=
   match Phi with
   | Ty_Unit => terminal
@@ -97,8 +97,8 @@ Fixpoint interp_h_ty
 
 Fixpoint interp_h_ctx 
   {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF}
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel}
   (I : b_ty) (G : @h_context Sign) : @obj (Fiber (interp_ty I)) :=
   match G with
   | nil => terminal
@@ -113,8 +113,7 @@ Class AdjointEpsilonFibration
   {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
   {BEM : BaseEpsilonModel} {GF : GoodFibration C} 
-  {SGF : StrictGoodFibration C GF} 
-  {EHM : EpsilonHyperModel SGF} := {
+  {EHM : EpsilonHyperModel} := {
 
   eps_is_left_adj_obj : forall (I A : b_ty) (Phi : @h_ty Sign),
     WellFormed (b_Prod I A) Phi -> (* <--- Megköveteljük a helyes szintaxist *)

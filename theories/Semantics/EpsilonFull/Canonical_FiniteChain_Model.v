@@ -667,7 +667,7 @@ Defined.
 Global Instance FHCanonicalEpsilonHyperModel :
   @EpsilonHyperModel Label Func Pred HFunc HPred
     FHBaseCategory FHBaseCartesian FHBaseTwoSort
-    FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration.
+    FHCanonicalBaseEpsilonFullModel FHGoodFibration.
 Proof.
   unshelve econstructor.
   - exact FHCanonicalAtom.
@@ -685,7 +685,7 @@ Lemma FHCanonicalFormula_interp :
   FHPredicateValue
     (@interp_h_ty Label Func Pred HFunc HPred
       FHBaseCategory FHBaseCartesian FHBaseTwoSort
-      FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+      FHCanonicalBaseEpsilonFullModel FHGoodFibration
       FHCanonicalEpsilonHyperModel I Phi) env =
   FHCanonicalFormulaEval function_value predicate_value Phi
     (FHEncode (FHModelBase I) env).
@@ -706,11 +706,11 @@ Proof.
         (FHPredicateCartesian (FHModelBase I))
         (@interp_h_ty Label Func Pred HFunc HPred
         FHBaseCategory FHBaseCartesian FHBaseTwoSort
-        FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+        FHCanonicalBaseEpsilonFullModel FHGoodFibration
         FHCanonicalEpsilonHyperModel I Phi1)
         (@interp_h_ty Label Func Pred HFunc HPred
         FHBaseCategory FHBaseCartesian FHBaseTwoSort
-        FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+        FHCanonicalBaseEpsilonFullModel FHGoodFibration
         FHCanonicalEpsilonHyperModel I Phi2)) env =
       fh_meet
         (FHCanonicalFormulaEval function_value predicate_value Phi1
@@ -728,11 +728,11 @@ Proof.
         (FHPredicateBiClosed (FHModelBase I))
         (@interp_h_ty Label Func Pred HFunc HPred
         FHBaseCategory FHBaseCartesian FHBaseTwoSort
-        FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+        FHCanonicalBaseEpsilonFullModel FHGoodFibration
         FHCanonicalEpsilonHyperModel I Phi1)
         (@interp_h_ty Label Func Pred HFunc HPred
         FHBaseCategory FHBaseCartesian FHBaseTwoSort
-        FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+        FHCanonicalBaseEpsilonFullModel FHGoodFibration
         FHCanonicalEpsilonHyperModel I Phi2)) env =
       fh_join
         (FHCanonicalFormulaEval function_value predicate_value Phi1
@@ -749,11 +749,11 @@ Proof.
         (FHPredicateClosed (FHModelBase I))
         (@interp_h_ty Label Func Pred HFunc HPred
         FHBaseCategory FHBaseCartesian FHBaseTwoSort
-        FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+        FHCanonicalBaseEpsilonFullModel FHGoodFibration
         FHCanonicalEpsilonHyperModel I Phi2)
         (@interp_h_ty Label Func Pred HFunc HPred
         FHBaseCategory FHBaseCartesian FHBaseTwoSort
-        FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+        FHCanonicalBaseEpsilonFullModel FHGoodFibration
         FHCanonicalEpsilonHyperModel I Phi1)) env =
       fh_impl
         (FHCanonicalFormulaEval function_value predicate_value Phi1
@@ -776,7 +776,7 @@ Lemma FHCanonicalEpsilon_pointwise_maximum :
   FHPointwiseMaximum (FHModelBase I) (FHModelBase A)
     (@interp_h_ty Label Func Pred HFunc HPred
       FHBaseCategory FHBaseCartesian FHBaseTwoSort
-      FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+      FHCanonicalBaseEpsilonFullModel FHGoodFibration
       FHCanonicalEpsilonHyperModel (b_Prod I A) Phi)
     (@interp_tm Label Func HFunc
       FHBaseCategory FHBaseCartesian FHBaseTwoSort
@@ -788,7 +788,7 @@ Proof.
     (FHPredicateValue
       (@interp_h_ty Label Func Pred HFunc HPred
         FHBaseCategory FHBaseCartesian FHBaseTwoSort
-        FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+        FHCanonicalBaseEpsilonFullModel FHGoodFibration
         FHCanonicalEpsilonHyperModel (b_Prod I A) Phi)
       (env, FHCanonicalChoice function_value predicate_value
         (CFLabels.epsilon_label A Phi) (FHModelBase A)
@@ -823,7 +823,7 @@ Global Instance FHCanonicalAdjointEpsilonFullFibration :
   @AdjointEpsilonFullFibration Label Func Pred HFunc HPred
     (CFLabels.CanonicalSkolemMapping Func Pred)
     FHBaseCategory FHBaseCartesian FHBaseTwoSort
-    FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+    FHCanonicalBaseEpsilonFullModel FHGoodFibration
     FHCanonicalEpsilonHyperModel.
 Proof.
   refine {|
@@ -838,7 +838,7 @@ Proof.
       exact (@form_subst_iso Label Func Pred HFunc HPred
         (CFLabels.CanonicalSkolemMapping Func Pred)
         FHBaseCategory FHBaseCartesian FHBaseTwoSort
-        FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+        FHCanonicalBaseEpsilonFullModel FHGoodFibration
         FHCanonicalEpsilonHyperModel
         I (b_Prod I A)
         (b_pair b_id (b_const A (CFLabels.epsilon_label A Phi)))
@@ -852,7 +852,7 @@ Proof.
       exact (@form_subst_iso Label Func Pred HFunc HPred
         (CFLabels.CanonicalSkolemMapping Func Pred)
         FHBaseCategory FHBaseCartesian FHBaseTwoSort
-        FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+        FHCanonicalBaseEpsilonFullModel FHGoodFibration
         FHCanonicalEpsilonHyperModel
         I (b_Prod I A)
         (b_pair b_id (b_const A (CFLabels.epsilon_label A Phi)))
@@ -872,7 +872,7 @@ Global Instance FHCanonicalAllPredicateEpsilonFullModel :
   @AllPredicateEpsilonFullModel Label Func Pred HFunc HPred
     (CFLabels.CanonicalSkolemMapping Func Pred)
     FHBaseCategory FHBaseCartesian FHBaseTwoSort
-    FHCanonicalBaseEpsilonFullModel FHGoodFibration FHStrictGoodFibration
+    FHCanonicalBaseEpsilonFullModel FHGoodFibration
     FHCanonicalEpsilonHyperModel FHCanonicalAdjointEpsilonFullFibration.
 Proof.
   constructor. exact FHCanonicalAllPredicateEpsilonFullFibration.
@@ -889,7 +889,6 @@ Proof.
     efm_base_model := FHCanonicalBaseEpsilonFullModel;
     efm_base_coherent := FHCanonicalCoherentBaseModel;
     efm_good_fibration := FHGoodFibration;
-    efm_strict_fibration := FHStrictGoodFibration;
     efm_hyper_model := FHCanonicalEpsilonHyperModel;
     efm_adjoint_epsilon := FHCanonicalAdjointEpsilonFullFibration
   |}.

@@ -139,16 +139,6 @@ Proof.
   Unshelve. all: intros; h3_crush. all: reflexivity.
 Defined.
 
-Instance H3_StrictGoodFibration {Sign Func : Type} `{FunctionSignature Func}
-  : StrictGoodFibration (Base_SetoidCategory Sign Func) H3_GoodFibration.
-Proof.
-  econstructor.
-  intros X Y M1 M2 Heq.
-  assert (H_sym : h_base M2 ≅ h_base M1) by (symmetry; exact Heq).
-  exists H_sym.
-  exact I.
-Defined.
-
 Instance H3_EpsilonHyperModel
   {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred}
   : @EpsilonHyperModel
@@ -157,8 +147,7 @@ Instance H3_EpsilonHyperModel
       (Base_CartesianCategory Sign Func)
       (Base_TwoSortCategory Sign Func)
       (Base_SyntacticEpsilonFullModel Sign Func)
-      H3_GoodFibration
-      H3_StrictGoodFibration.
+      H3_GoodFibration.
 Proof.
   unshelve econstructor.
   - exact (fun _ _ _ => HMid).
@@ -178,7 +167,6 @@ Lemma H3_interp_h_ty_subst_const :
     (Base_TwoSortCategory Sign Func)
     (Base_SyntacticEpsilonFullModel Sign Func)
     H3_GoodFibration
-    H3_StrictGoodFibration
     H3_EpsilonHyperModel
     I
     (form_subst f Phi)
@@ -190,7 +178,6 @@ Lemma H3_interp_h_ty_subst_const :
     (Base_TwoSortCategory Sign Func)
     (Base_SyntacticEpsilonFullModel Sign Func)
     H3_GoodFibration
-    H3_StrictGoodFibration
     H3_EpsilonHyperModel
     J
     Phi.
@@ -227,7 +214,6 @@ Instance H3_AdjointEpsilonFullFibration
       (Base_TwoSortCategory Sign Func)
       (Base_SyntacticEpsilonFullModel Sign Func)
       H3_GoodFibration
-      H3_StrictGoodFibration
       H3_EpsilonHyperModel.
 Proof.
   constructor.
@@ -300,7 +286,6 @@ Theorem H3_LEM_refuted_at_unit :
       (Base_TwoSortCategory Sign Func)
       (Base_SyntacticEpsilonFullModel Sign Func)
       H3_GoodFibration
-      H3_StrictGoodFibration
       H3_EpsilonHyperModel
       b_Unit nil)
     (@interp_h_ty
@@ -310,7 +295,6 @@ Theorem H3_LEM_refuted_at_unit :
       (Base_TwoSortCategory Sign Func)
       (Base_SyntacticEpsilonFullModel Sign Func)
       H3_GoodFibration
-      H3_StrictGoodFibration
       H3_EpsilonHyperModel
       b_Unit (LEM_Formula b_Unit)) ->
   False.
@@ -334,7 +318,6 @@ Proof.
     (Base_TwoSortCategory Sign Func)
     (Base_SyntacticEpsilonFullModel Sign Func)
     H3_GoodFibration
-    H3_StrictGoodFibration
     H3_EpsilonHyperModel
     H3_AdjointEpsilonFullFibration
     b_Unit nil p (LEM_Formula b_Unit)

@@ -675,15 +675,6 @@ Proof.
 Defined.
 
 
-Instance Fin_StrictGoodFibration : StrictGoodFibration Fin_Setoid Fin_GoodFibration.
-Proof.
-  econstructor.
-  intros X Y M1 M2 H.
-  (* Kézzel adjuk meg a bázisbeli egyenlőség megfordítását! *)
-  exists (fun x => eq_sym (H x)).
-  exact I.
-Defined.
-
 (* ================================================================= *)
 (* 7. A DUAL DRINKER CÁFOLATA SZINTAKTIKAI SZINTEN                   *)
 (* ================================================================= *)
@@ -728,7 +719,11 @@ Proof.
 Defined.
 
 (* 2. The iFOL atomic interpretation induced by the finite base model. *)
-Instance Fin_IFOLHyperModel : IFOLHyperModel Fin_StrictGoodFibration.
+Instance Fin_IFOLHyperModel :
+  @IFOLHyperModel ifol_dd_func ifol_dd_pred
+    ifol_dd_function_signature ifol_dd_predicate_signature
+    Fin_Setoid Fin_Cartesian Fin_TwoSort
+    Fin_BaseIFOLModel Fin_GoodFibration.
 Proof.
   unshelve econstructor.
   - (* 1. Cél: Az i_atom függvény megadása (Szemantikai illesztéssel) *)
@@ -798,24 +793,24 @@ Theorem ifol_dual_drinker_refuted :
   ~ (forall (C : SetoidCategory) (CC : CartesianCategory C)
             (TSC : TwoSortCategory C)
             (BIM : @BaseIFOLModel ifol_dd_func ifol_dd_function_signature C CC TSC)
-            (GF : GoodFibration C) (SGF : StrictGoodFibration C GF)
+            (GF : GoodFibration C)
             (IHM : @IFOLHyperModel ifol_dd_func ifol_dd_pred
               ifol_dd_function_signature ifol_dd_predicate_signature
-              C CC TSC BIM GF SGF)
+              C CC TSC BIM GF)
             (I : b_ty),
        inhabited
          (@hom (Fiber (@interp_ty C CC TSC I))
            (@interp_h_ctx ifol_dd_func ifol_dd_pred
              ifol_dd_function_signature ifol_dd_predicate_signature
-             C CC TSC BIM GF SGF IHM I nil)
+             C CC TSC BIM GF IHM I nil)
            (@interp_h_ty ifol_dd_func ifol_dd_pred
              ifol_dd_function_signature ifol_dd_predicate_signature
-             C CC TSC BIM GF SGF IHM I (ifol_dual_drinker_formula I)))).
+             C CC TSC BIM GF IHM I (ifol_dual_drinker_formula I)))).
 Proof.
   intro H_univ.
   specialize (H_univ
     Fin_Setoid Fin_Cartesian Fin_TwoSort Fin_BaseIFOLModel
-    Fin_GoodFibration Fin_StrictGoodFibration Fin_IFOLHyperModel b_Unit).
+    Fin_GoodFibration Fin_IFOLHyperModel b_Unit).
   destruct H_univ as [f_drinker].
   pose proof (f_drinker tt) as f_eval.
   compute in f_eval.

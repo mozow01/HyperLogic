@@ -38,10 +38,6 @@ Definition TermModel_GoodFibration :=
   @Completeness.TermModel_GoodFibration
     (Sign Func Pred) Func Pred HFunc HPred (SkolemMapping Func Pred).
 
-Definition TermModel_StrictGoodFibration :=
-  @Completeness.TermModel_StrictGoodFibration
-    (Sign Func Pred) Func Pred HFunc HPred (SkolemMapping Func Pred).
-
 Definition TermModel_EpsilonHyperModel :=
   @Completeness.TermModel_EpsilonHyperModel
     (Sign Func Pred) Func Pred HFunc HPred (SkolemMapping Func Pred).

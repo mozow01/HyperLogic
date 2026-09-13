@@ -1497,29 +1497,6 @@ Proof.
 Defined.
 
 (* ================================================================= *)
-(* KANONIKUS MODELL: STRICT GOOD FIBRATION                           *)
-(* ================================================================= *)
-
-Instance TermModel_StrictGoodFibration {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} :
-  StrictGoodFibration (Base_SetoidCategory Sign Func) TermModel_GoodFibration.
-Proof.
-  constructor.
-  intros X Y M1 M2 Heq.
-
-  unfold TotalHom_equiv.
-  (* Supply the symmetric base equality. *)
-  assert (Hsym : h_base M2 ≅ h_base M1). {
-    symmetry. exact Heq.
-  }
-
-  exists Hsym.
-
-  (* Fiber equality follows from thinness. *)
-  unfold fiber_equiv; constructor.
-Defined.
-
-
-(* ================================================================= *)
 (* KANONIKUS MODELL: EPSILON HYPER MODEL                             *)
 (* ================================================================= *)
 
@@ -1572,7 +1549,12 @@ Defined.
 (* ================================================================= *)
 
 Instance TermModel_EpsilonHyperModel {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} :
-  EpsilonHyperModel TermModel_StrictGoodFibration.
+  @EpsilonHyperModel Sign Func Pred H H0
+    (Base_SetoidCategory Sign Func)
+    (Base_CartesianCategory Sign Func)
+    (Base_TwoSortCategory Sign Func)
+    (Base_SyntacticEpsilonModel Sign Func)
+    TermModel_GoodFibration.
 Proof.
   refine (@Build_EpsilonHyperModel Sign Func Pred H H0
     (Base_SetoidCategory Sign Func)
@@ -1580,7 +1562,6 @@ Proof.
     (Base_TwoSortCategory Sign Func)
     (Base_SyntacticEpsilonModel Sign Func)
     TermModel_GoodFibration
-    TermModel_StrictGoodFibration
     term_model_i_atom
     _
     _).
@@ -1704,7 +1685,6 @@ Lemma term_model_interp_id : forall {Sign Func Pred : Type} `{HFunc : FunctionSi
             (Base_TwoSortCategory Sign Func)
             (Base_SyntacticEpsilonModel Sign Func)
             TermModel_GoodFibration
-            TermModel_StrictGoodFibration
             (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
             ctx X) = X.
 Proof.
@@ -1797,7 +1777,6 @@ Definition term_model_hom_of_derivation :
            (Base_TwoSortCategory Sign Func)
            (Base_SyntacticEpsilonModel Sign Func)
            TermModel_GoodFibration
-           TermModel_StrictGoodFibration
            (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
            I Phi)
         (@interp_h_ty Sign Func Pred HFunc HPred
@@ -1806,7 +1785,6 @@ Definition term_model_hom_of_derivation :
            (Base_TwoSortCategory Sign Func)
            (Base_SyntacticEpsilonModel Sign Func)
            TermModel_GoodFibration
-           TermModel_StrictGoodFibration
            (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
            I Psi).
 Proof.
@@ -1855,7 +1833,6 @@ Lemma term_model_derivation_of_hom :
            (Base_TwoSortCategory Sign Func)
            (Base_SyntacticEpsilonModel Sign Func)
            TermModel_GoodFibration
-           TermModel_StrictGoodFibration
            (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
            I Phi)
         (@interp_h_ty Sign Func Pred HFunc HPred
@@ -1864,7 +1841,6 @@ Lemma term_model_derivation_of_hom :
            (Base_TwoSortCategory Sign Func)
            (Base_SyntacticEpsilonModel Sign Func)
            TermModel_GoodFibration
-           TermModel_StrictGoodFibration
            (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
            I Psi),
       { p : @h_tm Sign Func Pred &
@@ -1900,7 +1876,6 @@ Lemma term_model_iso_of_form_equiv :
          (Base_TwoSortCategory Sign Func)
          (Base_SyntacticEpsilonModel Sign Func)
          TermModel_GoodFibration
-         TermModel_StrictGoodFibration
          (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
          I Phi)
       (@interp_h_ty Sign Func Pred HFunc HPred
@@ -1909,7 +1884,6 @@ Lemma term_model_iso_of_form_equiv :
          (Base_TwoSortCategory Sign Func)
          (Base_SyntacticEpsilonModel Sign Func)
          TermModel_GoodFibration
-         TermModel_StrictGoodFibration
          (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
          I Psi).
 Proof.
@@ -2285,7 +2259,6 @@ Lemma term_model_interp_ctx_as_ty :
       (Base_TwoSortCategory Sign Func)
       (Base_SyntacticEpsilonModel Sign Func)
       TermModel_GoodFibration
-      TermModel_StrictGoodFibration
       (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
       I G
     =
@@ -2295,7 +2268,6 @@ Lemma term_model_interp_ctx_as_ty :
       (Base_TwoSortCategory Sign Func)
       (Base_SyntacticEpsilonModel Sign Func)
       TermModel_GoodFibration
-      TermModel_StrictGoodFibration
       (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
       I (h_make_ctx_ty G).
 Proof.
@@ -2338,7 +2310,6 @@ Lemma term_model_interp_ctx_id : forall {Sign Func Pred : Type} `{HFunc : Functi
        (Base_TwoSortCategory Sign Func)
        (Base_SyntacticEpsilonModel Sign Func)
        TermModel_GoodFibration
-       TermModel_StrictGoodFibration
        (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
        I G)
   = h_make_ctx_ty G.
@@ -2380,7 +2351,6 @@ Instance TermModel_EpsilonGoodFibration
     (Base_TwoSortCategory Sign Func)
     (Base_SyntacticEpsilonModel Sign Func)
     TermModel_GoodFibration
-    TermModel_StrictGoodFibration
     (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM).
 Proof.
   constructor.
@@ -2556,14 +2526,13 @@ Theorem epsilon_completeness_inhabitational_gen :
           (BEM : @BaseEpsilonModel Sign Func HFunc C CC TSC)
           (CBM : @CoherentBaseModel Sign Func HFunc C CC TSC BEM)
           (GF : GoodFibration C)
-          (SGF : StrictGoodFibration C GF)
-          (EHM : @EpsilonHyperModel Sign Func Pred HFunc HPred C CC TSC BEM GF SGF)
+          (EHM : @EpsilonHyperModel Sign Func Pred HFunc HPred C CC TSC BEM GF)
           (EGF : @EpsilonGoodFibration Sign Func Pred HFunc HPred SM
-            C CC TSC BEM GF SGF EHM),
+            C CC TSC BEM GF EHM),
      inhabited
        (@hom (Fiber (interp_ty I))
-             (@interp_h_ctx Sign Func Pred HFunc HPred C CC TSC BEM GF SGF EHM I G)
-             (@interp_h_ty  Sign Func Pred HFunc HPred C CC TSC BEM GF SGF EHM I Phi))) ->
+             (@interp_h_ctx Sign Func Pred HFunc HPred C CC TSC BEM GF EHM I G)
+             (@interp_h_ty  Sign Func Pred HFunc HPred C CC TSC BEM GF EHM I Phi))) ->
   exists (p : @h_tm Sign Func Pred),
     inhabited (h_derivation I G p Phi).
 Proof.
@@ -2578,7 +2547,6 @@ Proof.
        (Base_SyntacticEpsilonModel Sign Func)
        (Base_SyntacticCoherentModel Sign Func)
        TermModel_GoodFibration
-       TermModel_StrictGoodFibration
        TermModel_EpsilonHyperModel
        TermModel_EpsilonGoodFibration) as H_term.
 
@@ -2595,7 +2563,6 @@ Proof.
          (Base_TwoSortCategory Sign Func)
          (Base_SyntacticEpsilonModel Sign Func)
          TermModel_GoodFibration
-         TermModel_StrictGoodFibration
          (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
          I G)
     = h_make_ctx_ty G).
@@ -2613,7 +2580,6 @@ Proof.
          (Base_TwoSortCategory Sign Func)
          (Base_SyntacticEpsilonModel Sign Func)
          TermModel_GoodFibration
-         TermModel_StrictGoodFibration
          (@TermModel_EpsilonHyperModel Sign Func Pred HFunc HPred SM)
          I Phi)
     = Phi).

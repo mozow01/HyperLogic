@@ -33,11 +33,10 @@ Context {CC : CartesianCategory C}.
 Context {TSC : TwoSortCategory C}.
 Context {BEM : @BaseEpsilonFullModel Sign Func HFunc C CC TSC}.
 Context {GF : GoodFibration C}.
-Context {SGF : StrictGoodFibration C GF}.
 Context {EHM : @EpsilonHyperModel Sign Func Pred HFunc HPred
-  C CC TSC BEM GF SGF}.
+  C CC TSC BEM GF}.
 Context {AEF : @AdjointEpsilonFullFibration Sign Func Pred HFunc HPred SM
-  C CC TSC BEM GF SGF EHM}.
+  C CC TSC BEM GF EHM}.
 
 Definition interpreted_epsilon_morphism
   (I A : b_ty) (Phi : @h_ty Sign Func Pred) :
@@ -162,11 +161,10 @@ Class AllPredicateEpsilonFullModel
   {TSC : TwoSortCategory C}
   {BEM : @BaseEpsilonFullModel Sign Func HFunc C CC TSC}
   {GF : GoodFibration C}
-  {SGF : StrictGoodFibration C GF}
   {EHM : @EpsilonHyperModel Sign Func Pred HFunc HPred
-    C CC TSC BEM GF SGF}
+    C CC TSC BEM GF}
   {AEF : @AdjointEpsilonFullFibration Sign Func Pred HFunc HPred SM
-    C CC TSC BEM GF SGF EHM} : Type := {
+    C CC TSC BEM GF EHM} : Type := {
   all_predicate_epsilonfull_fibration :
     @AllPredicateEpsilonFullFibration C CC TSC GF
 }.
@@ -181,14 +179,13 @@ Definition all_predicate_epsilonfull_model_selection
   {TSC : TwoSortCategory C}
   {BEM : @BaseEpsilonFullModel Sign Func HFunc C CC TSC}
   {GF : GoodFibration C}
-  {SGF : StrictGoodFibration C GF}
   {EHM : @EpsilonHyperModel Sign Func Pred HFunc HPred
-    C CC TSC BEM GF SGF}
+    C CC TSC BEM GF}
   {AEF : @AdjointEpsilonFullFibration Sign Func Pred HFunc HPred SM
-    C CC TSC BEM GF SGF EHM}
+    C CC TSC BEM GF EHM}
   (APM : @AllPredicateEpsilonFullModel
     Sign Func Pred HFunc HPred SM
-    C CC TSC BEM GF SGF EHM AEF)
+    C CC TSC BEM GF EHM AEF)
   (I A : b_ty)
   (Q : @obj (Fiber (interp_ty (b_Prod I A)))) :
   @ChosenEpsilonSelection C CC GF
@@ -196,7 +193,7 @@ Definition all_predicate_epsilonfull_model_selection
   @all_predicate_epsilon_selection C CC TSC GF
     (@all_predicate_epsilonfull_fibration
       Sign Func Pred HFunc HPred SM
-      C CC TSC BEM GF SGF EHM AEF APM)
+      C CC TSC BEM GF EHM AEF APM)
     I A Q.
 
 Section TermModelAllPredicates.
@@ -224,7 +221,6 @@ Definition term_model_formula_fiber_cover
     (Base_TwoSortCategory Sign Func)
     (Base_SyntacticEpsilonFullModel Sign Func)
     TermModel_GoodFibration
-    TermModel_StrictGoodFibration
     TermModel_EpsilonHyperModel
     I A Q.
 Proof.
@@ -241,7 +237,6 @@ Proof.
     (Base_TwoSortCategory Sign Func)
     (Base_SyntacticEpsilonFullModel Sign Func)
     TermModel_GoodFibration
-    TermModel_StrictGoodFibration
     TermModel_EpsilonHyperModel
     I A _ Phi Hwf_syn _).
   apply form_equiv_to_iso.
@@ -259,7 +254,6 @@ Definition term_model_formula_fiber_coverage :
     (Base_TwoSortCategory Sign Func)
     (Base_SyntacticEpsilonFullModel Sign Func)
     TermModel_GoodFibration
-    TermModel_StrictGoodFibration
     TermModel_EpsilonHyperModel :=
   term_model_formula_fiber_cover.
 
@@ -277,7 +271,6 @@ Proof.
     (Base_TwoSortCategory Sign Func)
     (Base_SyntacticEpsilonFullModel Sign Func)
     TermModel_GoodFibration
-    TermModel_StrictGoodFibration
     TermModel_EpsilonHyperModel
     TermModel_AdjointEpsilonFullFibration).
   exact term_model_formula_fiber_coverage.
@@ -291,7 +284,6 @@ Global Instance TermModel_AllPredicateEpsilonFullModel :
     (Base_TwoSortCategory Sign Func)
     (Base_SyntacticEpsilonFullModel Sign Func)
     TermModel_GoodFibration
-    TermModel_StrictGoodFibration
     TermModel_EpsilonHyperModel
     TermModel_AdjointEpsilonFullFibration.
 Proof.
@@ -317,20 +309,19 @@ Definition all_predicate_epsilonfull_valid
     (TSC : TwoSortCategory C)
     (BEM : @BaseEpsilonFullModel Sign Func HFunc C CC TSC)
     (GF : GoodFibration C)
-    (SGF : StrictGoodFibration C GF)
     (EHM : @EpsilonHyperModel Sign Func Pred HFunc HPred
-      C CC TSC BEM GF SGF)
+      C CC TSC BEM GF)
     (AEF : @AdjointEpsilonFullFibration Sign Func Pred HFunc HPred SM
-      C CC TSC BEM GF SGF EHM)
+      C CC TSC BEM GF EHM)
     (APM : @AllPredicateEpsilonFullModel
       Sign Func Pred HFunc HPred SM
-      C CC TSC BEM GF SGF EHM AEF),
+      C CC TSC BEM GF EHM AEF),
   inhabited
     (@hom (Fiber (interp_ty I))
       (@interp_h_ctx Sign Func Pred HFunc HPred
-        C CC TSC BEM GF SGF EHM I G)
+        C CC TSC BEM GF EHM I G)
       (@interp_h_ty Sign Func Pred HFunc HPred
-        C CC TSC BEM GF SGF EHM I Phi)).
+        C CC TSC BEM GF EHM I Phi)).
 
 Theorem all_predicate_epsilonfull_soundness_completeness :
   forall (I : b_ty) (G : @h_context Sign Func Pred)
@@ -343,10 +334,10 @@ Theorem all_predicate_epsilonfull_soundness_completeness :
 Proof.
   intros I G Phi HwfG HwfPhi.
   split.
-  - intros [p [D]] C CC TSC BEM GF SGF EHM AEF APM.
+  - intros [p [D]] C CC TSC BEM GF EHM AEF APM.
     constructor.
     exact (@soundness Sign Func Pred HFunc HPred SM
-      C CC TSC BEM GF SGF EHM AEF I G p Phi D).
+      C CC TSC BEM GF EHM AEF I G p Phi D).
   - intros Hvalid.
     eapply term_model_inhabited_to_derivation.
     + exact HwfG.
@@ -357,7 +348,6 @@ Proof.
         (Base_TwoSortCategory Sign Func)
         (Base_SyntacticEpsilonFullModel Sign Func)
         TermModel_GoodFibration
-        TermModel_StrictGoodFibration
         TermModel_EpsilonHyperModel
         TermModel_AdjointEpsilonFullFibration
         TermModel_AllPredicateEpsilonFullModel).

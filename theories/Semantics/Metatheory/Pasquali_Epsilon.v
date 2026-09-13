@@ -104,14 +104,14 @@ Lemma pasquali_formula_substitution_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred}
     {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-    {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF}
+    {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel}
     (I A : b_ty) (f : @b_tm Sign Func) (df : base_typing I f A)
     (Phi : @h_ty Sign Func Pred),
   interp_h_ty I (form_subst f Phi) ≅O
   @fobj _ _ (Pullback (interp_tm df)) (interp_h_ty A Phi).
 Proof.
-  intros Sign Func Pred HFunc HPred C CC TSC BEM GF SGF EHM I A f df Phi.
+  intros Sign Func Pred HFunc HPred C CC TSC BEM GF EHM I A f df Phi.
   apply form_subst_iso.
 Defined.
 
@@ -121,14 +121,14 @@ Lemma pasquali_context_projection_substitution_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred}
     {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-    {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF}
+    {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel}
     (I A : b_ty) (G : @h_context Sign Func Pred),
   interp_h_ctx (b_Prod I A) (ctx_subst b_fst G) ≅O
   @fobj _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (Func:=Func) (A:=I) (B:=A))))
     (interp_h_ctx I G).
 Proof.
-  intros Sign Func Pred HFunc HPred C CC TSC BEM GF SGF EHM I A G.
+  intros Sign Func Pred HFunc HPred C CC TSC BEM GF EHM I A G.
   apply ctx_subst_iso.
 Defined.
 
@@ -148,14 +148,14 @@ Lemma pasquali_epsilon_category_condition_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-    {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration}
+    {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel} {EGF : EpsilonGoodFibration}
     (I A : b_ty) (Phi : @h_ty Sign Func Pred),
   WellFormed (b_Prod I A) Phi ->
   hom (interp_h_ty (b_Prod I A) Phi)
       (interp_h_ty (b_Prod I A) (form_subst b_fst (pasquali_eps_exists A Phi))).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF I A Phi Hwf.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM EGF I A Phi Hwf.
   apply eps_unit. exact Hwf.
 Defined.
 
@@ -173,8 +173,8 @@ Class PasqualiEnoughEpsilonTerms
   {Sign Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF} := {
+  {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel} := {
 
   pasquali_enough_epsilon_terms :
     forall (I A : b_ty) (Phi Theta : @h_ty Sign Func Pred),
@@ -194,11 +194,11 @@ Instance PasqualiEnoughEpsilonTerms_from_EpsilonGoodFibration :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-    {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration},
+    {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel} {EGF : EpsilonGoodFibration},
   PasqualiEnoughEpsilonTerms.
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM EGF.
   constructor.
   intros I A Phi Theta HwfPhi HwfTheta.
   split.
@@ -235,8 +235,8 @@ Lemma pasquali_has_enough_epsilon_terms_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-    {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF} {PEET : PasqualiEnoughEpsilonTerms}
+    {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel} {PEET : PasqualiEnoughEpsilonTerms}
     (I A : b_ty) (Phi Theta : @h_ty Sign Func Pred),
   WellFormed (b_Prod I A) Phi ->
   WellFormed I Theta ->
@@ -249,7 +249,7 @@ Lemma pasquali_has_enough_epsilon_terms_semantic :
     hom (interp_h_ty I (pasquali_eps_exists A Phi))
         (interp_h_ty I Theta)))%type.
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM PEET
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM PEET
     I A Phi Theta HwfPhi HwfTheta.
   apply pasquali_enough_epsilon_terms; assumption.
 Defined.
@@ -263,15 +263,15 @@ Lemma pasquali_eps_intro_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-    {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration}
+    {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel} {EGF : EpsilonGoodFibration}
     (I A : b_ty) (Phi : @h_ty Sign Func Pred) (f : @b_tm Sign Func),
   WellFormed (b_Prod I A) Phi ->
   base_typing I f A ->
   hom (interp_h_ty I (form_subst (b_pair b_id f) Phi))
       (interp_h_ty I (pasquali_eps_exists A Phi)).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM EGF
     I A Phi f Hwf df.
   apply eps_intro; assumption.
 Defined.
@@ -284,8 +284,8 @@ Lemma pasquali_eps_elim_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-    {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration}
+    {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel} {EGF : EpsilonGoodFibration}
     (I A : b_ty) (G : @h_context Sign Func Pred) (Phi Chi : @h_ty Sign Func Pred),
   All_WellFormed I G ->
   WellFormed (b_Prod I A) Phi ->
@@ -296,7 +296,7 @@ Lemma pasquali_eps_elim_semantic :
   hom (prod (interp_h_ctx I G) (interp_h_ty I (pasquali_eps_exists A Phi)))
       (interp_h_ty I Chi).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM EGF
     I A G Phi Chi HwfG HwfPhi HwfChi H.
   apply eps_elim_frobenius; assumption.
 Defined.
@@ -308,8 +308,8 @@ Lemma pasquali_eps_functorial_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-    {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration}
+    {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel} {EGF : EpsilonGoodFibration}
     (I A : b_ty) (Phi Psi : @h_ty Sign Func Pred),
   WellFormed (b_Prod I A) Phi ->
   WellFormed (b_Prod I A) Psi ->
@@ -317,7 +317,7 @@ Lemma pasquali_eps_functorial_semantic :
   interp_h_ty I (pasquali_eps_exists A Phi) ≅O
   interp_h_ty I (pasquali_eps_exists A Psi).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF I A Phi Psi WFPhi WFPsi Hiso.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM EGF I A Phi Psi WFPhi WFPsi Hiso.
   apply eps_functorial_iso; assumption.
 Defined.
 
@@ -328,15 +328,15 @@ Lemma pasquali_eps_beck_chevalley :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-    {BEM : BaseEpsilonModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF} {EGF : EpsilonGoodFibration}
+    {BEM : BaseEpsilonModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel} {EGF : EpsilonGoodFibration}
     (I J A : b_ty) (g : @b_tm Sign Func) (dg : base_typing I g J)
     (Phi : @h_ty Sign Func Pred),
   WellFormed (b_Prod J A) Phi ->
   interp_h_ty I (pasquali_eps_exists A (form_subst (b_subst_ext g) Phi)) ≅O
   interp_h_ty I (form_subst g (pasquali_eps_exists A Phi)).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM EGF
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM EGF
     I J A g dg Phi Hwf.
   symmetry.
   exact (eps_beck_chevalley_iso I J A g dg Phi Hwf).

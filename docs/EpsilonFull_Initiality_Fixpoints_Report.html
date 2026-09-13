@@ -275,9 +275,15 @@ SM    : SkolemMapping Sign Func Pred</code></pre>
   <p>
     Egy <code>EpsilonFullModel</code> objektum a következő adatokat tartalmazza:
     egy setoid kategóriát, annak karteziánus struktúráját, kétsortú
-    bázisinterpretációt, koherens bázismodellt, jó és strict fibrációt,
+    bázisinterpretációt, koherens bázismodellt, jó fibrációt,
     hiperlogikai modellt, valamint az EpsilonFull adjungált-epszilon
     fibrációs struktúrát.
+  </p>
+  <p>
+    A teljes kategória morfizmusainak báziskomponens szerinti koherenciája
+    nem külön modelladat: a <code>global_pi</code> lemma a
+    <code>GoodFibration</code> <code>fiber_is_thin</code> és
+    <code>pb_iso</code> mezőiből vezeti le.
   </p>
   <p>
     Fontos: ez az osztály a rögzített <span class="math">Σ</span> szintaxistól
@@ -294,7 +300,6 @@ SM    : SkolemMapping Sign Func Pred</code></pre>
   efm_base_model       : BaseEpsilonFullModel ...;
   efm_base_coherent    : CoherentBaseModel ...;
   efm_good_fibration   : GoodFibration ...;
-  efm_strict_fibration : StrictGoodFibration ...;
   efm_hyper_model      : EpsilonHyperModel ...;
   efm_adjoint_epsilon  : AdjointEpsilonFullFibration ...
 }.</code></pre>

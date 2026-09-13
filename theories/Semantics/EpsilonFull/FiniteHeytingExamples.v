@@ -201,7 +201,6 @@ Theorem H3_canonical_LEM_value :
       H3CanonicalFunctionSignature H3CanonicalPredicateSignature
       FHBaseCategory FHBaseCartesian FHBaseTwoSort H3CanonicalBaseModel
       (@FHGoodFibration H3FiniteHeytingAlgebra)
-      (@FHStrictGoodFibration H3FiniteHeytingAlgebra)
       H3CanonicalHyperModel b_Unit H3LEMFormula) tt = OldH3.HMid.
 Proof. reflexivity. Defined.
 
@@ -213,7 +212,6 @@ Theorem H3_canonical_LEM_not_top :
       H3CanonicalFunctionSignature H3CanonicalPredicateSignature
       FHBaseCategory FHBaseCartesian FHBaseTwoSort H3CanonicalBaseModel
       (@FHGoodFibration H3FiniteHeytingAlgebra)
-      (@FHStrictGoodFibration H3FiniteHeytingAlgebra)
       H3CanonicalHyperModel b_Unit H3LEMFormula) tt <>
   @fh_top H3FiniteHeytingAlgebra.
 Proof. rewrite H3_canonical_LEM_value. discriminate. Defined.
@@ -227,7 +225,6 @@ Theorem H3_canonical_LEM_refuted :
       H3CanonicalFunctionSignature H3CanonicalPredicateSignature
       FHBaseCategory FHBaseCartesian FHBaseTwoSort H3CanonicalBaseModel
       (@FHGoodFibration H3FiniteHeytingAlgebra)
-      (@FHStrictGoodFibration H3FiniteHeytingAlgebra)
       H3CanonicalHyperModel b_Unit nil)
     (@interp_h_ty
       (CFLabel (Func:=H3CanonicalFunc) (Pred:=H3CanonicalPred))
@@ -235,7 +232,6 @@ Theorem H3_canonical_LEM_refuted :
       H3CanonicalFunctionSignature H3CanonicalPredicateSignature
       FHBaseCategory FHBaseCartesian FHBaseTwoSort H3CanonicalBaseModel
       (@FHGoodFibration H3FiniteHeytingAlgebra)
-      (@FHStrictGoodFibration H3FiniteHeytingAlgebra)
       H3CanonicalHyperModel b_Unit H3LEMFormula) -> False.
 Proof.
   intro Hlem.
@@ -270,7 +266,6 @@ Proof.
     (CFLabels.CanonicalSkolemMapping H3CanonicalFunc H3CanonicalPred)
     FHBaseCategory FHBaseCartesian FHBaseTwoSort H3CanonicalBaseModel
     (@FHGoodFibration H3FiniteHeytingAlgebra)
-    (@FHStrictGoodFibration H3FiniteHeytingAlgebra)
     H3CanonicalHyperModel H3CanonicalAdjointModel
     b_Unit nil p H3LEMFormula d).
 Defined.

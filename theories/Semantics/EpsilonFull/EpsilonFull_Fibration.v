@@ -71,7 +71,7 @@ Class EpsilonHyperModel
   `{FunctionSignature Func} `{PredicateSignature Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
   {BEM : BaseEpsilonFullModel}
-  {GF : GoodFibration C} (SGF : StrictGoodFibration C GF) := {
+  {GF : GoodFibration C} := {
   i_atom : forall (p : Pred) (t : @b_tm Sign Func) (I : b_ty), @obj (Fiber (interp_ty I));
 
   i_atom_pb : forall (p : Pred) (t : @b_tm Sign Func) (I A : b_ty) (f : @b_tm Sign Func)
@@ -87,8 +87,8 @@ Class EpsilonHyperModel
 Fixpoint interp_h_ty
   {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF}
+  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel}
   (I : b_ty) (Phi : @h_ty Sign Func Pred) : @obj (Fiber (interp_ty I)) :=
   match Phi with
   | Ty_Unit => terminal
@@ -106,8 +106,8 @@ Fixpoint interp_h_ty
 Fixpoint interp_h_ctx
   {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF}
+  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel}
   (I : b_ty) (G : @h_context Sign Func Pred) : @obj (Fiber (interp_ty I)) :=
   match G with
   | nil => terminal
@@ -123,8 +123,7 @@ Class AdjointEpsilonFullFibration
   `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
   {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
-  {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF} := {
+  {EHM : EpsilonHyperModel} := {
 
   eps_is_left_adj_obj : forall (I A : b_ty) (Phi : @h_ty Sign Func Pred),
     WellFormed (b_Prod I A) Phi ->
@@ -146,8 +145,7 @@ Lemma eps_functorial_from_eps_is_left_adj_obj
   `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
   {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
-  {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF}
+  {EHM : EpsilonHyperModel}
   (eps_obj_iso : forall (I A : b_ty) (Phi : @h_ty Sign Func Pred),
     WellFormed (b_Prod I A) Phi ->
     @left_adj_obj _ _ _ pullback_has_left_adjoint (interp_h_ty (b_Prod I A) Phi)
@@ -181,8 +179,7 @@ Class EpsilonAsSigmaFibration
   `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
   {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
-  {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF} := {
+  {EHM : EpsilonHyperModel} := {
 
   epsilon_sigma_adj : forall (I A : b_ty),
     IsRightAdjoint (Pullback (@prod_fst C CC (interp_ty I) (interp_ty A)));
@@ -199,8 +196,7 @@ Lemma eps_is_left_adj_obj_from_epsilon_as_sigma
   `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
   {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
-  {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF}
+  {EHM : EpsilonHyperModel}
   {EASF : EpsilonAsSigmaFibration}
   (I A : b_ty) (Phi : @h_ty Sign Func Pred) :
   WellFormed (b_Prod I A) Phi ->
@@ -224,8 +220,7 @@ Global Instance AdjointEpsilonFullFibration_from_EpsilonAsSigmaFibration
   `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
   {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
-  {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF}
+  {EHM : EpsilonHyperModel}
   {EASF : EpsilonAsSigmaFibration}
   : AdjointEpsilonFullFibration.
 Proof.

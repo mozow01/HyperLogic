@@ -24,12 +24,12 @@ Lemma form_subst_iso :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-    {BEM : BaseEpsilonFullModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF}
+    {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel}
     (I A : b_ty) (f : @b_tm Sign Func) (df : base_typing I f A) (Phi : @h_ty Sign Func Pred),
   interp_h_ty I (form_subst f Phi) ≅O @fobj _ _ (Pullback (interp_tm df)) (interp_h_ty A Phi).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM.
   intros I A f df Phi.
   revert I A f df.
 
@@ -60,13 +60,13 @@ Lemma ctx_subst_iso :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
-    {BEM : BaseEpsilonFullModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF}
+    {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel}
     (I A : b_ty) (G : @h_context Sign Func Pred),
   interp_h_ctx (b_Prod I A) (ctx_subst b_fst G) ≅O
   @fobj _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (Func:=Func) (A:=I) (B:=A)))) (interp_h_ctx I G).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM I A G.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM I A G.
   induction G as [|Phi G' IHG']; simpl.
   - symmetry. apply pb_term_iso.
   - eapply iso_trans.
@@ -82,14 +82,14 @@ Lemma interp_subst_cong : forall {Sign Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
   {C : SetoidCategory} {CC : CartesianCategory C}
   {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF} (I J : b_ty) (f g : @b_tm Sign Func) (Phi : @h_ty Sign Func Pred)
+  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel} (I J : b_ty) (f g : @b_tm Sign Func) (Phi : @h_ty Sign Func Pred)
   (df : base_typing I f J) (dg : base_typing I g J),
   base_equiv df dg ->
   WellFormed J Phi ->
   interp_h_ty I (form_subst f Phi) ≅O interp_h_ty I (form_subst g Phi).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM I J f g Phi df dg Heq Hwf.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM I J f g Phi df dg Heq Hwf.
   revert I f g df dg Heq.
   induction Hwf; intros I' f' g' df' dg' Heq'; simpl.
   - apply iso_refl.
@@ -120,12 +120,12 @@ Lemma interp_subst_id : forall {Sign Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
   {C : SetoidCategory} {CC : CartesianCategory C}
   {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF} (I : b_ty) (Phi : @h_ty Sign Func Pred),
+  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel} (I : b_ty) (Phi : @h_ty Sign Func Pred),
   WellFormed I Phi ->
   interp_h_ty I (form_subst b_id Phi) ≅O interp_h_ty I Phi.
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM I Phi Hwf.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM I Phi Hwf.
   induction Hwf.
   - simpl. apply iso_refl.
   - simpl. apply iso_refl.
@@ -134,7 +134,7 @@ Proof.
   - simpl. apply exp_iso_cong; assumption.
   - simpl. eapply i_atom_cong_global. apply BE_IdR.
   - simpl. apply pi_iso_cong. eapply iso_trans.
-    + eapply (@interp_subst_cong Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM
+    + eapply (@interp_subst_cong Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM
         (b_Prod I A) (b_Prod I A) (b_subst_ext b_id) b_id Phi
         (BT_Pair (BT_Comp BT_Id BT_Fst) BT_Snd) BT_Id).
       * unfold b_subst_ext. eapply BE_Trans. 2: { apply BE_EtaPair. }
@@ -144,7 +144,7 @@ Proof.
       * exact Hwf.
     + exact IHHwf.
   - simpl. apply sigma_iso_cong. eapply iso_trans.
-    + eapply (@interp_subst_cong Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM
+    + eapply (@interp_subst_cong Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM
         (b_Prod I A) (b_Prod I A) (b_subst_ext b_id) b_id Phi
         (BT_Pair (BT_Comp BT_Id BT_Fst) BT_Snd) BT_Id).
       * unfold b_subst_ext. eapply BE_Trans. 2: { apply BE_EtaPair. }
@@ -162,13 +162,13 @@ Lemma interp_subst_comp : forall {Sign Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
   {C : SetoidCategory} {CC : CartesianCategory C}
   {TSC : TwoSortCategory C}
-  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-  {EHM : EpsilonHyperModel SGF} (I J K : b_ty) (f g : @b_tm Sign Func) (Phi : @h_ty Sign Func Pred)
+  {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+  {EHM : EpsilonHyperModel} (I J K : b_ty) (f g : @b_tm Sign Func) (Phi : @h_ty Sign Func Pred)
   (df : base_typing J f K) (dg : base_typing I g J),
   WellFormed K Phi ->
   interp_h_ty I (form_subst (b_comp f g) Phi) ≅O interp_h_ty I (form_subst g (form_subst f Phi)).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM I J K f g Phi df dg Hwf.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM I J K f g Phi df dg Hwf.
   revert I J f g df dg.
   induction Hwf; intros I0 J0 f0 g0 df0 dg0; simpl.
   - apply iso_refl.
@@ -246,14 +246,14 @@ Lemma interp_form_equiv :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C}
-    {TSC : TwoSortCategory C} {BEM : BaseEpsilonFullModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF}
-    {AdEHM : @AdjointEpsilonFullFibration Sign Func Pred H H0 SM C CC TSC BEM GF SGF EHM},
+    {TSC : TwoSortCategory C} {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel}
+    {AdEHM : @AdjointEpsilonFullFibration Sign Func Pred H H0 SM C CC TSC BEM GF EHM},
   forall (I : b_ty) (Phi Psi : @h_ty Sign Func Pred),
   form_equiv I Phi Psi ->
   interp_h_ty I Phi ≅O interp_h_ty I Psi.
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM AdEHM I Phi Psi Heq.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM AdEHM I Phi Psi Heq.
   induction Heq; simpl.
   - eapply i_atom_cong_global. exact b.
   - apply iso_refl.
@@ -296,14 +296,14 @@ Lemma interp_ctx_equiv :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C}
-    {TSC : TwoSortCategory C} {BEM : BaseEpsilonFullModel} {GF : GoodFibration C} {SGF : StrictGoodFibration C GF}
-    {EHM : EpsilonHyperModel SGF}
-    {AdEHM : @AdjointEpsilonFullFibration Sign Func Pred H H0 SM C CC TSC BEM GF SGF EHM},
+    {TSC : TwoSortCategory C} {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
+    {EHM : EpsilonHyperModel}
+    {AdEHM : @AdjointEpsilonFullFibration Sign Func Pred H H0 SM C CC TSC BEM GF EHM},
   forall (I : b_ty) (G1 G2 : @h_context Sign Func Pred),
   ctx_equiv I G1 G2 ->
   interp_h_ctx I G1 ≅O interp_h_ctx I G2.
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM AdEHM I G1 G2 H_ctx.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM AdEHM I G1 G2 H_ctx.
   induction H_ctx; simpl.
   - apply iso_refl.
   - apply prod_iso_cong.
@@ -320,13 +320,13 @@ Theorem soundness :
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
     {C : SetoidCategory} {CC : CartesianCategory C}
     {TSC : TwoSortCategory C} {BEM : BaseEpsilonFullModel} {GF : GoodFibration C}
-    {SGF : StrictGoodFibration C GF} {EHM : EpsilonHyperModel SGF}
-    {AdEHM : @AdjointEpsilonFullFibration Sign Func Pred H H0 SM C CC TSC BEM GF SGF EHM},
+    {EHM : EpsilonHyperModel}
+    {AdEHM : @AdjointEpsilonFullFibration Sign Func Pred H H0 SM C CC TSC BEM GF EHM},
   forall (I : b_ty) (G : @h_context Sign Func Pred) (p : @h_tm Sign Func Pred) (Phi : @h_ty Sign Func Pred),
   h_derivation I G p Phi ->
   hom (interp_h_ctx I G) (interp_h_ty I Phi).
 Proof.
-  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF SGF EHM AdEHM I G p Phi H_der.
+  intros Sign Func Pred HFunc HPred SM C CC TSC BEM GF EHM AdEHM I G p Phi H_der.
   induction H_der.
   - apply prod_snd.
   - eapply compose. exact IHH_der. apply prod_fst.
