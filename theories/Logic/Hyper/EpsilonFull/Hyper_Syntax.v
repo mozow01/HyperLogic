@@ -144,6 +144,8 @@ Inductive ctx_equiv {Sign Func Pred : Type}
       ctx_equiv I (Phi :: G1) (Psi :: G2).
 
 
+(* Legacy [h_typing] omits some formation premises. The paper and supported
+   metatheorems use [h_derivation] for fully checked judgments. *)
 Inductive h_typing {Sign Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} (I : b_ty)
   : @h_context Sign Func Pred -> @h_tm Sign Func Pred -> @h_ty Sign Func Pred -> Prop :=

@@ -9,6 +9,12 @@
 Makefile
 Makefile.conf
 .Makefile.d
+Makefile.coq
+Makefile.coq.conf
+.Makefile.coq.d
+CoqMakefile
+CoqMakefile.conf
+.CoqMakefile.d
 
 # Coq gyorsítótárak
 .lia.cache

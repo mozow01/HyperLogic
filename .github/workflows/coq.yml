@@ -1,0 +1,36 @@
+name: Coq 8.18.0
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  library:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ocaml/setup-ocaml@v3
+        with:
+          ocaml-compiler: "4.14.1"
+      - name: Install Coq 8.18.0
+        run: opam install -y coq.8.18.0
+      - name: Build supported library from _CoqProject
+        run: |
+          opam exec -- coq_makefile -f _CoqProject -o Makefile.coq
+          opam exec -- make -f Makefile.coq -j2
+      - name: Kernel-check main results
+        run: |
+          opam exec -- coqchk -R theories HyperLogic \
+            HyperLogic.Semantics.EpsilonFull.EpsilonFull_Soundness \
+            HyperLogic.Semantics.EpsilonFull.EpsilonFull_Completeness \
+            HyperLogic.Semantics.EpsilonFull.EpsilonFull_ModelCategory \
+            HyperLogic.Semantics.EpsilonFull.EpsilonFull_SelectionModels \
+            HyperLogic.Semantics.Epsilon.Epsilon_SelectionModels \
+            HyperLogic.Semantics.Epsilon.Epsilon_Completeness \
+            HyperLogic.Semantics.IFOL.IFOL_Completeness \
+            HyperLogic.Semantics.Metatheory.EpsilonFull_Substitutivity \
+            HyperLogic.Semantics.Metatheory.DerivationExtractionInstances \
+            HyperLogic.Semantics.EpsilonFull.IndexedHeytingPredicates

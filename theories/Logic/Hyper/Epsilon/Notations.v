@@ -49,5 +49,6 @@ Notation "I '⊢' Phi 'wff'" := (WellFormed I Phi) (at level 99, no associativit
 Notation "I '⊢' Phi '≡' Psi" := (form_equiv I Phi Psi) (at level 99, no associativity) : logic_scope.
 
 
-(* [I ∙ G ⊢h p : Phi] types [p] under base [I] and hypotheses [G]. *)
+(* Legacy [h_typing] notation: [I ∙ G ⊢h p : Phi] omits some formation
+   premises. Use [h_derivation] for the supported metatheory. *)
 Notation "I '∙' G '⊢h' p ':' Phi" := (h_typing I G p Phi) (at level 99, p at next level, no associativity) : logic_scope.

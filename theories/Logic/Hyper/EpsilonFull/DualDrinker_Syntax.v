@@ -8,6 +8,9 @@ Require Import HyperLogic.Logic.Base.EpsilonFull.Base_Syntax_Lemmas.
 Require Import HyperLogic.Logic.Hyper.EpsilonFull.Hyper_Syntax.
 Require Import HyperLogic.Logic.Hyper.EpsilonFull.Hyper_Syntax_Lemmas.
 
+(** Compatibility identity on EpsilonFull formulas, retained for Dual Drinker
+    uses. It does not translate IFOL syntax. The structural translation is
+    [HyperLogic.Semantics.Metatheory.IFOL_EpsilonFull_Translation.ifol_to_epsilon_h_ty]. *)
 Definition T_ifol_to_epsilonfull {Sign Func Pred : Type}
   (Phi : @h_ty Sign Func Pred) : @h_ty Sign Func Pred := Phi.
 
