@@ -1,4 +1,4 @@
-(* H3 and H5 specializations of the finite-valued epsilon characterization. *)
+(** H3 and H5 specializations of the finite-valued epsilon characterization. *)
 
 Require Import Coq.Lists.List.
 Require Import Coq.Bool.Bool.
@@ -18,17 +18,17 @@ Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_Soundness.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_AllPredicates.
 Require Import HyperLogic.Semantics.EpsilonFull.FiniteHeytingPredicates.
 Require Import HyperLogic.Semantics.EpsilonFull.Canonical_FiniteChain_Model.
-Require Import HyperLogic.Semantics.EpsilonFull.LEM_disproved.
-Require Import HyperLogic.Semantics.IFOL.DualDrinker.
+Require Import HyperLogic.Semantics.EpsilonFull.H3_Algebra.
+Require Import HyperLogic.Semantics.IFOL.H5_Algebra.
 
-Module OldH3 := HyperLogic.Semantics.EpsilonFull.LEM_disproved.
-Module OldH5 := HyperLogic.Semantics.IFOL.DualDrinker.
+Module H3Algebra := HyperLogic.Semantics.EpsilonFull.H3_Algebra.
+Module H5Algebra := HyperLogic.Semantics.IFOL.H5_Algebra.
 
-Definition H3_eq_dec (x y : OldH3.H3) : {x = y} + {x <> y}.
+Definition H3_eq_dec (x y : H3Algebra.H3) : {x = y} + {x <> y}.
 Proof. decide equality. Defined.
 
-Definition H3_le_dec (x y : OldH3.H3) :
-  {OldH3.H3_le x y} + {~ OldH3.H3_le x y}.
+Definition H3_le_dec (x y : H3Algebra.H3) :
+  {H3Algebra.H3_le x y} + {~ H3Algebra.H3_le x y}.
 Proof.
   destruct x, y; cbn; try (left; exact I); right; tauto.
 Defined.
@@ -36,18 +36,18 @@ Defined.
 Definition H3FiniteHeytingAlgebra : FiniteHeytingAlgebra.
 Proof.
   refine {|
-    fh_carrier := OldH3.H3;
+    fh_carrier := H3Algebra.H3;
     fh_eq_dec := H3_eq_dec;
-    fh_le := OldH3.H3_le;
+    fh_le := H3Algebra.H3_le;
     fh_le_dec := H3_le_dec;
-    fh_le_refl := OldH3.H3_le_refl;
+    fh_le_refl := H3Algebra.H3_le_refl;
     fh_le_trans := _;
     fh_le_antisym := _;
-    fh_bot := OldH3.HBot;
-    fh_top := OldH3.HTop;
-    fh_meet := OldH3.H3_meet;
-    fh_join := OldH3.H3_join;
-    fh_impl := OldH3.H3_impl;
+    fh_bot := H3Algebra.HBot;
+    fh_top := H3Algebra.HTop;
+    fh_meet := H3Algebra.H3_meet;
+    fh_join := H3Algebra.H3_join;
+    fh_impl := H3Algebra.H3_impl;
     fh_bot_le := _;
     fh_le_top := _;
     fh_meet_le_l := _;
@@ -58,11 +58,11 @@ Proof.
     fh_join_le := _;
     fh_impl_intro := _;
     fh_impl_elim := _;
-    fh_enum := [OldH3.HBot; OldH3.HMid; OldH3.HTop];
+    fh_enum := [H3Algebra.HBot; H3Algebra.HMid; H3Algebra.HTop];
     fh_enum_nodup := _;
     fh_enum_complete := _
   |}.
-  - intros x y z Hxy Hyz. eapply OldH3.H3_le_trans; eassumption.
+  - intros x y z Hxy Hyz. eapply H3Algebra.H3_le_trans; eassumption.
   - destruct x, y; cbn; intros; try contradiction; reflexivity.
   - destruct x; exact I.
   - destruct x; exact I.
@@ -85,11 +85,11 @@ Lemma H3_is_chain : @FiniteHeytingChain H3FiniteHeytingAlgebra.
 Proof. intros x y. destruct x, y; cbn; auto. Defined.
 
 Lemma H3_LEM_algebra_value :
-  OldH3.H3_join OldH3.HMid
-    (OldH3.H3_impl OldH3.HMid OldH3.HBot) = OldH3.HMid.
+  H3Algebra.H3_join H3Algebra.HMid
+    (H3Algebra.H3_impl H3Algebra.HMid H3Algebra.HBot) = H3Algebra.HMid.
 Proof. reflexivity. Defined.
 
-Lemma H3_mid_not_top : OldH3.HMid <> OldH3.HTop.
+Lemma H3_mid_not_top : H3Algebra.HMid <> H3Algebra.HTop.
 Proof. discriminate. Defined.
 
 Inductive H3CanonicalFunc : Type := .
@@ -113,17 +113,17 @@ Definition H3CanonicalFunctionValue (f : H3CanonicalFunc) :
 Proof. destruct f. Defined.
 
 Definition H3CanonicalPredicateValue (p : H3CanonicalPred) :
-  fh_base_denote (FHModelBase (pred_dom p)) -> OldH3.H3.
+  fh_base_denote (FHModelBase (pred_dom p)) -> H3Algebra.H3.
 Proof.
   destruct p; cbn [FHModelBase FHBaseTwoSort].
-  - intro b. exact (if b then OldH3.HMid else OldH3.HBot).
-  - intro u. exact OldH3.HMid.
+  - intro b. exact (if b then H3Algebra.HMid else H3Algebra.HBot).
+  - intro u. exact H3Algebra.HMid.
 Defined.
 
 Lemma H3_bool_atom_is_nonconstant :
-  H3CanonicalPredicateValue H3BoolAtom true = OldH3.HMid /\
-  H3CanonicalPredicateValue H3BoolAtom false = OldH3.HBot /\
-  OldH3.HMid <> OldH3.HBot.
+  H3CanonicalPredicateValue H3BoolAtom true = H3Algebra.HMid /\
+  H3CanonicalPredicateValue H3BoolAtom false = H3Algebra.HBot /\
+  H3Algebra.HMid <> H3Algebra.HBot.
 Proof. repeat split; reflexivity || discriminate. Defined.
 
 Definition H3CanonicalBaseModel :=
@@ -165,7 +165,7 @@ Definition H3CanonicalFullModel :=
 Definition H3DiagonalPredicate :
   @FHPredicate H3FiniteHeytingAlgebra (b_Prod b_S b_S) :=
   fun xa => if Bool.eqb (fst xa) (snd xa)
-    then OldH3.HMid else OldH3.HBot.
+    then H3Algebra.HMid else H3Algebra.HBot.
 
 Definition H3DiagonalSelector : FHBaseHom b_S b_S :=
   fh_maximum_selector
@@ -201,7 +201,7 @@ Theorem H3_canonical_LEM_value :
       H3CanonicalFunctionSignature H3CanonicalPredicateSignature
       FHBaseCategory FHBaseCartesian FHBaseTwoSort H3CanonicalBaseModel
       (@FHGoodFibration H3FiniteHeytingAlgebra)
-      H3CanonicalHyperModel b_Unit H3LEMFormula) tt = OldH3.HMid.
+      H3CanonicalHyperModel b_Unit H3LEMFormula) tt = H3Algebra.HMid.
 Proof. reflexivity. Defined.
 
 Theorem H3_canonical_LEM_not_top :
@@ -270,11 +270,11 @@ Proof.
     b_Unit nil p H3LEMFormula d).
 Defined.
 
-Definition H5_eq_dec (x y : OldH5.H5) : {x = y} + {x <> y}.
+Definition H5_eq_dec (x y : H5Algebra.H5) : {x = y} + {x <> y}.
 Proof. decide equality. Defined.
 
-Definition H5_le_dec (x y : OldH5.H5) :
-  {OldH5.H5_le x y} + {~ OldH5.H5_le x y}.
+Definition H5_le_dec (x y : H5Algebra.H5) :
+  {H5Algebra.H5_le x y} + {~ H5Algebra.H5_le x y}.
 Proof.
   destruct x, y; cbn; try (left; exact I); right; tauto.
 Defined.
@@ -282,18 +282,18 @@ Defined.
 Definition H5FiniteHeytingAlgebra : FiniteHeytingAlgebra.
 Proof.
   refine {|
-    fh_carrier := OldH5.H5;
+    fh_carrier := H5Algebra.H5;
     fh_eq_dec := H5_eq_dec;
-    fh_le := OldH5.H5_le;
+    fh_le := H5Algebra.H5_le;
     fh_le_dec := H5_le_dec;
-    fh_le_refl := OldH5.H5_le_refl;
+    fh_le_refl := H5Algebra.H5_le_refl;
     fh_le_trans := _;
     fh_le_antisym := _;
-    fh_bot := OldH5.HBot;
-    fh_top := OldH5.HTop;
-    fh_meet := OldH5.H5_meet;
-    fh_join := OldH5.H5_join;
-    fh_impl := OldH5.H5_impl;
+    fh_bot := H5Algebra.HBot;
+    fh_top := H5Algebra.HTop;
+    fh_meet := H5Algebra.H5_meet;
+    fh_join := H5Algebra.H5_join;
+    fh_impl := H5Algebra.H5_impl;
     fh_bot_le := _;
     fh_le_top := _;
     fh_meet_le_l := _;
@@ -304,11 +304,11 @@ Proof.
     fh_join_le := _;
     fh_impl_intro := _;
     fh_impl_elim := _;
-    fh_enum := [OldH5.HBot; OldH5.H1; OldH5.H2; OldH5.H12; OldH5.HTop];
+    fh_enum := [H5Algebra.HBot; H5Algebra.H1; H5Algebra.H2; H5Algebra.H12; H5Algebra.HTop];
     fh_enum_nodup := _;
     fh_enum_complete := _
   |}.
-  - intros x y z Hxy Hyz. eapply OldH5.H5_le_trans; eassumption.
+  - intros x y z Hxy Hyz. eapply H5Algebra.H5_le_trans; eassumption.
   - destruct x, y; cbn; intros; try contradiction; reflexivity.
   - destruct x; exact I.
   - destruct x; exact I.
@@ -330,8 +330,8 @@ Proof.
 Defined.
 
 Lemma H5_incomparable :
-  ~ (@fh_le H5FiniteHeytingAlgebra OldH5.H1 OldH5.H2 \/
-     @fh_le H5FiniteHeytingAlgebra OldH5.H2 OldH5.H1).
+  ~ (@fh_le H5FiniteHeytingAlgebra H5Algebra.H1 H5Algebra.H2 \/
+     @fh_le H5FiniteHeytingAlgebra H5Algebra.H2 H5Algebra.H1).
 Proof. cbn. tauto. Defined.
 
 Lemma H5_not_chain : ~ @FiniteHeytingChain H5FiniteHeytingAlgebra.
@@ -340,13 +340,13 @@ Proof.
 Defined.
 
 Lemma H5_incomparable_join :
-  @fh_join H5FiniteHeytingAlgebra OldH5.H1 OldH5.H2 = OldH5.H12 /\
-  OldH5.H12 <> OldH5.H1 /\ OldH5.H12 <> OldH5.H2.
+  @fh_join H5FiniteHeytingAlgebra H5Algebra.H1 H5Algebra.H2 = H5Algebra.H12 /\
+  H5Algebra.H12 <> H5Algebra.H1 /\ H5Algebra.H12 <> H5Algebra.H2.
 Proof. repeat split; cbn; discriminate || reflexivity. Defined.
 
 Definition H5ObstructionPredicate :
   @FHPredicate H5FiniteHeytingAlgebra (b_Prod b_Unit b_S) :=
-  fun xb => if snd xb then OldH5.H1 else OldH5.H2.
+  fun xb => if snd xb then H5Algebra.H1 else H5Algebra.H2.
 
 Lemma H5_obstruction_has_no_maximum_selector :
   forall e : FHBaseHom b_Unit b_S,

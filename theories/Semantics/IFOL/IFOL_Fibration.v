@@ -1,4 +1,4 @@
-(* Semantic interface for epsilon-free intuitionistic first-order logic. *)
+(** Semantic interface for epsilon-free intuitionistic first-order logic. *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import List.

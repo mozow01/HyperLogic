@@ -1,4 +1,4 @@
-(* Canonical, well-founded epsilon labels for the epsilon-only syntax. *)
+(** Canonical, well-founded epsilon labels for the epsilon-only syntax. *)
 
 Require Import Arith.
 Require Import Lia.

@@ -1,13 +1,10 @@
-(* theories/Logic/Hyper/Epsilon_Adjoint/Hyper_Syntax.v *)
+(** Raw epsilon-adjoint hyperdoctrine syntax. *)
 
 Require Import List.
 Import ListNotations.
 Require Import HyperLogic.Logic.Base.Epsilon_Adjoint.Base_Syntax.
 Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
 
-(* ================================================================= *)
-(* 1. FORMULÁK                                                       *)
-(* ================================================================= *)
 
 Inductive h_ty {Sign : Type} : Type :=
   | Ty_Unit   : h_ty
@@ -21,9 +18,6 @@ Inductive h_ty {Sign : Type} : Type :=
 
 Definition h_context {Sign : Type} := list (@h_ty Sign).
 
-(* ================================================================= *)
-(* 1.5 AZ ORÁKULUM OSZTÁLY                                           *)
-(* ================================================================= *)
 
 Class SkolemMapping (Sign : Type) := {
   skolem_index : forall (A : b_ty), @h_ty Sign -> Sign ;
@@ -32,9 +26,6 @@ Class SkolemMapping (Sign : Type) := {
                  A = B /\ Phi = Psi
 }.
 
-(* ================================================================= *)
-(* 2. BIZONYÍTÁSTERMEK (Explicit Epszilon termekkel)                 *)
-(* ================================================================= *)
 
 Inductive h_tm {Sign : Type} : Type :=
   | tm_unit   : h_tm
@@ -55,9 +46,6 @@ Inductive h_tm {Sign : Type} : Type :=
   | tm_eps_intro : @b_tm Sign -> h_tm -> h_tm
   | tm_eps_elim  : h_tm -> h_tm -> h_tm.
 
-(* ================================================================= *)
-(* BÁZIS HELYETTESÍTÉS ÉS PULLBACK                                   *)
-(* ================================================================= *)
 
 Definition b_subst_ext {Sign : Type} (f : @b_tm Sign) : @b_tm Sign :=
   b_pair (b_comp f b_fst) b_snd.
@@ -82,9 +70,6 @@ Notation "Phi .[ t ]" := (form_subst (b_pair b_id t) Phi) (at level 40, left ass
 Notation "'ε' D , Phi" := (b_const D (skolem_index D Phi)) (at level 50) : surface_scope.
 Open Scope surface_scope.
 
-(* ================================================================= *)
-(* WELLFORMED FORMULAS (WFF)                                         *)
-(* ================================================================= *)
 
 Inductive WellFormed {Sign : Type} (I : b_ty) : @h_ty Sign -> Type :=
   | WF_Unit   : WellFormed I Ty_Unit
@@ -95,10 +80,6 @@ Inductive WellFormed {Sign : Type} (I : b_ty) : @h_ty Sign -> Type :=
   | WF_Atom   : forall p t A, base_typing I t A -> WellFormed I (Ty_Atom p t)
   | WF_All    : forall A Phi, WellFormed (b_Prod I A) Phi -> WellFormed I (Ty_All A Phi)
   | WF_Ex     : forall A Phi, WellFormed (b_Prod I A) Phi -> WellFormed I (Ty_Ex A Phi).
-
-(* ================================================================= *)
-(* 2.5 FORMULA EKVIVALENCIA (Az Adjungált Modellhez)                 *)
-(* ================================================================= *)
 
 Inductive form_equiv {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_ty Sign -> @h_ty Sign -> Type :=
   
@@ -113,7 +94,6 @@ Inductive form_equiv {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_ty Sign
   | FE_All  : forall D Body Body', form_equiv (b_Prod I D) Body Body' -> form_equiv I (Ty_All D Body) (Ty_All D Body')
   | FE_Ex   : forall D Body Body', form_equiv (b_Prod I D) Body Body' -> form_equiv I (Ty_Ex D Body) (Ty_Ex D Body')
   
-  (* --- ÚJ: ADJUNGÁLT EPSZILON AXIÓMÁK --- *)
   | FE_Eps_Adjoint_Iso : forall A Phi,
       WellFormed (b_Prod I A) Phi ->
       form_equiv I (Ty_Ex A Phi) (Phi .[ ε A, Phi ])
@@ -122,24 +102,18 @@ Inductive form_equiv {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_ty Sign
       form_equiv (b_Prod I A) Phi Psi ->
       form_equiv I (Phi .[ ε A, Phi ]) (Psi .[ ε A, Psi ])
 
-  (* --- FIBRÁCIÓS FUNKTOR SZABÁLYOK --- *)
   | FE_Pullback_Id : forall Phi, WellFormed I Phi -> form_equiv I (form_subst b_id Phi) Phi
   | FE_Pullback_Comp : forall J K (f g : @b_tm Sign) Phi (df : base_typing J f K) (dg : base_typing I g J),
       WellFormed K Phi -> form_equiv I (form_subst g (form_subst f Phi)) (form_subst (b_comp f g) Phi)
   | FE_Pullback_Cong : forall J (f g : @b_tm Sign) Phi (df : base_typing I f J) (dg : base_typing I g J), 
       @base_equiv Sign I J f g df dg -> WellFormed J Phi -> form_equiv I (form_subst f Phi) (form_subst g Phi)
-(* --- A BECK-CHEVALLEY AXIÓMA AZ EPSZILONRA --- *)
   | FE_Eps_BC : forall J A (t : @b_tm Sign) (dt : base_typing I t J) Phi,
       WellFormed (b_Prod J A) Phi ->
       form_equiv I 
         ((form_subst (b_subst_ext t) Phi) .[ ε A, form_subst (b_subst_ext t) Phi ])
         (form_subst t (Phi .[ ε A, Phi ])).
 
-(* ================================================================= *)
-(* 2.6 KONTEXTUS EKVIVALENCIA (A Completenesshez)                    *)
-(* ================================================================= *)
-
-(* Saját iterátor a Type univerzumban lévő WellFormed fák listázásához *)
+(** A [Type]-valued well-formedness witness for every formula in a context. *)
 Inductive All_WellFormed {Sign : Type} (J : b_ty) : @h_context Sign -> Type :=
   | AWF_Nil : All_WellFormed J nil
   | AWF_Cons : forall (Phi : @h_ty Sign) (G : @h_context Sign),
@@ -152,9 +126,6 @@ Inductive ctx_equiv {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_context 
                  ctx_equiv I G1 G2 ->
                  ctx_equiv I (Phi :: G1) (Psi :: G2).
 
-(* ================================================================= *)
-(* 3. DUAL CONTEXT TYPING                                            *)
-(* ================================================================= *)
 
 Inductive h_typing {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_context Sign -> @h_tm Sign -> @h_ty Sign -> Prop :=
   | HT_Var0 : forall G Phi, h_typing I (Phi :: G) (tm_var 0) Phi
@@ -180,7 +151,6 @@ Inductive h_typing {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_context S
   | HT_Ex_Intro : forall G p A Phi f, base_typing I f A -> h_typing I G p (form_subst (b_pair b_id f) Phi) -> h_typing I G (tm_ex_intro f p) (Ty_Ex A Phi)
   | HT_Ex_Elim : forall G p p2 A Phi Chi, h_typing I G p (Ty_Ex A Phi) -> h_typing (b_Prod I A) (Phi :: ctx_subst b_fst G) p2 (form_subst b_fst Chi) -> h_typing I G (tm_ex_elim p p2) Chi
 
-  (* --- INTENZIONÁLIS EPSZILON SZABÁLYOK --- *)
   | HT_Eps_Intro : forall G p A Phi f,
       base_typing I f A ->
       h_typing I G p (form_subst (b_pair b_id f) Phi) ->
@@ -192,33 +162,25 @@ Inductive h_typing {Sign : Type} `{SkolemMapping Sign} (I : b_ty) : @h_context S
       h_typing (b_Prod I A) (Phi :: ctx_subst b_fst G) p2 (form_subst b_fst Chi) ->
       h_typing I G (tm_eps_elim p p2) Chi.
 
-(* ================================================================= *)
-(* 4. DUAL CONTEXT DERIVATION (Set-alapú)                            *)
-(* ================================================================= *)
 
 
 Inductive h_derivation {Sign : Type} `{SkolemMapping Sign} : 
   b_ty -> h_context (Sign:=Sign) -> @h_tm Sign -> h_ty (Sign:=Sign) -> Type :=
 
-  (* --- LEVELEK (Regularitási premisszákkal) --- *)
   
-  (* 0-s indexű változó *)
   | HD_Var0 : forall (I : b_ty) (Phi : @h_ty Sign) (G : @h_context Sign), 
       All_WellFormed I (Phi :: G) -> 
       h_derivation I (Phi :: G) (tm_var 0) Phi
 
-  (* S n-es indexű változó *)
   | HD_VarS : forall (I : b_ty) (Phi Psi : @h_ty Sign) (G : @h_context Sign) (n : nat), 
       WellFormed I Psi -> 
       h_derivation I G (tm_var n) Phi -> 
       h_derivation I (Psi :: G) (tm_var (S n)) Phi
 
-  (* Unit konstans *)
   | HD_Unit : forall (I : b_ty) (G : @h_context Sign), 
       All_WellFormed I G -> 
       h_derivation I G tm_unit Ty_Unit
 
-  (* --- KONVERZIÓK --- *)
   | HD_Conv : forall (I : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi Psi : @h_ty Sign),
       h_derivation I G p Phi ->
       form_equiv I Phi Psi ->
@@ -229,7 +191,6 @@ Inductive h_derivation {Sign : Type} `{SkolemMapping Sign} :
       h_derivation I G1 p Phi ->
       h_derivation I G2 p Phi
 
-  (* --- STRUKTURÁLIS SZABÁLYOK (Mindenhol explicit I és @h_tm Sign) --- *)
   | HD_Lam : forall (I : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi Psi : @h_ty Sign), 
       h_derivation I (Phi :: G) p Psi -> 
       h_derivation I G (tm_lam Phi p) (Ty_Arrow Phi Psi)
@@ -247,12 +208,12 @@ Inductive h_derivation {Sign : Type} `{SkolemMapping Sign} :
       h_derivation I G p (Ty_Prod Phi Psi) -> h_derivation I G (tm_snd p) Psi
       
   | HD_Inl : forall {I G p Phi Psi},
-      WellFormed I Psi ->     (* <--- EZ HIÁNYZOTT! *)
+      WellFormed I Psi ->     (* Records the unselected summand's well-formedness. *)
       h_derivation I G p Phi ->
       h_derivation I G (tm_inl Psi p) (Ty_Sum Phi Psi)
 
   | HD_Inr : forall {I G p Phi Psi},
-      WellFormed I Phi ->     (* <--- EZ HIÁNYZOTT! *)
+      WellFormed I Phi ->     (* Records the unselected summand's well-formedness. *)
       h_derivation I G p Psi ->
       h_derivation I G (tm_inr Phi p) (Ty_Sum Phi Psi)
        
@@ -260,11 +221,10 @@ Inductive h_derivation {Sign : Type} `{SkolemMapping Sign} :
       h_derivation I G p (Ty_Sum Phi Psi) -> h_derivation I (Phi :: G) p1 Chi -> h_derivation I (Psi :: G) p2 Chi -> h_derivation I G (tm_case p p1 p2) Chi
       
   | HD_Absurd : forall {I G p Phi},
-      WellFormed I Phi ->    (* <--- ÚJ PREMISSZA: A "motive" jólformáltsága *)
+      WellFormed I Phi ->    (* Records the elimination motive's well-formedness. *)
       h_derivation I G p Ty_Void ->
       h_derivation I G (tm_absurd Phi p) Phi
   
-  (* --- KVANTOROK ÉS EPSZILON (I és A bázis típusokkal) --- *)
   | HD_All_Intro : forall (I A : b_ty) (G : @h_context Sign) (p : @h_tm Sign) (Phi : @h_ty Sign), 
       h_derivation (b_Prod I A) (ctx_subst b_fst G) p Phi -> h_derivation I G (tm_all_intro p) (Ty_All A Phi)
       
@@ -302,16 +262,13 @@ Fixpoint tm_subst {Sign : Type} (f : @b_tm Sign) (p : @h_tm Sign) : @h_tm Sign :
   | tm_case p' p1 p2 => tm_case (tm_subst f p') (tm_subst f p1) (tm_subst f p2)
   | tm_absurd Phi p' => tm_absurd (form_subst f Phi) (tm_subst f p')
   
-  (* Kvantorok és Bázis-interakciók *)
   | tm_all_intro p' => tm_all_intro (tm_subst (b_subst_ext f) p')
   | tm_all_elim p' t => tm_all_elim (tm_subst f p') (b_comp t f)
   
   | tm_ex_intro t p' => tm_ex_intro (b_comp t f) (tm_subst f p')
   | tm_ex_elim p1 p2 => tm_ex_elim (tm_subst f p1) (tm_subst (b_subst_ext f) p2)
   
-  (* Intenzionális Epsilon szabályok *)
   | tm_eps_intro t p' => tm_eps_intro (b_comp t f) (tm_subst f p')
   | tm_eps_elim p1 p2 => tm_eps_elim (tm_subst f p1) (tm_subst (b_subst_ext f) p2)
   end.
   
-

@@ -1,4 +1,4 @@
-(* The epsilon extension proves a translated iFOL formula that iFOL refutes. *)
+(** The epsilon extension proves a translated iFOL formula that iFOL refutes. *)
 
 Require Import List.
 Import ListNotations.

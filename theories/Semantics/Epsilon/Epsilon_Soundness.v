@@ -1,4 +1,3 @@
-(* theories/Semantics/Epsilon/Epsilon_Soundness.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import List Arith PeanoNat Lia.
@@ -17,9 +16,7 @@ Require Import HyperLogic.Logic.Hyper.Epsilon.Hyper_Syntax.
 Require Import HyperLogic.Logic.Hyper.Epsilon.Epsilon_Syntax_Lemmas.
 Require Import HyperLogic.Semantics.Epsilon.Epsilon_Fibration.
 
-(* ================================================================= *)
-(* 0. BASE EQUATIONAL SOUNDNESS                                      *)
-(* ================================================================= *)
+(** Soundness for the epsilon-only calculus. *)
 
 Lemma base_equiv_sound :
   forall {Sign Func : Type} `{FunctionSignature Func}
@@ -50,9 +47,6 @@ Proof.
   - symmetry. apply compos_prod.
 Defined.
 
-(* ================================================================= *)
-(* 1. SUBSTITUTION AS PULLBACK                                       *)
-(* ================================================================= *)
 
 Lemma form_subst_iso :
   forall {Sign Func Pred : Type}
@@ -117,9 +111,6 @@ Proof.
   exact H.
 Defined.
 
-(* ================================================================= *)
-(* 2. FORMULA AND CONTEXT EQUIVALENCE SOUNDNESS                      *)
-(* ================================================================= *)
 
 Lemma interp_form_equiv :
   forall {Sign Func Pred : Type}
@@ -184,9 +175,6 @@ Proof.
     + apply interp_form_equiv. exact f.
 Defined.
 
-(* ================================================================= *)
-(* 3. SOUNDNESS                                                      *)
-(* ================================================================= *)
 
 Theorem soundness :
   forall {Sign Func Pred : Type}

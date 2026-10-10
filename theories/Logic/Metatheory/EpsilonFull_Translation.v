@@ -1,4 +1,3 @@
-(* theories/Logic/Metatheory/EpsilonFull_Translation.v *)
 
 Require Import List.
 Import ListNotations.

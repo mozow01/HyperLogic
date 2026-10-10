@@ -1,4 +1,3 @@
-(* theories/Semantics/EpsilonFull/LargeSetoidCategory.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Classes.RelationClasses.

@@ -1,4 +1,4 @@
-(* Structural lemmas for the epsilon-free iFOL base syntax. *)
+(** Structural lemmas for the epsilon-free iFOL base syntax. *)
 
 Require Import Coq.Program.Equality.
 Require Import HyperLogic.Logic.Base.IFOL.Base_Syntax.

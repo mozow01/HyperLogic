@@ -1,4 +1,3 @@
-(* theories/Logic/Hyper/Epsilon_Adjoint/Hyper_Syntax_Lemmas.v *)
 
 Require Import List.
 Import ListNotations.
@@ -29,14 +28,13 @@ Proof.
     eapply BT_Comp.
     + eassumption.
     + exact dt.
-  - (* WF_All *)
+  -
     simpl. apply WF_All.
     apply IHWellFormed.
-    (* Kibontjuk a bázis-kiterjesztést és bebizonyítjuk a típusosságát: *)
     unfold b_subst_ext. apply BT_Pair.
     + eapply BT_Comp. exact dt. apply BT_Fst.
     + apply BT_Snd.
-  - (* WF_Ex *)
+  -
     simpl. apply WF_Ex.
     apply IHWellFormed.
     unfold b_subst_ext. apply BT_Pair.
@@ -58,8 +56,6 @@ Proof.
   - apply BT_Snd.
 Defined.
 
-(* Visszanyeri a formulák jólformáltságát az ekvivalenciájukból *)
-(* Visszanyeri a formulák jólformáltságát az ekvivalenciájukból *)
 Lemma form_equiv_wf : forall {Sign : Type} `{SkolemMapping Sign} (I : b_ty) (Phi Psi : @h_ty Sign),
   form_equiv I Phi Psi -> (WellFormed I Phi * WellFormed I Psi)%type.
 Proof.
@@ -75,14 +71,14 @@ Proof.
   - destruct IHform_equiv; split; apply WF_All; assumption.
   - destruct IHform_equiv; split; apply WF_Ex; assumption.
   
-  - (* FE_Eps_Adjoint_Iso *)
+  -
     split.
     + apply WF_Ex. exact w.
     + eapply wf_subst.
       * eapply BT_Pair. apply BT_Id. apply BT_Const.
       * exact w.
 
-  - (* FE_Eps_Functorial *)
+  -
     destruct IHform_equiv as [wf_Phi wf_Psi].
     split.
     + eapply wf_subst.
@@ -92,22 +88,22 @@ Proof.
       * eapply BT_Pair. apply BT_Id. apply BT_Const.
       * exact wf_Psi.
 
-  - (* FE_Pullback_Id *)
+  -
     split.
     + eapply wf_subst. apply BT_Id. exact w.
     + exact w.
 
-  - (* FE_Pullback_Comp *)
+  -
     split.
     + eapply wf_subst. exact dg. eapply wf_subst. exact df. exact w.
     + eapply wf_subst. eapply BT_Comp. exact df. exact dg. exact w.
 
-  - (* FE_Pullback_Cong *)
+  -
     split.
     + eapply wf_subst. exact df. exact w.
     + eapply wf_subst. exact dg. exact w.
 
-  - (* FE_Eps_BC *)
+  -
     split.
     + eapply wf_subst.
       * eapply BT_Pair. apply BT_Id. apply BT_Const.
@@ -117,40 +113,36 @@ Proof.
       * eapply wf_subst. eapply BT_Pair. apply BT_Id. apply BT_Const. exact w.
 Defined.
 
-(* Visszanyeri a kontextusok jólformáltságát az ekvivalenciájukból *)
 Lemma ctx_equiv_wf_left : forall {Sign : Type} `{SkolemMapping Sign} (I : b_ty) (G G' : @h_context Sign),
   ctx_equiv I G G' -> All_WellFormed I G' -> All_WellFormed I G.
 Proof.
   intros Sign SM I G G' H Hwf_G'.
   induction H.
-  - (* CEq_Nil *)
+  -
     exact Hwf_G'.
-  - (* CEq_Cons *)
-    (* Invertáljuk a G' jólformáltságát (ami Psi :: G2 alakú) *)
+  -
     inversion Hwf_G'; subst.
     apply AWF_Cons.
-    + (* A form_equiv_wf lemma adja a Phi jólformáltságát *)
+    +
       apply (form_equiv_wf I Phi Psi f).
-    + (* Az IH adja a G1 jólformáltságát *)
+    +
       apply IHctx_equiv. exact X0.
 Defined.
 
-(* Visszanyeri a kontextusok jólformáltságát az ekvivalenciájukból - Jobb irány *)
 Lemma ctx_equiv_wf_right : forall {Sign : Type} `{SkolemMapping Sign} (I : b_ty) (G1 G2 : @h_context Sign),
   ctx_equiv I G1 G2 -> All_WellFormed I G1 -> All_WellFormed I G2.
 Proof.
   intros Sign SM I G1 G2 H Hwf1.
   induction H.
-  - (* CEq_Nil *)
+  -
     exact Hwf1.
-  - (* CEq_Cons *)
-    (* Invertáljuk a G1 jólformáltságát *)
+  -
     inversion Hwf1; subst.
     apply AWF_Cons.
-    + (* A form_equiv_wf mindkét irányt visszaadja egy párban (szorzatban) *)
+    +
       destruct (form_equiv_wf I Phi Psi f) as [wf_Phi wf_Psi].
       exact wf_Psi.
-    + (* Az IH adja a G2 maradékának jólformáltságát *)
+    +
       apply IHctx_equiv. exact X0.
 Defined.
 
@@ -162,166 +154,155 @@ Proof.
   intros Sign SM I J t dt Phi Psi H.
   revert I t dt.
   induction H; intros I0 t0 dt0.
-  - (* FE_Atom *)
+  -
     simpl. eapply FE_Atom.
     apply BE_CongComp.
-    + apply BE_Refl. (* A helyettesítés (t0) önmagával ekvivalens *)
-    + exact b.       (* Az atomok bázis-termjei (t1, t2) ekvivalensek *)
-  - (* FE_Refl *)
+    + apply BE_Refl.
+    + exact b.
+  -
     apply FE_Refl.
     eapply wf_subst.
     + exact dt0.
     + exact w.
-  - (* FE_Sym *)
+  -
     apply FE_Sym.
     apply IHform_equiv. exact dt0.
-  - (* FE_Trans *)
+  -
     eapply FE_Trans.
     + apply IHform_equiv1. exact dt0.
     + apply IHform_equiv2. exact dt0.
-  - (* FE_Prod *)
+  -
     simpl. apply FE_Prod.
     + apply IHform_equiv1. exact dt0.
     + apply IHform_equiv2. exact dt0.
-  - (* FE_Sum *)
+  -
     simpl. apply FE_Sum. 
     + apply IHform_equiv1. exact dt0.
     + apply IHform_equiv2. exact dt0.
-  - (* FE_Arrow *)
+  -
     simpl. apply FE_Arrow.
     + apply IHform_equiv1. exact dt0.
     + apply IHform_equiv2. exact dt0.
-  - (* FE_All *)
+  -
     simpl. apply FE_All.
-    (* Itt használjuk fel az imént bizonyított lemmát! *)
     apply IHform_equiv. apply typing_subst_ext. exact dt0.
-  - (* FE_Ex *)
+  -
     simpl. apply FE_Ex.
     apply IHform_equiv. apply typing_subst_ext. exact dt0.
- - (* FE_Eps_Adjoint_Iso ág *)
-    (* A cél: Ty_Ex A (form_subst (b_subst_ext t0) Phi) ≡ form_subst t0 (Phi .[ ε A, Phi ]) *)
+ -
     
     eapply FE_Trans.
-    { (* 1. Lépés: Alkalmazzuk az Epszilon-Adjunkciót a BELSŐ (már helyettesített) formulára *)
+    {
       apply FE_Eps_Adjoint_Iso.
-      (* A wf_pullback (vagy wf_subst) lemma mondja ki, hogy a helyettesítés 
-         megőrzi a jólformáltságot, ha a helyettesítő term típushelyes. *)
       eapply wf_subst. 
       
-      (* 1. Megadjuk a b_subst_ext t0 (azaz b_pair (b_comp t0 b_fst) b_snd) 
-            típushelyességének levezetési fáját: *)
       - exact (BT_Pair (BT_Comp dt0 BT_Fst) BT_Snd).
       
-      (* 2. Megadjuk magának a Phi-nek a jólformáltságát, amit a 'w' igazol: *)
       - exact w.
     }
-    { (* 2. Lépés: Itt jön a mágia! A tegnap bevezetett Beck-Chevalley axióma (FE_Eps_BC) 
-         haajszálpontosan a hiányzó láncszemet bizonyítja a két forma között! *)
+    {
       eapply FE_Eps_BC.
       - exact dt0.
       - exact w. 
     }
- - (* FE_Eps_Functorial ág *)
+ -
     eapply FE_Trans.
-    { (* 1. Lépés: Bal oldalon visszafelé alkalmazzuk a Beck-Chevalley-t *)
+    {
       eapply FE_Sym. 
       eapply FE_Eps_BC.
       - exact dt0.
-      - exact (fst (form_equiv_wf (b_Prod I A) Phi Psi H)). (* <-- WF_Phi lekérése *)
+      - exact (fst (form_equiv_wf (b_Prod I A) Phi Psi H)).
     }
     
     eapply FE_Trans.
-    { (* 2. Lépés: Epszilon Functorial szabály! *)
+    {
       eapply FE_Eps_Functorial.
       apply (IHform_equiv (b_Prod I0 A) (b_subst_ext t0)).
       apply typing_subst_ext. exact dt0. 
     }
     
-    { (* 3. Lépés: Jobb oldalon előrefelé alkalmazzuk a Beck-Chevalley-t *)
+    {
       eapply FE_Eps_BC.
       - exact dt0.
-      - exact (snd (form_equiv_wf (b_Prod I A) Phi Psi H)). (* <-- WF_Psi lekérése *)
+      - exact (snd (form_equiv_wf (b_Prod I A) Phi Psi H)).
     }
-  - (* FE_Pullback_Id ág *)
-    (* Cél: (Phi[id])[t0] ≡ Phi[t0] *)
+  -
     eapply FE_Trans.
-    { (* 1. Lépés: (Phi[id])[t0] ≡ Phi[id o t0] *)
+    {
       eapply FE_Pullback_Comp.
       - apply BT_Id.
       - exact dt0.
       - exact w.
     }
-    { (* 2. Lépés: Phi[id o t0] ≡ Phi[t0] 
-         mivel id o t0 = t0 a bázis kategóriában. *)
+    {
       eapply FE_Pullback_Cong.
-      - (* Itt a bázis ekvivalencia kell: id o t0 ≈ t0 *)
-        apply BE_IdL. (* Vagy BE_Id_Left, a bázis szintaxisodtól függően *)
+      -
+        apply BE_IdL.
       - exact w.
     }
-  - (* FE_Pullback_Comp ág *)
+  -
     eapply FE_Trans.
-    { (* 1. Lépés: (Phi[f])[g][t0] ≡ (Phi[f])[g o t0] *)
+    {
       eapply FE_Pullback_Comp.
-      - exact dg.   (* A belső helyettesítés: g *)
-      - exact dt0.  (* A külső helyettesítés: t0 *)
-      - (* Mivel a belső formula itt Phi[f], ehhez kell a wf_subst *)
+      - exact dg.
+      - exact dt0.
+      -
         eapply wf_subst.
         + exact df.
         + exact w.
     }
     
     eapply FE_Trans.
-    { (* 2. Lépés: Phi[f][g o t0] ≡ Phi[f o (g o t0)] *)
+    {
       eapply FE_Pullback_Comp.
-      - exact df. (* Belső helyettesítés: f *)
-      - eapply BT_Comp. exact dg. exact dt0. (* Külső: g o t0 *)
+      - exact df.
+      - eapply BT_Comp. exact dg. exact dt0.
       - exact w.
     }
     
     eapply FE_Trans.
-    { (* 3. Lépés: Phi[f o (g o t0)] ≡ Phi[(f o g) o t0] *)
+    {
       eapply FE_Pullback_Cong.
-      - apply BE_Assoc. (* A bázis kategória asszociativitása *)
+      - apply BE_Assoc.
       - exact w.
     }
     
-    { (* 4. Lépés: Phi[(f o g) o t0] ≡ Phi[f o g][t0] (Visszafelé) *)
+    {
       eapply FE_Sym.
       eapply FE_Pullback_Comp.
-      - eapply BT_Comp. exact df. exact dg. (* Belső: f o g *)
-      - exact dt0. (* Külső: t0 *)
+      - eapply BT_Comp. exact df. exact dg.
+      - exact dt0.
       - exact w.
     }
- - (* FE_Pullback_Cong ág *)
+ -
     eapply FE_Trans.
-    { (* 1. Lépés: (Phi[f])[t0] ≡ Phi[f o t0] *)
+    {
       eapply FE_Pullback_Comp.
-      - exact df.  (* Belső helyettesítés: f *)
-      - exact dt0. (* Külső helyettesítés: t0 *)
-      - exact w.   (* Jólformáltság: w *)
+      - exact df.
+      - exact dt0.
+      - exact w.
     }
     
     eapply FE_Trans.
-    { (* 2. Lépés: Phi[f o t0] ≡ Phi[g o t0] *)
+    {
       eapply FE_Pullback_Cong.
-      - (* A bázis kongruencia: t0 ≡ t0 és f ≡ g => f o t0 ≡ g o t0 *)
+      -
         eapply BE_CongComp.
-        + apply BE_Refl. (* A belső term (t0) önmagával ekvivalens *)
-        + exact b.       (* A külső termek (f és g) ekvivalensek *)
+        + apply BE_Refl.
+        + exact b.
       - exact w.
     }
     
-    { (* 3. Lépés: Phi[g o t0] ≡ (Phi[g])[t0] *)
+    {
       eapply FE_Sym.
       eapply FE_Pullback_Comp.
-      - exact dg.  (* Belső helyettesítés: g *)
-      - exact dt0. (* Külső helyettesítés: t0 *)
+      - exact dg.
+      - exact dt0.
       - exact w.
     }
- - (* Új FE_Eps_BC ág (A Coq által generálva az új konstruktorhoz) *)
+ -
     eapply FE_Trans.
-    { (* 1. Lépés: Bal oldal kibontása: (Phi[ext t][ε...])[t0] ≡ (Phi[ext t][ext t0])[ε...] 
-         Ezt a FE_Eps_BC adja visszafelé a t0-ra! *)
+    {
       eapply FE_Sym.
       eapply FE_Eps_BC.
       - exact dt0.
@@ -331,7 +312,7 @@ Proof.
     }
     
     eapply FE_Trans.
-    { (* 2. Lépés: Belső kompozíció összevonása: (Phi[ext t][ext t0])[ε...] ≡ (Phi[ext t o ext t0])[ε...] *)
+    {
       eapply FE_Eps_Functorial.
       eapply FE_Pullback_Comp.
       - eapply typing_subst_ext. exact dt.
@@ -340,8 +321,7 @@ Proof.
     }
     
     eapply FE_Trans.
-    { (* 3. Lépés: Bázis szintű kongruencia: ext t o ext t0 ≡ ext (t o t0) 
-         Itt jön be a Base_Syntax Béta-redukciója! *)
+    {
       eapply FE_Eps_Functorial.
       eapply FE_Pullback_Cong.
       - unfold b_subst_ext.
@@ -360,13 +340,13 @@ Proof.
     }
     
     eapply FE_Trans.
-    { (* 4. Lépés: Alkalmazzuk a FE_Eps_BC-t a kompozícióra: (Phi[ext (t o t0)])[ε...] ≡ (Phi[ε...])[t o t0] *)
+    {
       eapply FE_Eps_BC.
       - eapply BT_Comp. exact dt. exact dt0.
       - exact w.
     }
     
-    { (* 5. Lépés: Külső kompozíció szétbontása: (Phi[ε...])[t o t0] ≡ (Phi[ε...])[t][t0] *)
+    {
       eapply FE_Sym.
       eapply FE_Pullback_Comp.
       - exact dt.
@@ -375,7 +355,6 @@ Proof.
         + eapply BT_Pair. apply BT_Id. apply BT_Const.
         + exact w.
     }
-(* --- A POLC LESÖPRÉSE (Unshelve Magic) --- *)
   Unshelve.
   all: repeat match goal with
   | |- base_typing _ _ _ => eapply BT_Comp || eapply BT_Pair || 
@@ -404,76 +383,69 @@ Lemma phi_iso_phi_id_snd : forall {Sign : Type} `{SkolemMapping Sign} (I A : b_t
 Proof.
   intros Sign SM I A Phi wf.
   
-  (* Lépés 1: Phi <==> Phi[id] 
-     (Az identitás mentén vett subst izomorf az eredetivel) *)
   eapply FE_Trans.
   { eapply FE_Sym. eapply FE_Pullback_Id. exact wf. }
   
-  (* Lépés 2: Phi[id] <==> Phi[fst o <id, snd>] 
-     (A bázis kategória egyenlősége alapján: id = fst o <id, snd>) *)
   eapply FE_Trans.
   { eapply FE_Sym. 
     eapply FE_Pullback_Cong with 
       (df := BT_Comp BT_Fst (BT_Pair BT_Id BT_Snd)) 
       (dg := BT_Id).
-    - (* ---> ITT A BÁZIS SZINTAXIS MÁGIÁJA <--- *)
+    -
       apply BE_BetaFst. 
     - exact wf. 
   }
   
- (* Lépés 3: Phi[fst o <id, snd>] <==> (Phi[fst])[<id, snd>] 
-     (A subst funktor kompozíciója megőrzi az izomorfizmust) *)
   { apply FE_Sym.
     eapply FE_Pullback_Comp.
-    - (* df: b_fst tipizálása *)
+    -
       apply (@BT_Fst Sign (b_Prod I A) A).
-    - (* dg: b_pair b_id b_snd tipizálása *)
+    -
       apply BT_Pair.
       + apply (@BT_Id Sign (b_Prod I A)).
       + apply (@BT_Snd Sign I A).
-    - (* a WellFormed Phi bizonyítás átadása *)
+    -
       exact wf. 
   }
 Defined.
 
 Lemma ex_implies_eps : forall {Sign : Type} `{SkolemMapping Sign} (I A : b_ty) (Phi : @h_ty Sign)
-  (wf : WellFormed (b_Prod I A) Phi), (* <--- EZT ADD HOZZÁ! *)
+  (wf : WellFormed (b_Prod I A) Phi),
   h_derivation I [ Ty_Ex A Phi ]
     (tm_ex_elim (tm_var 0) (tm_eps_intro b_snd (tm_var 0)))
     (Phi .[ ε A, Phi ]).
 Proof.
   intros Sign SM I A Phi wf.
   
-  (* 1. Felnyitjuk az egzisztenciálist az Ex_Elim szabállyal *)
   eapply HD_Ex_Elim.
   - apply HD_Var0.
     apply AWF_Cons.
-    + apply WF_Ex. exact wf. (* A Ty_Ex jólformált, mert a magja (wf) az *)
-    + apply AWF_Nil.         (* A lista vége *)
+    + apply WF_Ex. exact wf.
+    + apply AWF_Nil.
   - eapply HD_Conv.
-    + (* 2. Epszilon bevezetése a b_snd projekcióra *)
+    +
       eapply HD_Eps_Intro.
       * apply BT_Snd.
       * eapply HD_Conv.
         { apply HD_Var0. 
           apply AWF_Cons.
-          - exact wf. (* 1. A Phi formula jólformált *)
+          - exact wf.
           - simpl. apply AWF_Cons.
-            + (* 2. A (Ty_Ex A Phi)[fst] formula jólformáltsága *)
+            +
               apply WF_Ex. 
               eapply wf_subst.
-              * (* A kiterjesztett fst projekció tipizálása *)
+              *
                 eapply typing_subst_ext. apply BT_Fst.
-              * (* Maga a belső formula (Phi) jólformált *)
+              *
                 exact wf.
-            + apply AWF_Nil. (* A lista vége *)
+            + apply AWF_Nil.
         }
-        { (* BELSŐ KONVERZIÓ: Phi ≡ (Phi[ext fst])[id, snd] *)
+        {
           eapply FE_Trans.
           { eapply FE_Sym. eapply FE_Pullback_Id. exact wf. }
           eapply FE_Trans.
           { eapply FE_Pullback_Cong.
-            - (* Bázis mágia: id ≡ ext fst o <id, snd> *)
+            -
               eapply BE_Trans.
               { eapply BE_Sym. apply BE_EtaPair. }
               eapply BE_Sym. eapply BE_Trans.
@@ -493,22 +465,17 @@ Proof.
             - exact wf.
           }
         }
-    + (* KÜLSŐ KONVERZIÓ: (Phi[ext fst])[ε...] ≡ Phi[ε...][fst] 
-         Zseniális: Ez hajszálpontosan a Beck-Chevalley axióma (FE_Eps_BC) a b_fst-re! *)
+    +
       eapply FE_Eps_BC.
       * apply BT_Fst.
       * exact wf.
       
-  (* --- A POLC LESÖPRÉSE --- *)
   Unshelve.
   all: repeat match goal with
   | |- base_typing _ _ _ => eapply BT_Comp || eapply BT_Pair || apply BT_Id || eapply BT_Fst || eapply BT_Snd || apply typing_subst_ext || eassumption
   end.
 Defined.
 
-(* ================================================================= *)
-(* WEAKENING (APPEND) LEMMÁK A ZÁRT TERMEKHEZ                        *)
-(* ================================================================= *)
 
 Lemma ctx_equiv_refl : forall {Sign : Type} `{SkolemMapping Sign} (I : b_ty) (D : @h_context Sign), 
   All_WellFormed I D -> ctx_equiv I D D.
@@ -539,19 +506,17 @@ Proof.
   - apply AWF_Cons. eapply wf_subst; eauto. auto.
 Defined.
 
-(* A Varázslat: Ha a kontextus végére fűzünk, a bizonyítás-term VÁLTOZATLAN marad! *)
+(** Appending a well-formed context preserves a closed proof code unchanged. *)
 Lemma h_derivation_append : forall {Sign : Type} `{SkolemMapping Sign} (I : b_ty) (G D : @h_context Sign) (p : @h_tm Sign) (Phi : @h_ty Sign),
   h_derivation I G p Phi ->
   All_WellFormed I D ->
   h_derivation I (G ++ D) p Phi.
 Proof.
-  (* ITT A JAVÍTÁS: A sorrend G D p Phi *)
   intros Sign SM I G D p Phi H.
   revert D.
   induction H; intros D Hwf; simpl.
- - (* HD_Var0 *)
+ -
     apply HD_Var0. 
-    (* Expliciten megadjuk a paramétereket, hogy átlépjünk a mintaillesztési hibán *)
     apply (All_WellFormed_app I (Phi :: G) D).
     + exact a.
     + exact Hwf.
@@ -568,7 +533,7 @@ Proof.
   - apply HD_Inr; auto.
   - eapply HD_Case; eauto.
   - apply HD_Absurd; auto.
-  - (* HD_All_Intro *)
+  -
     apply HD_All_Intro. 
     unfold ctx_subst. rewrite map_app. fold (@ctx_subst Sign).
     apply IHh_derivation. eapply All_WellFormed_subst.
@@ -590,9 +555,6 @@ Proof.
       exact Hwf.
 Defined.
 
-(* ================================================================= *)
-(* BASE TYPING UNIQUENESS                                            *)
-(* ================================================================= *)
 
 Lemma base_typing_unique : forall {Sign : Type} A f B1
   (d1 : @base_typing Sign A f B1) B2
@@ -617,9 +579,6 @@ Proof.
   - reflexivity.
 Defined.
 
-(* ================================================================= *)
-(* FORMULA WF INVERSION FOR SUBSTITUTION                             *)
-(* ================================================================= *)
 
 Lemma form_wf_subst_inv : forall {Sign : Type} {SM : SkolemMapping Sign}
   {I J : b_ty} (f : @b_tm Sign) (df : base_typing I f J)
@@ -644,7 +603,7 @@ Proof.
   - apply WF_Arrow.
     + eapply IHPhi1; eassumption.
     + eapply IHPhi2; eassumption.
-  - (* Ty_Atom *)
+  -
     eapply WF_Atom.
     match goal with
     | Hcomp : base_typing I (b_comp ?u f) ?B |- base_typing J ?u _ =>
@@ -658,12 +617,12 @@ Proof.
             exact Hu
         end
     end.
-   - (* Ty_All *)
+   -
     apply WF_All.
     eapply IHPhi.
     + exact (@typing_subst_ext Sign I J b f df).
     + exact X.
-  - (* Ty_Ex *)
+  -
     apply WF_Ex.
     eapply IHPhi.
     + exact (@typing_subst_ext Sign I J b f df).
@@ -696,9 +655,6 @@ Proof.
     + apply IH. exact X0.
 Defined.
 
-(* ================================================================= *)
-(* THE THREE AXIOMS, NOW AS LEMMAS                                    *)
-(* ================================================================= *)
 
 Lemma form_equiv_wf1 : forall {Sign : Type} {SM : SkolemMapping Sign}
   (I : b_ty) (Phi Psi : @h_ty Sign),
@@ -718,7 +674,7 @@ Proof.
   exact (snd (form_equiv_wf I Phi Psi H)).
 Defined.
 
-(* Kontextus regularitás: ha van deriváció, akkor a kontextus jólformált. *)
+(** Every derivation has a well-formed context. *)
 Lemma meta_ctx_wf : forall {Sign : Type} {SM : SkolemMapping Sign}
   {I : b_ty} {G : @h_context Sign} {p : @h_tm Sign} {Phi : @h_ty Sign},
   h_derivation I G p Phi ->
@@ -751,7 +707,7 @@ Proof.
   - exact IHHderiv1.
 Defined.
 
-(* Típus regularitás: ha van deriváció, akkor a célformula jólformált. *)
+(** Every derivation has a well-formed conclusion. *)
 Lemma meta_type_wf : forall {Sign : Type} {SM : SkolemMapping Sign}
   {I : b_ty} {G : @h_context Sign} {p : @h_tm Sign} {Phi : @h_ty Sign},
   h_derivation I G p Phi ->

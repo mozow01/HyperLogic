@@ -2,9 +2,7 @@ Require Import List PeanoNat Arith Lia.
 Import ListNotations.
 Require Import Coq.Classes.Morphisms.
 
-(* ================================================================= *)
-(* TYPES AND TERMS                                *)
-(* ================================================================= *)
+(** Simply typed lambda calculus with products. *)
 
 Inductive ty : Set :=
   | Ty_Atomic : nat -> ty
@@ -23,18 +21,12 @@ Inductive tm : Set :=
 
 Definition context := list ty.
 
-(* ================================================================= *)
-(* SCOPE DEFINITION                               *)
-(* ================================================================= *)
 
-(* Létrehozzuk a saját scope-ot, hogy ne akadjon össze a későbbi nyelvekkel *)
+(* A private scope avoids clashes with later object languages. *)
 Declare Scope stlc_scope.
 Delimit Scope stlc_scope with stlc.
 
-(* ================================================================= *)
-(* TYPING SYSTEM (LOGIC LAYER - Prop)                     *)
-(* ================================================================= *)
-(* Ez a matematikai definíció, ez kell a Kategóriához és Completenesshez *)
+(** Prop-valued typeability supports the categorical interface and completeness. *)
 
 Inductive typeability : context -> tm -> ty -> Prop :=
   | T_Unit : forall Gamma, 
@@ -69,18 +61,13 @@ Inductive typeability : context -> tm -> ty -> Prop :=
       typeability Gamma t (Ty_Prod A B) ->
       typeability Gamma (tm_snd t) B.
 
-(* A notációt az stlc_scope-hoz kötjük *)
 Notation "Gamma '⊢' t '[:]' A" := (typeability Gamma t A) (at level 70, no associativity) : stlc_scope.
 Notation "'⊢' t '[:]' A" := (typeability nil t A) (at level 70, no associativity) : stlc_scope.
 Notation "A ⊃ B" := (Ty_Arrow A B) (at level 70, right associativity) : stlc_scope.
 
-(* Alapértelmezetten megnyitjuk a scope-ot ebben a fájlban *)
 Open Scope stlc_scope.
 
-(* ================================================================= *)
-(* DERIVATION TREES (DATA LAYER - Set)                      *)
-(* ================================================================= *)
-(* Ez a Soundness-hez (Computation) kell. Ugyanaz a struktúra, de Set-ben. *)
+(** Set-valued derivation trees support computation in soundness. *)
 
 Inductive derivation : context -> tm -> ty -> Set :=
   | D_Unit : forall Gamma, 
@@ -115,7 +102,7 @@ Inductive derivation : context -> tm -> ty -> Set :=
       derivation Gamma t (Ty_Prod A B) -> 
       derivation Gamma (tm_snd t) B.
 
-(* Híd a Derivation (Set) és Typeability (Prop) között *)
+(** Forgets a derivation tree to Prop-valued typeability. *)
 Fixpoint forget_derivation {Gamma t A} (d : derivation Gamma t A) : typeability Gamma t A.
 Proof.
   induction d.
@@ -129,9 +116,6 @@ Proof.
   - eapply T_Snd; eassumption.
 Defined.
 
-(* ================================================================= *)
-(* PROOF IRRELEVANCE LOGIC                          *)
-(* ================================================================= *)
 
 Inductive tm_equiv_rel : tm -> tm -> Prop :=
   | PI_rule : forall Gamma A t s,

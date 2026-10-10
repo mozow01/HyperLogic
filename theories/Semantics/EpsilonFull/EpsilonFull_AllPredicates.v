@@ -1,9 +1,7 @@
-(* Epsilon selection for every semantic predicate over syntactic base types.
-   This is an all-predicate "enough epsilon terms" comparison relative to the
-   Sigma already present in GoodFibration.  It does not formalize equality
-   predicates or Pasquali's full notion of epsilon doctrine.  Unlike the
-   epsilon-only, formula-indexed comparison in [Pasquali_Epsilon], the object
-   Q below is an arbitrary object of the relevant semantic fiber. *)
+(** Syntax-indexed epsilon selection for arbitrary objects of semantic fibers
+    over interpreted base types. It is relative to the chosen [Sigma] in
+    [GoodFibration] and does not include equality predicates or Pasquali's full
+    epsilon doctrine. *)
 
 Require Import List.
 Import ListNotations.
@@ -117,8 +115,8 @@ Proof.
       exact Hcover.
 Defined.
 
-(* The indices range only over interpretations of syntactic base types I,A.
-   No claim is made about unrelated objects that may also live in C. *)
+(** The indices range only over interpretations of syntactic base types; no
+    claim is made about unrelated objects of the base category. *)
 Class AllPredicateEpsilonFullFibration : Type := {
   all_predicate_epsilon_selection :
     forall (I A : b_ty)
@@ -149,8 +147,8 @@ Definition all_predicate_epsilon_selection_exists
 
 End EpsilonFullAllPredicates.
 
-(* This class extends all data of the existing epsilon-exists model.  Its
-   additional field is the syntax-indexed, all-predicate selection structure. *)
+(** Extends an epsilon-exists model with syntax-indexed selection for every
+    semantic predicate. *)
 Class AllPredicateEpsilonFullModel
   {Sign Func Pred : Type}
   `{HFunc : FunctionSignature Func}

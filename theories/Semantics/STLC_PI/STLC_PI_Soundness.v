@@ -11,22 +11,12 @@ Require Import HyperLogic.Logic.STLC_PI.STLC_PI_Lemmas.
 
 Open Scope stlc_scope. 
 
-(* ================================================================= *)
-(* 1. MODEL & TYPE INTERPRETATION                                   *)
-(* ================================================================= *)
+(** Categorical semantics for STLC with products. *)
 
 Class Model (C : SetoidCategory) := {
   interp_base : nat -> @obj C
 }.
 
-(* Interpretation of Types: [[ A ]]
-   ---------------------------------------------------------
-   [[ base n ]] = M(n)
-   [[ unit ]]   = 1          (Terminal)
-   [[ A x B ]]  = [[A]] x [[B]] (Product)
-   [[ A -> B ]] = [[B]]^[[A]]   (Exponential) 
-*)
-(* VÁLTOZÁS: Ct és CC implicitek lettek {} a könnyebb használatért *)
 Fixpoint interp_ty (C : SetoidCategory) {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} 
                    (M : Model C) (A : ty) : @obj C :=
   match A with
@@ -36,10 +26,6 @@ Fixpoint interp_ty (C : SetoidCategory) {Ct : CartesianCategory C} {CC : Cartesi
   | Ty_Arrow A B => exp (interp_ty C M B) (interp_ty C M A)  
   end.
 
-(* Interpretation of Contexts: [[ Gamma ]]
-   ---------------------------------------------------------
-   [[ nil ]]      = 1
-   [[ A :: G' ]]  = [[G']] x [[A]] *)
 Fixpoint interp_ctx (C : SetoidCategory) {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} 
                     (M : Model C) (Gamma : context) : @obj C :=
   match Gamma with
@@ -47,13 +33,8 @@ Fixpoint interp_ctx (C : SetoidCategory) {Ct : CartesianCategory C} {CC : Cartes
   | A :: Gamma' => prod (interp_ctx C M Gamma') (interp_ty C M A)
   end.
 
-(* ================================================================= *)
-(* 2. EXPLICIT SEMANTICS (Computation / Set-based)                  *)
-(* ================================================================= *)
+(** Explicit interpretation of Set-valued derivation trees. *)
 
-(* Interpretation of Derivations: [[ D ]]
-   ---------------------------------------------------------
-   Maps a derivation tree D to a morphism f : [[Gamma]] -> [[A]] *)
 Fixpoint interp_derivation {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} 
                            {M : Model C} 
                            {Gamma : context} {t : tm} {A : ty} 
@@ -70,7 +51,6 @@ Fixpoint interp_derivation {C : SetoidCategory} {Ct : CartesianCategory C} {CC :
   | D_Snd _ _ _ _ D_pair   => compose prod_snd (interp_derivation D_pair)
   end.
 
-(* Wrapper definition *)
 Definition interp_term_ver {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} 
                            {M : Model C} (t : tm) 
                            {Gamma : context} {A : ty} 
@@ -78,7 +58,6 @@ Definition interp_term_ver {C : SetoidCategory} {Ct : CartesianCategory C} {CC :
                            : hom (interp_ctx C M Gamma) (interp_ty C M A) :=
   interp_derivation d.
 
-(* --- Explicit Soundness Theorems --- *)
 
 Theorem Soundness_explicit : forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (M : Model C) 
                                     (Gamma : context) (A : ty) (t : tm)
@@ -99,7 +78,6 @@ Proof.
   apply (interp_derivation d).
 Defined.
 
-(* --- Coherence and Equivalence --- *)
 
 Theorem coherence_theorem {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} 
                           {M : Model C} {HThin : Thin C}
@@ -149,9 +127,7 @@ Proof.
 Defined. 
 
 
-(* ================================================================= *)
-(* 3. IMPLICIT SEMANTICS (Prop-based / Existential)                 *)
-(* ================================================================= *)
+(** Inhabitational interpretation of Prop-valued typeability. *)
 
 Lemma Soundness_implicit_aux (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (M : Model C) :
   forall (Gamma : context) (t : tm) (A : ty),
@@ -160,37 +136,28 @@ Proof.
   intros Gamma t A H.
   induction H.
   
-  (* T_Unit *)
   - apply inhabits. simpl.
     exact terminal_map.
     
-  (* T_Var0 *)
   - apply inhabits. simpl. 
     exact prod_snd.
-  (* T_VarS *)
   - destruct IHtypeability as [IH].
     apply inhabits. simpl. 
     exact (compose IH prod_fst).
-  (* T_Lam *)
   - destruct IHtypeability as [IH].
     apply inhabits. simpl. 
     exact (exp_map IH).
-  (* T_App *)
-  - destruct IHtypeability1 as [Fun]. (* Gamma -> B^A *)
+  - destruct IHtypeability1 as [Fun].
     destruct IHtypeability2 as [Arg].
-    (* Gamma -> A *)
     apply inhabits. simpl. 
     exact (compose eval (prod_map Fun Arg)).
-  (* T_Pair *)
   - destruct IHtypeability1 as [Hfst].
     destruct IHtypeability2 as [Hsnd].
     apply inhabits. simpl. 
     exact (prod_map Hfst Hsnd).
-  (* T_Fst *)
   - destruct IHtypeability as [Hpair].
     apply inhabits. simpl. 
     exact (compose prod_fst Hpair).
-  (* T_Snd *)
   - destruct IHtypeability as [Hpair].
     apply inhabits. simpl. 
     exact (compose prod_snd Hpair).

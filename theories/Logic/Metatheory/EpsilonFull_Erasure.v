@@ -1,4 +1,3 @@
-(* theories/Logic/Metatheory/EpsilonFull_Erasure.v *)
 
 Require Import List.
 Import ListNotations.
@@ -114,31 +113,10 @@ Fixpoint erase_h_tm_with
       EpsHyper.tm_eps_elim (erase_h_tm_with erase_sign p1) (erase_h_tm_with erase_sign p2)
   end.
 
-(* A [SkolemErasure] is a morphism of Skolem oracles/signatures.
-
-   The map [erase_sign] sends Full skolem names to Epsilon skolem names.  The
-   compatibility law says that this map preserves the skolem symbol generated
-   from an index pair:
-
-        (A, Phi) --Full.skolem_index--> SignFull
-           |                              |
-           | erase                        | erase_sign
-           v                              v
-        (erase A, erase Phi) --Eps.skolem_index--> SignEps
-
-   In other words, the square commutes.  This is not an object-logic axiom and
-   not a semantic model condition; it is the signature/oracle coherence needed
-   to read a Full epsilon constant as the corresponding Epsilon epsilon
-   constant after erasure.  Equivalently, one could present it relationally as
-   the graph relation of [erase_sign], relating
-   [Full.skolem_index A Phi] to
-   [Eps.skolem_index (erase A) (erase Phi)].
-
-   The law is written with Coq equality because the present raw syntax stores
-   epsilon constants by their skolem names in [b_const].  Thus, to rewrite a
-   Full-generated constant into the Epsilon-generated constant, the syntax
-   currently needs literal equality of names rather than a separate setoid
-   relation on names. *)
+(** [SkolemErasure] maps full Skolem names to their erased counterparts.
+    Its compatibility law is signature coherence, not an object-logic or
+    model axiom. Literal equality is required because [b_const] stores raw
+    names rather than a separate setoid relation. *)
 Class SkolemErasure : Type := {
   erase_sign : SignFull -> SignEps;
   erase_skolem_index :

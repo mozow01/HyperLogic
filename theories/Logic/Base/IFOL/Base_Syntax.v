@@ -1,4 +1,4 @@
-(* The epsilon-free base syntax of intuitionistic first-order logic. *)
+(** The epsilon-free base syntax of intuitionistic first-order logic. *)
 
 Require Import Setoid.
 Require Import Relation_Definitions.

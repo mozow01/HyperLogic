@@ -1,4 +1,3 @@
-(* theories/Semantics/IFOL/Base_IFOL_Completeness.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Program.Equality.
@@ -9,9 +8,7 @@ Require Import HyperLogic.Cat.Fibration.
 Require Import HyperLogic.Logic.Base.IFOL.Base_Syntax.
 Require Import HyperLogic.Semantics.IFOL.IFOL_Fibration.
 
-(* ================================================================= *)
-(* 1. A SZINTAKTIKUS KATEGÓRIA (TERM MODELL) MORFIZMUSAI             *)
-(* ================================================================= *)
+(** Syntactic base model for completeness. *)
 
 Class hom_base {Func : Type} `{HFunc : FunctionSignature Func} (A B : b_ty) : Type := mk_hom_base {
   tm_of : @b_tm Func;
@@ -21,9 +18,6 @@ Class hom_base {Func : Type} `{HFunc : FunctionSignature Func} (A B : b_ty) : Ty
 Arguments tm_of {Func HFunc A B} _.
 Arguments deriv_of {Func HFunc A B} _.
 
-(* ================================================================= *)
-(* 2. A BÁZIS KATEGÓRIA PÉLDÁNYOSÍTÁSA                               *)
-(* ================================================================= *)
 
 Instance Base_SetoidCategory (Func : Type) `{HFunc : FunctionSignature Func} : SetoidCategory.
 Proof.
@@ -77,9 +71,6 @@ Proof.
   intro H. discriminate H.
 Defined.
 
-(* ================================================================= *)
-(* 2.5 SZINTAKTIKUS IFOL-MODELL ÉS SEGÉDLEMMÁK                       *)
-(* ================================================================= *)
 
 Lemma interp_ty_id : forall (Func : Type) `{HFunc : FunctionSignature Func} (A : b_ty),
   @interp_ty (Base_SetoidCategory Func) (Base_CartesianCategory Func) (Base_TwoSortCategory Func) A = A.
@@ -99,9 +90,6 @@ Proof.
     exact (@mk_hom_base Func HFunc (func_dom f) (func_cod f) (b_func f) BT_Func).
 Defined.
 
-(* ================================================================= *)
-(* 3. COMPLETENESS HELPER LEMMÁK                                     *)
-(* ================================================================= *)
 
 Lemma tm_of_eq_rect : forall {Func : Type} `{HFunc : FunctionSignature Func}
   (I A I_sem A_sem : b_ty)
@@ -185,9 +173,7 @@ Proof.
   subst. exact d.
 Defined.
 
-(* ================================================================= *)
-(* 4. COMPLETENESS (TELJESSÉG) TÉTELEK                               *)
-(* ================================================================= *)
+(** Base completeness theorems. *)
 
 Instance Base_SyntacticCoherentModel (Func : Type) `{HFunc : FunctionSignature Func} :
   @CoherentBaseIFOLModel Func HFunc

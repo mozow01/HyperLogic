@@ -1,4 +1,4 @@
-(* Semantic entry points for the canonical epsilon-only signature. *)
+(** Semantic entry points for the canonical epsilon-only signature. *)
 
 Require Import HyperLogic.Logic.Hyper.Epsilon.Canonical_Skolem.
 Require Import HyperLogic.Semantics.Epsilon.Epsilon_Soundness.

@@ -1,10 +1,8 @@
-(* Semantics/Simple/Simple_Soundness.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import List Arith PeanoNat Lia.
 Import ListNotations.
 
-(* Kategóriaelméleti alapok *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
 Require Import HyperLogic.Cat.CCC. 
@@ -13,7 +11,6 @@ Require Import HyperLogic.Cat.Functor.
 Require Import HyperLogic.Cat.Adjoint.
 Require Import HyperLogic.Cat.Fibration.
 
-(* Szintaxis és Bázis Szemantika *)
 Require Import HyperLogic.Logic.Base.Simple.Base_Syntax.
 Require Import HyperLogic.Semantics.Simple.Base_Simple_Soundness.
 Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
@@ -21,7 +18,7 @@ Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
 Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Syntax.
 Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Lemmas.
 
-(* Axiom-Free Extractors for WellFormed Derivations *)
+(** Well-formedness extractors for derivations. *)
 Definition ext_prod_L {I A B} (wf : WellFormed I (Ty_Prod A B)) : WellFormed I A :=
   match wf in (WellFormed I' P) return (match P with Ty_Prod A' _ => WellFormed I' A' | _ => Datatypes.unit end) with
   | WF_Prod _ _ _ wfA _ => wfA | _ => Datatypes.tt end.
@@ -54,37 +51,30 @@ Definition ext_ex {I A Body} (wf : WellFormed I (Ty_Ex A Body)) : WellFormed (b_
   match wf in (WellFormed I' P) return (match P with Ty_Ex A' B' => WellFormed (b_Prod I' A') B' | _ => Datatypes.unit end) with
   | WF_Ex _ _ _ wfBody => wfBody | _ => Datatypes.tt end.
 
-(* Atoms extract a dependent pair containing the target type and the base typing derivation! *)
+(* Atom well-formedness exposes its codomain and base typing derivation. *)
 Definition ext_atom {I p t} (wf : WellFormed I (Ty_Atom p t)) : { A : b_ty & base_typing I t A } :=
   match wf in (WellFormed I' P) return (match P with Ty_Atom p' t' => { A : b_ty & base_typing I' t' A } | _ => Datatypes.unit end) with
   | WF_Atom _ _ _ A dt => existT _ A dt | _ => Datatypes.tt end.
 
 
-(* ================================================================= *)
-(* 1. HYPER MODEL ÉS INTERPRETÁCIÓ (DEPENDENTLY TYPED)               *)
-(* ================================================================= *)
 
 Class HyperModel {C : SetoidCategory} {CC : CartesianCategory C} 
                  {TSC : TwoSortCategory C} {GF : GoodFibration C} 
                  (SGF : StrictGoodFibration C GF) := {
   
-  (* 1. i_atom natively requires a well-formed base typing derivation *)
   i_atom : forall (p : nat) (t : b_tm) (I A : b_ty) (dt : base_typing I t A), @obj (Fiber (interp_ty I)) ;
   
-  (* 2. i_atom_pb perfectly threads the composition derivation (BT_Comp) *)
   i_atom_pb : forall (p : nat) (t : b_tm) (I J A : b_ty) (f : b_tm) 
                      (df : base_typing I f J) (dt : base_typing J t A),
       @fobj _ _ (Pullback (interp_tm df)) (i_atom p t J A dt) ≅O i_atom p (b_comp t f) I A (BT_Comp dt df) ;
       
-  (* 3. Base model soundness uses the new non-dependent equivalence! *)
   base_model_sound : forall (I J : b_ty) (f g : b_tm) (df : base_typing I f J) (dg : base_typing I g J),
-      base_equiv I J f g ->   (* <--- NEW SIGNATURE *)
+      base_equiv I J f g ->
       interp_tm df ≅ interp_tm dg ;
       
-  (* 4. i_atom_cong compares the terms natively, but casts the derivations *)
   i_atom_cong : forall (p : nat) (t1 t2 : b_tm) (I A : b_ty)
                        (d1 : base_typing I t1 A) (d2 : base_typing I t2 A),
-      base_equiv I A t1 t2 ->   (* <--- NEW SIGNATURE *)
+      base_equiv I A t1 t2 ->
       i_atom p t1 I A d1 ≅O i_atom p t2 I A d2}.
 
 Fixpoint interp_h_ty {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
@@ -97,13 +87,11 @@ Fixpoint interp_h_ty {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoS
   | Ty_Sum A B => fun wf => coprod (interp_h_ty I A (ext_sum_L wf)) (interp_h_ty I B (ext_sum_R wf))
   | Ty_Arrow A B => fun wf => exp (interp_h_ty I B (ext_arr_R wf)) (interp_h_ty I A (ext_arr_L wf))
   | Ty_Atom p t => fun wf => 
-      (* We extract the underlying derivation safely *)
       i_atom p t I (projT1 (ext_atom wf)) (projT2 (ext_atom wf))
   | Ty_All A Body => fun wf => @right_adj_obj _ _ _ pullback_has_right_adjoint (interp_h_ty (b_Prod I A) Body (ext_all wf))
   | Ty_Ex A Body => fun wf => @left_adj_obj _ _ _ pullback_has_left_adjoint (interp_h_ty (b_Prod I A) Body (ext_ex wf))
   end.
   
-(* Axiom-Free Extractors for Contexts *)
 Definition ext_ctx_hd {I Phi G} (wfc : wf_ctx I (Phi :: G)) : WellFormed I Phi :=
   match wfc in (wf_ctx _ G') return (match G' with | nil => Datatypes.unit | Phi' :: _ => WellFormed I Phi' end) with
   | WFC_cons _ _ _ wf_Phi _ => wf_Phi 
@@ -124,9 +112,6 @@ Fixpoint interp_h_ctx {C : SetoidCategory} {CC : CartesianCategory C} {TSC : Two
   | Phi :: G' => fun wfc => prod (interp_h_ctx I G' (ext_ctx_tl wfc)) (interp_h_ty I Phi (ext_ctx_hd wfc))
   end.
 
-(* ================================================================= *)
-(* 2. STRUKTURÁLIS KOMPATIBILITÁSI LEMMÁK (DEPENDENTLY TYPED)        *)
-(* ================================================================= *)
 
 Lemma typing_pullback_ext :
   forall {I J b : b_ty} {g : b_tm} (dg : base_typing I g J),
@@ -149,41 +134,40 @@ Proof.
   intros C CC TSC GF SGF HM I J Phi wf.
   
   revert I. 
-  (* We use I_src to prevent shadowing the target context bound by WF_Prod/WF_Sum/etc. *)
+  (* [I_src] avoids shadowing contexts introduced by formula constructors. *)
   induction wf; intros I_src g dg; cbn.
   
-  - (* Ty_Unit *) 
+  -
     symmetry. apply pb_term_iso.
     
-  - (* Ty_Void *) 
+  -
     symmetry. apply pb_init_iso.
     
-  - (* Ty_Prod *) 
+  -
     eapply iso_trans.
     + apply (prod_iso_cong (IHwf1 I_src g dg) (IHwf2 I_src g dg)).
     + symmetry. apply pb_prod_iso.
     
-  - (* Ty_Sum *) 
+  -
     eapply iso_trans.
     + apply (coprod_iso_cong (IHwf1 I_src g dg) (IHwf2 I_src g dg)).
     + symmetry. apply pb_coprod_iso.
     
-  - (* Ty_Arrow *) 
+  -
     eapply iso_trans.
     + apply (exp_iso_cong (IHwf2 I_src g dg) (IHwf1 I_src g dg)).
     + symmetry. apply pb_exp_iso.
     
-  - (* Ty_Atom *) 
-    (* We can just let Coq auto-resolve the parameters for the atom pullback law *)
+  -
     symmetry. apply i_atom_pb.
     
-  - (* Ty_All *) 
+  -
     eapply iso_trans.
     + apply pi_iso_cong. 
       exact (IHwf (b_Prod I_src A) (b_pullback_ext g) (typing_pullback_ext dg)).
     + symmetry. apply beck_chevalley_pi.
     
-  - (* Ty_Ex *) 
+  -
     eapply iso_trans.
     + apply sigma_iso_cong. 
       exact (IHwf (b_Prod I_src A) (b_pullback_ext g) (typing_pullback_ext dg)).
@@ -200,12 +184,12 @@ Proof.
   intros C CC TSC GF SGF HM I A G wfc.
   induction wfc; cbn.
   
-  - (* WFC_nil *)
+  -
     symmetry. apply pb_term_iso.
     
-  - (* WFC_cons *)
+  -
     eapply iso_trans.
-    + (* We pass the proofs directly into prod_iso_cong so Coq's unifier doesn't have to guess! *)
+    + (* Explicit proof arguments keep [prod_iso_cong] from leaving unification variables. *)
       apply (prod_iso_cong IHwfc (form_pullback_general_iso w b_fst BT_Fst)).
     + symmetry. apply pb_prod_iso.
 Defined.
@@ -219,7 +203,7 @@ Lemma semantic_pi_ty :
   interp_h_ty I Phi wf1 ≅O interp_h_ty I Phi wf2.
 Proof.
   intros C CC TSC GF SGF HM I Phi.
-  (* We MUST revert the context I so the IH can handle the extended contexts created by the quantifiers! *)
+  (* Generalize [I] so induction applies under quantifiers. *)
   revert I.
   induction Phi; intros I wf1 wf2; cbn.
   
@@ -229,17 +213,17 @@ Proof.
   - apply coprod_iso_cong; [apply IHPhi1 | apply IHPhi2].
   - apply exp_iso_cong; [apply IHPhi2 | apply IHPhi1].
   
-  - (* Ty_Atom *)
+  -
     destruct (ext_atom wf1) as [A1 dt1].
     destruct (ext_atom wf2) as [A2 dt2].
     assert (Heq : A1 = A2) by (eapply base_typing_unique; [exact dt1 | exact dt2]).
     subst A2.
     apply i_atom_cong.
-    eapply BE_Refl. exact dt1. (* <--- explicitly provide the derivation to BE_Refl! *)
+    eapply BE_Refl. exact dt1.
 
-  - (* Ty_All *) 
+  -
     apply pi_iso_cong. apply (IHPhi (b_Prod I b)).
-  - (* Ty_Ex *)  
+  -
     apply sigma_iso_cong. apply (IHPhi (b_Prod I b)).
 Defined.
 
@@ -356,7 +340,7 @@ Proof.
   intros C CC TSC GF SGF HM I Phi Psi H.
   induction H; intros wf1 wf2; cbn.
   
-  - (* FEQ_Atom *)
+  -
     destruct (ext_atom wf1) as [A1 dt1].
     destruct (ext_atom wf2) as [A2 dt2].
     assert (Heq1 : A1 = A) by (eapply base_typing_unique; [exact dt1 | exact d1]).
@@ -364,22 +348,22 @@ Proof.
     subst A1 A2.
     apply i_atom_cong. exact b.
 
-  - (* FEQ_Refl *) apply semantic_pi_ty.
-  - (* FEQ_Sym *) symmetry. apply IHform_equiv.
+  -   apply semantic_pi_ty.
+  -   symmetry. apply IHform_equiv.
   
-  - (* FEQ_Trans *)
+  -
     assert (wf_Psi : WellFormed I Psi) by exact (snd (form_equiv_wf I Phi Psi H)).
     eapply iso_trans. 
     + apply (IHform_equiv1 wf1 wf_Psi).
     + apply (IHform_equiv2 wf_Psi wf2).
     
-  - (* FEQ_Prod *) apply prod_iso_cong; [apply IHform_equiv1 | apply IHform_equiv2].
-  - (* FEQ_Sum *) apply coprod_iso_cong; [apply IHform_equiv1 | apply IHform_equiv2].
-  - (* FEQ_Arrow *) apply exp_iso_cong; [apply IHform_equiv2 | apply IHform_equiv1].
-  - (* FEQ_All *) apply pi_iso_cong; apply IHform_equiv.
-  - (* FEQ_Ex *) apply sigma_iso_cong; apply IHform_equiv.
+  -   apply prod_iso_cong; [apply IHform_equiv1 | apply IHform_equiv2].
+  -   apply coprod_iso_cong; [apply IHform_equiv1 | apply IHform_equiv2].
+  -   apply exp_iso_cong; [apply IHform_equiv2 | apply IHform_equiv1].
+  -   apply pi_iso_cong; apply IHform_equiv.
+  -   apply sigma_iso_cong; apply IHform_equiv.
 
-  - (* FEQ_Pullback_Id *)
+  -
     eapply iso_trans. { apply semantic_pi_ty. } 
     eapply iso_trans.
     { apply (form_pullback_general_iso w b_id BT_Id). }
@@ -390,7 +374,7 @@ Proof.
       { apply pullback_id_iso. } }
     { apply semantic_pi_ty. } 
 
-  - (* FEQ_Pullback_Comp *)
+  -
     eapply iso_trans. { apply semantic_pi_ty. } 
     eapply iso_trans.
     { eapply (form_pullback_general_iso (wf_pullback _ _ _ _ _ w) g dg). }
@@ -405,7 +389,7 @@ Proof.
     { symmetry. apply (form_pullback_general_iso w (b_comp f g) (BT_Comp df dg)). }
     { apply semantic_pi_ty. } 
 
-  - (* FEQ_Pullback_Cong *)
+  -
     eapply iso_trans. { apply semantic_pi_ty. } 
     eapply iso_trans.
     { apply (form_pullback_general_iso w f df). }
@@ -440,10 +424,10 @@ Proof.
   intros C CC TSC GF SGF HM I G1 G2 H.
   induction H; intros wfc1 wfc2; cbn.
   
-  - (* CEQ_nil: Empty contexts map to the terminal object *)
+  -
     apply iso_refl.
     
-  - (* CEQ_cons: Map the equivalence to the product functor *)
+  -
     apply prod_iso_cong.
     + apply IHctx_equiv.
     + apply interp_form_equiv. exact f.
@@ -460,37 +444,37 @@ Theorem hyper_soundness_inhabited
 Proof.
   induction D; intros wfc wf_Phi.
   
-  - (* HD_Var0 *)
+  -
     cbn. eapply compose. 
-    { apply (@iso_to _ _ _ (semantic_pi_ty (ext_ctx_hd wfc) wf_Phi)). } (* Outer map: Bridge to Target *)
-    { apply prod_snd. }                                               (* Inner map: Extract from Context *)
+    { apply (@iso_to _ _ _ (semantic_pi_ty (ext_ctx_hd wfc) wf_Phi)). }
+    { apply prod_snd. }
 
-  - (* HD_VarS *)
+  -
     cbn. eapply compose. 
     { apply (IHD (ext_ctx_tl wfc) wf_Phi). }
     { apply prod_fst. }
 
-  - (* HD_Unit *)
+  -
     apply terminal_map.
 
-  - (* HD_Lam *)
+  -
     cbn. apply exp_map. 
     apply (IHD (WFC_cons _ _ _ (ext_arr_L wf_Phi) wfc) (ext_arr_R wf_Phi)).
 
- - (* HD_App *)
+ -
     pose proof (well_formed_target _ _ _ _ D2) as wf_A.
     eapply compose. { eapply eval. }
     apply prod_map.
-    + (* We build the perfect arrow proof so the extractors yield exactly wf_A and wf_Phi! *)
+    +
       exact (IHD1 wfc (WF_Arrow _ _ _ wf_A wf_Phi)).
     + exact (IHD2 wfc wf_A).
 
-  - (* HD_Pair *)
+  -
     cbn. apply prod_map.
     + exact (IHD1 wfc (ext_prod_L wf_Phi)).
     + exact (IHD2 wfc (ext_prod_R wf_Phi)).
 
-  - (* HD_Fst *)
+  -
     pose proof (well_formed_target _ _ _ _ D) as wf_prod.
     eapply compose. 
     { apply (@iso_to _ _ _ (semantic_pi_ty (ext_prod_L wf_prod) wf_Phi)). }
@@ -498,7 +482,7 @@ Proof.
     { eapply prod_fst. }
     { exact (IHD wfc wf_prod). }
 
-  - (* HD_Snd *)
+  -
     pose proof (well_formed_target _ _ _ _ D) as wf_prod.
     eapply compose. 
     { apply (@iso_to _ _ _ (semantic_pi_ty (ext_prod_R wf_prod) wf_Phi)). }
@@ -506,17 +490,17 @@ Proof.
     { eapply prod_snd. }
     { exact (IHD wfc wf_prod). }
 
-  - (* HD_Inl *)
+  -
     cbn. eapply compose. 
     { apply coprod_inl. }
     { exact (IHD wfc (ext_sum_L wf_Phi)). }
 
-  - (* HD_Inr *)
+  -
     cbn. eapply compose. 
     { apply coprod_inr. }
     { exact (IHD wfc (ext_sum_R wf_Phi)). }
 
-  - (* HD_Case *)
+  -
     pose proof (well_formed_target _ _ _ _ D1) as wf_sum.
     eapply compose.
     { eapply compose.
@@ -532,33 +516,33 @@ Proof.
         { eapply (prod_map prod_snd prod_fst). } } }
     { apply (prod_map (id _) (IHD1 wfc wf_sum)). }
 
-  - (* HD_Absurd *)
+  -
     eapply compose. 
     { apply initial_map. }
     { exact (IHD wfc (WF_Void I)). }
 
-  - (* HD_All_Intro *)
+  -
     cbn. apply right_adj_mor. eapply compose.
-    { (* We let Coq infer the explicit I, J, f, and Delta arguments! *)
+    {
       exact (IHD (wf_ctx_pullback _ _ _ _ BT_Fst wfc) (ext_all wf_Phi)). }
     { apply (@iso_from _ _ _ (ctx_pullback_iso wfc)). }
 
-  - (* HD_All_Elim *)
+  -
     pose proof (well_formed_target _ _ _ _ D) as wf_all.
     eapply compose. 
     { eapply (@iso_to _ _ _ (semantic_pi_ty _ wf_Phi)). }
     eapply compose. 
-    { (* Peel the inner proof out using ext_all! *)
+    {
       eapply (@iso_from _ _ _ (form_pullback_iso b (ext_all wf_all))). }
     eapply compose. 
     { eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id b))) _ _).
       apply (@epsilon _ _ (Pullback (interp_tm (BT_Fst (A:=I) (B:=A)))) pullback_has_right_adjoint). }
     eapply compose. 
-    { (* pb_eval_iso also needs the inner body proof! *)
+    {
       apply (pb_eval_iso b (ext_all wf_all)). }
     { exact (IHD wfc wf_all). }
 
-  - (* HD_Ex_Intro *)
+  -
     pose proof (well_formed_target _ _ _ _ D) as wf_pb.
     eapply compose. 
     { eapply (@iso_to _ _ _ (semantic_pi_ty _ wf_Phi)). }
@@ -570,25 +554,23 @@ Proof.
     eapply compose. 
     { apply (@iso_to _ _ _ (form_pullback_iso b (ext_ex wf_Phi))). }
     
-    (* NEW: Bridge the explicitly extracted wf_pb to the proof expected by form_pullback_iso! *)
     eapply compose. 
     { apply (@iso_to _ _ _ (semantic_pi_ty wf_pb _)). } 
     { exact (IHD wfc wf_pb). }
 
-  - (* HD_Ex_Elim *)
+  -
     pose proof (well_formed_target _ _ _ _ D1) as wf_ex.
     pose proof (well_formed_target _ _ _ _ D2) as wf_chi_pb.
     eapply compose. 
     { apply (ex_elim_frobenius wfc (ext_ex wf_ex) wf_Phi).
       eapply compose. { apply (@iso_to _ _ _ (form_pullback_fst_iso wf_Phi)). }
       
-      (* NEW: Bridge the explicitly extracted wf_chi_pb to the proof expected by form_pullback_fst_iso! *)
       eapply compose. { apply (@iso_to _ _ _ (semantic_pi_ty wf_chi_pb _)). }
       
       eapply compose. { exact (IHD2 (WFC_cons _ _ _ (ext_ex wf_ex) (wf_ctx_pullback _ _ _ _ BT_Fst wfc)) wf_chi_pb). }
       { apply (prod_map (compose (@iso_from _ _ _ (ctx_pullback_iso wfc)) prod_fst) prod_snd). } }
     { apply prod_map; [apply (id _) | exact (IHD1 wfc wf_ex)]. }
-  - (* HD_Conv *)
+  -
       pose proof (well_formed_ctx _ _ _ _ D) as wfc1.
       pose proof (fst (form_equiv_wf _ _ _ f)) as wf1.
       eapply compose. 

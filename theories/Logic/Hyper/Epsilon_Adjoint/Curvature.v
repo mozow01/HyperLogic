@@ -1,42 +1,10 @@
-(* theories/Logic/Hyper/Epsilon_Adjoint/Curvature.v *)
 
-(*  Proof-code level curvature for the epsilon syntax.
-
-   FINAL INTERPRETATION
-   --------------------
-   There is one epsilon curvature datum, with two return components:
-
-        Curv(Phi) = (g_Phi o f_Phi, f_Phi o g_Phi).
-
-   Here
-
-        f_Phi : exists Phi -> Phi(epsilon_Phi)
-        g_Phi : Phi(epsilon_Phi) -> exists Phi
-
-   and g_Phi is the direct existential return
-
-        q |-> ex_intro epsilon_Phi q.
-
-   The E-side component g_Phi o f_Phi detects witness hiding.  On an
-   explicit existential proof ex_intro t p, the direct beta-computation is
-
-        ex_intro t p  |->  ex_intro epsilon_Phi (eps_intro t p).
-
-   Thus the public witness, i.e. the first component of the outer ex_intro,
-   changes from t to epsilon_Phi unless the curvature component is equal to
-   the identity.
-
-   IMPORTANT SEPARATION OF LEVELS
-   ------------------------------
-   - b_tm          : individual/base terms, e.g. epsilon_Phi.
-   - h_tm          : object-language proof codes, e.g. f, g, K(f,g), id.
-   - h_derivation  : Coq-level evidence that an h_tm proof code has a type.
-
-   Curvature is defined on h_tm proof codes.  h_derivation is used only to
-   certify that those codes are well typed.
-
-   This file deliberately does NOT import the completeness/term-model file.
-*)
+(** Proof-code curvature for the epsilon bi-implication.
+    For [f : exists Phi -> Phi(epsilon_Phi)] and its direct return [g],
+    curvature is [(g o f, f o g)]. The first component exposes witness
+    hiding by replacing an explicit witness with [epsilon_Phi].
+    Base terms live in [b_tm], proof codes in [h_tm], and [h_derivation]
+    only certifies their typing. This file does not use the term model. *)
 
 Require Import List.
 Import ListNotations.
@@ -51,10 +19,6 @@ Set Implicit Arguments.
 Section Internal_Epsilon_Curvature.
 
 Context {Sign : Type} `{SM : SkolemMapping Sign}.
-
-(* ================================================================= *)
-(* 1. Epsilon is an individual term                                  *)
-(* ================================================================= *)
 
 Definition eps_ind (A : b_ty) (Phi : @h_ty Sign) : @b_tm Sign :=
   b_const A (skolem_index A Phi).
@@ -77,7 +41,6 @@ Proof.
   - apply eps_ind_typing.
 Defined.
 
-(* The existential formula and the epsilon instance. *)
 Definition ex_ty (A : b_ty) (Phi : @h_ty Sign) : @h_ty Sign :=
   Ty_Ex A Phi.
 
@@ -111,13 +74,7 @@ Proof.
   intros I Phi wfPhi. unfold endo_ty. apply WF_Arrow; exact wfPhi.
 Defined.
 
-(* ================================================================= *)
-(* 2. Identity and composition as object-language proof codes         *)
-(* ================================================================= *)
-
-(* Object-language identity proof code:
-      id_Phi := lambda x:Phi. x  : Phi -> Phi
-   This is an h_tm, not a Coq equality proof. *)
+(** Object-language identity code, not a Coq equality proof. *)
 Definition h_id_code (Phi : @h_ty Sign) : @h_tm Sign :=
   tm_lam Phi (tm_var 0).
 
@@ -134,9 +91,7 @@ Proof.
   - apply AWF_Nil.
 Defined.
 
-(* Object-language composition of closed proof codes:
-      comp(f,g) := lambda x. f (g x)
-   If f : B -> C and g : A -> B, then comp(f,g) : A -> C. *)
+(** Composition of closed object-language proof codes. *)
 Definition h_comp_code
   (A B C : @h_ty Sign) (f g : @h_tm Sign) : @h_tm Sign :=
   tm_lam A (tm_app f (tm_app g (tm_var 0))).
@@ -165,7 +120,7 @@ Proof.
 
   eapply HD_App with (Phi := B).
 
-  - (* f : B -> C, weakened from [] to [A] *)
+  -
     change (h_derivation I ([] ++ [A]) f (Ty_Arrow B C)).
     eapply (@h_derivation_append Sign SM
               I [] [A] f (Ty_Arrow B C)).
@@ -174,10 +129,10 @@ Proof.
       * exact wfA.
       * constructor.
 
-  - (* g x : B *)
+  -
     eapply HD_App with (Phi := A).
 
-    + (* g : A -> B, weakened from [] to [A] *)
+    +
       change (h_derivation I ([] ++ [A]) g (Ty_Arrow A B)).
       eapply (@h_derivation_append Sign SM
                 I [] [A] g (Ty_Arrow A B)).
@@ -186,35 +141,25 @@ Proof.
         -- exact wfA.
         -- constructor.
 
-    + (* x : A *)
+    +
       apply HD_Var0.
       constructor.
       * exact wfA.
       * constructor.
 Qed.
-(* ================================================================= *)
-(* 3. Curvature K(f,g) for proof codes f : A -> B and g : B -> A    *)
-(* ================================================================= *)
-
-(* Left return / curvature component:
-      K_left(f,g) = g o f : A -> A. *)
 Definition K_left_code
   (A B : @h_ty Sign) (f g : @h_tm Sign) : @h_tm Sign :=
   h_comp_code A B A g f.
 
-(* Right return / curvature component:
-      K_right(f,g) = f o g : B -> B. *)
 Definition K_right_code
   (A B : @h_ty Sign) (f g : @h_tm Sign) : @h_tm Sign :=
   h_comp_code B A B f g.
 
-(* The raw curvature is one two-component object-language endomorphism code.
-   It is trivial exactly at the pair of identities. *)
+(** Raw curvature is the pair of return endomorphism codes. *)
 Definition K_code
   (A B : @h_ty Sign) (f g : @h_tm Sign) : (@h_tm Sign * @h_tm Sign)%type :=
   (K_left_code A B f g, K_right_code A B f g).
 
-(* A typed bi-implication datum at the proof-code level. *)
 Class BiImplicationTyped
   (I : b_ty) (A B : @h_ty Sign) (f g : @h_tm Sign) : Type := {
   bi_wf_A : WellFormed I A ;
@@ -249,10 +194,6 @@ Proof.
   - exact dg.
 Defined.
 
-(* ================================================================= *)
-(* 4. The canonical epsilon bi-implication proof codes               *)
-(* ================================================================= *)
-
 Definition eps_choice_statement
   (I A : b_ty) (Phi : @h_ty Sign) : @h_ty Sign :=
   Ty_Arrow (ex_ty A Phi) (eps_ty I A Phi).
@@ -283,33 +224,21 @@ Proof.
   - apply wf_ex_ty. exact wfPhi.
 Defined.
 
-(* f_Phi : exists y. Phi(y) -> Phi(epsilon_Phi)
-
-   The body is supplied by ex_implies_eps from Hyper_Syntax_Lemmas. *)
+(** The epsilon choice code from an existential to its epsilon instance. *)
 Definition eps_choice_code
   (I A : b_ty) (Phi : @h_ty Sign) : @h_tm Sign :=
   tm_lam (ex_ty A Phi)
     (tm_ex_elim (tm_var 0) (tm_eps_intro b_snd (tm_var 0))).
 
-(* g_Phi : Phi(epsilon_Phi) -> exists y. Phi(y)
-
-   This is ordinary existential introduction with the individual term
-   epsilon_Phi. *)
+(** The direct return uses [epsilon_Phi] as the existential witness. *)
 Definition eps_return_code
   (I A : b_ty) (Phi : @h_ty Sign) : @h_tm Sign :=
   tm_lam (eps_ty I A Phi)
     (tm_ex_intro (eps_ind A Phi) (tm_var 0)).
 
-(* The direct hiding result of the E-side return on an explicit witness.
-
-   This is not asserted as a definitional equality of the object language; it is
-   the raw proof code which appears after the expected beta-computation
-
-      g_Phi (f_Phi (ex_intro t p))
-
-   when g_Phi is the direct return q |-> ex_intro epsilon_Phi q.  The public
-   witness is the first component of the outer ex_intro, hence epsilon_Phi.
-   The original t is only inside the eps_intro proof code. *)
+(** Raw code after the direct round trip; this is not claimed as an
+    object-language definitional equality. The outer witness becomes
+    [epsilon_Phi], while the original witness remains inside [eps_intro]. *)
 Definition eps_hidden_ex_code
   (A : b_ty) (Phi : @h_ty Sign) (t : @b_tm Sign) (p : @h_tm Sign)
   : @h_tm Sign :=
@@ -377,7 +306,6 @@ Proof.
   - apply eps_return_derivation. exact wfPhi.
 Defined.
 
-(* The two epsilon curvature proof codes. *)
 Definition eps_K_ex_code
   (I A : b_ty) (Phi : @h_ty Sign) : @h_tm Sign :=
   K_left_code (ex_ty A Phi) (eps_ty I A Phi)
@@ -421,16 +349,7 @@ Proof.
   exact wfPhi.
 Defined.
 
-(* ================================================================= *)
-(* 5. Flatness                                                       *)
-(* ================================================================= *)
-
-(* Later you can instantiate this with the intended non-thin equality of
-   proof codes: raw syntactic equality, beta-eta equality, normalization
-   equality, proof-net equality, etc.
-
-   The relation is typed: it compares p and q only after both have been
-   certified as derivations of the same formula Phi in the same context. *)
+(** A pluggable non-thin equality on equally typed proof codes. *)
 Class ProofCodeEq : Type := {
   pc_eq : forall (I : b_ty) (G : @h_context Sign) (Phi : @h_ty Sign)
                  (p q : @h_tm Sign),
@@ -460,10 +379,7 @@ Class ProofCodeEqLaws `{ProofCodeEq} : Type := {
     pc_eq dp dr
 }.
 
-(* A typed bi-implication datum is flat iff the two return operators are equal
-   to the corresponding object-language identity proof codes. *)
-
-
+(** Flatness equates both return codes with the corresponding identities. *)
 Definition FlatBiImplication
   `{ProofCodeEq}
   (I : b_ty) (A B : @h_ty Sign) (f g : @h_tm Sign)
@@ -506,10 +422,8 @@ Definition FlatEpsilonDatum
        (I := I) (A := Y) (Phi := Phi)
        wfPhi).
 
-(* The E-side component is the witness-protection test.  It says that the
-   direct epsilon round trip on the existential side is the identity.  When it
-   fails, the outer public witness of an explicit ex_intro t p can be replaced
-   by epsilon_Phi, with the original t pushed into the inner eps_intro code. *)
+(** Witness-side flatness prevents the direct round trip from hiding an
+    explicit existential witness. *)
 Definition FlatEpsilonWitnessSide
   `{ProofCodeEq}
   (I Y : b_ty) (Phi : @h_ty Sign)
@@ -523,9 +437,7 @@ Definition FlatEpsilonWitnessSide
        (wf_ex_ty
           (I := I) (A := Y) (Phi := Phi)
           wfPhi)).
-(* The S-side component records the analogous return operator on the epsilon
-   instance Phi(epsilon_Phi).  It is kept as part of the same single curvature
-   datum; it should not be treated as a separate curvature. *)
+(** The epsilon-instance side is the second component of the same curvature. *)
 Definition FlatEpsilonEpsSide
   `{ProofCodeEq}
   (I Y : b_ty) (Phi : @h_ty Sign)
@@ -551,32 +463,22 @@ Definition SystemFlat `{ProofCodeEq} : Prop :=
     
 End Internal_Epsilon_Curvature.
 
-(* ================================================================= *)
-(* Romeo and Juliet example: a binary atom via product-valued b_tm    *)
-(* ================================================================= *)
+(** A binary relation example using a product-valued base term. *)
 
 Section Romeo_Juliet_Binary_Atom.
 
 Context {Sign : Type} `{SM : SkolemMapping Sign}.
 
-(* I      : külső individuum-kontextus
-   Person : a személyek bázistípus
-   loves  : a "szereti" reláció predikátumszimbóluma *)
 Variable I Person : b_ty.
 Variable loves : nat.
 
-(* A kétargumentumú reláció argumentumtípusa: Person × Person. *)
 Definition RJ_PairTy : b_ty :=
   b_Prod Person Person.
 
-(* A kötött változó az I × (Person × Person) kontextusban.
-   b_snd : I × (Person × Person) -> Person × Person. *)
 Definition RJ_pair_var : @b_tm Sign :=
   b_snd.
 
-(* Loves_body az I × (Person × Person) kontextusban él.
-   Olvasat: Loves(z), ahol z : Person × Person.
-   Ha z = (x,y), akkor ez Loves(x,y). *)
+(* Reads as [Loves z] for a bound pair [z : Person × Person]. *)
 Definition RJ_Loves_body : @h_ty Sign :=
   Ty_Atom loves RJ_pair_var.
 
@@ -588,9 +490,6 @@ Proof.
   apply BT_Snd.
 Defined.
 
-(* ∃z : Person × Person. Loves(z)
-
-   Olvasat: van valaki, aki szeret valakit. *)
 Definition RJ_Exists_Love : @h_ty Sign :=
   Ty_Ex RJ_PairTy RJ_Loves_body.
 
@@ -602,11 +501,7 @@ Proof.
   exact RJ_Loves_body_wf.
 Defined.
 
-(* Az epsilon által választott pár:
-
-      eps_pair : I -> Person × Person
-
-   Ez lesz a "Rómeó-Júlia pár". *)
+(* The epsilon-selected pair is read as Romeo and Juliet. *)
 Definition RJ_eps_pair : @b_tm Sign :=
   b_const RJ_PairTy (skolem_index RJ_PairTy RJ_Loves_body).
 
@@ -617,7 +512,6 @@ Proof.
   apply BT_Const.
 Defined.
 
-(* Rómeó és Júlia az epsilon-pár két projekciója. *)
 Definition RJ_Romeo : @b_tm Sign :=
   b_comp b_fst RJ_eps_pair.
 
@@ -642,7 +536,6 @@ Proof.
   - apply BT_Const.
 Defined.
 
-(* A Rómeó-Júlia pár explicit összerakva. *)
 Definition RJ_pair_from_components : @b_tm Sign :=
   b_pair RJ_Romeo RJ_Juliet.
 
@@ -655,10 +548,6 @@ Proof.
   - apply RJ_Juliet_typing.
 Defined.
 
-(* Az epsilon-helyettesítéshez használt bázismorfizmus:
-
-      <id, eps_pair> : I -> I × (Person × Person)
- *)
 Definition RJ_eps_subst : @b_tm Sign :=
   b_pair b_id RJ_eps_pair.
 
@@ -671,18 +560,7 @@ Proof.
   - apply RJ_eps_pair_typing.
 Defined.
 
-(* A tényleges epsilon-instancia:
-
-      Loves_body .[ eps_pair ]
-
-   Olvasat:
-
-      Loves(eps_pair)
-
-   vagy komponensekre bontva:
-
-      Loves(Romeo, Juliet).
- *)
+(* Reads as [Loves (Romeo, Juliet)]. *)
 Definition RJ_Loves_epsilon_pair : @h_ty Sign :=
   RJ_Loves_body .[ RJ_eps_pair ].
 
@@ -695,14 +573,8 @@ Proof.
   - apply RJ_Loves_body_wf.
 Defined.
 
-(* Ugyanez az olvasat explicit párként:
-
-      Loves(<Romeo, Juliet>)
-
-   Ez szemantikailag / base-beta-eta szerint ugyanaz, mint Loves(eps_pair),
-   de itt nem bizonyítjuk a base_eta lemmát, mert annak nevei a Base_Syntax
-   aktuális ekvivalencia-lemmaszintjétől függnek.
- *)
+(* The explicit pair has the same intended reading; its base eta
+   equivalence is outside this file. *)
 Definition RJ_Loves_Romeo_Juliet_explicit : @h_ty Sign :=
   Ty_Atom loves RJ_pair_from_components.
 
@@ -714,15 +586,6 @@ Proof.
   apply RJ_pair_from_components_typing.
 Defined.
 
-(* Az adjungált epsilon konkrét Rómeó-Júlia példánya:
-
-      ∃z. Loves(z)  <->  Loves(eps_pair)
-
-   Olvasat:
-
-      ha van valaki, aki szeret valakit,
-      akkor a kiválasztott pár első tagja szereti a másodikat.
- *)
 Lemma RJ_exists_love_equiv_epsilon_pair :
   form_equiv I RJ_Exists_Love RJ_Loves_epsilon_pair.
 Proof.
@@ -731,14 +594,6 @@ Proof.
   exact RJ_Loves_body_wf.
 Defined.
 
-(* A formula-olvasat:
-
-      ha van szeretés, akkor Rómeó szereti Júliát.
-
-   Formálisan ez az epsilon-választás egyik iránya:
-
-      (∃z. Loves(z)) -> Loves(eps_pair)
- *)
 Definition RJ_if_love_then_Romeo_loves_Juliet : @h_ty Sign :=
   Ty_Arrow RJ_Exists_Love RJ_Loves_epsilon_pair.
 
@@ -751,8 +606,6 @@ Proof.
   - apply RJ_Loves_epsilon_pair_wf.
 Defined.
 
-(* Ha ezt a Section-t a Curvature.v alá teszed, akkor az ottani
-   eps_choice_code / eps_choice_derivation közvetlenül adja a proof code-ot. *)
 Definition RJ_if_love_then_Romeo_loves_Juliet_code : @h_tm Sign :=
   eps_choice_code I RJ_PairTy RJ_Loves_body.
 
@@ -769,15 +622,8 @@ Proof.
   exact RJ_Loves_body_wf.
 Defined.
 
-(* A kétváltozós Dual Drinker szeretet-relációra:
-
-      ∃z : Person × Person.
-        ((∃w : Person × Person. Loves(w)) -> Loves(z))
-
-   Komponensekkel:
-
-      ∃x ∃y. ((∃u ∃v. Loves(u,v)) -> Loves(x,y)).
- *)
+(** The binary dual drinker formula:
+    [exists z, (exists w, Loves w) -> Loves z]. *)
 Definition RJ_DualDrinker_body : @h_ty Sign :=
   Ty_Arrow
     (form_subst b_fst RJ_Exists_Love)
@@ -805,13 +651,7 @@ Proof.
   apply RJ_DualDrinker_body_wf.
 Defined.
 
-(* Az intended epsilon-tanú a Dual Drinkerhez ugyanaz a pár:
-
-      eps_pair = (Romeo, Juliet)
-
-   Azaz: ha létezik szeretés, akkor a kiválasztott szerető-szeretett pár
-   reprezentálja ezt a létezést.
- *)
+(* The dual-drinker witness is the same epsilon-selected pair. *)
 Definition RJ_DualDrinker_witness : @b_tm Sign :=
   RJ_eps_pair.
 

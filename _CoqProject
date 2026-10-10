@@ -20,12 +20,14 @@ theories/Logic/Hyper/Epsilon/Notations.v
 theories/Logic/Hyper/Epsilon/Epsilon_Syntax_Lemmas.v 
 theories/Semantics/Epsilon/Epsilon_Fibration.v
 theories/Semantics/Epsilon/Epsilon_Soundness.v
+theories/Semantics/Epsilon/Epsilon_SelectionModels.v
 theories/Semantics/Epsilon/Base_Epsilon_Completeness.v
 theories/Semantics/Epsilon/Epsilon_Completeness.v
 theories/Semantics/Epsilon/Canonical_Epsilon.v
 theories/Logic/Metatheory/EpsilonFull_Translation.v
 theories/Logic/Metatheory/EpsilonFull_Erasure.v
 theories/Logic/Metatheory/Canonical_Epsilon_Comparison.v
+theories/Logic/Metatheory/DerivationExtraction.v
 theories/Logic/Metatheory/Epsilon_Conservativity.v
 
 # --- STLC Logic (STLC_PI) ---
@@ -66,20 +68,25 @@ theories/Logic/Base/EpsilonFull/Base_Syntax_Lemmas.v
 theories/Logic/Hyper/EpsilonFull/Hyper_Syntax.v
 theories/Logic/Hyper/EpsilonFull/Canonical_Skolem.v
 theories/Logic/Hyper/EpsilonFull/Hyper_Syntax_Lemmas.v
+theories/Logic/Hyper/EpsilonFull/DualDrinker_Syntax.v
+theories/Logic/Hyper/EpsilonFull/Examples.v
 theories/Logic/Hyper/EpsilonFull/LEM_DNE.v
 theories/Semantics/EpsilonFull/EpsilonFull_Fibration.v
 theories/Semantics/EpsilonFull/Base_EpsilonFull_Soundness.v
 theories/Semantics/EpsilonFull/Base_EpsilonFull_Completeness.v
 theories/Semantics/EpsilonFull/EpsilonFull_Soundness.v
+theories/Semantics/EpsilonFull/EpsilonFull_SelectionModels.v
 theories/Semantics/EpsilonFull/EpsilonFull_Completeness.v
 theories/Semantics/EpsilonFull/EpsilonFull_AllPredicates.v
 theories/Semantics/EpsilonFull/FiniteHeytingPredicates.v
+theories/Semantics/EpsilonFull/IndexedHeytingPredicates.v
 theories/Semantics/EpsilonFull/EpsilonFull_ModelCategory.v
 theories/Semantics/EpsilonFull/Canonical_FiniteChain_Model.v
 theories/Semantics/EpsilonFull/Canonical_EpsilonFull.v
 theories/Semantics/EpsilonFull/LargeSetoidCategory.v
 theories/Semantics/EpsilonFull/EpsilonFull_OneStepFunctor.v
 theories/Semantics/EpsilonFull/EpsilonFull_FixedPoint.v
+theories/Semantics/EpsilonFull/H3_Algebra.v
 theories/Semantics/EpsilonFull/LEM_disproved.v
 
 # --- Standalone iFOL ---
@@ -92,6 +99,7 @@ theories/Semantics/IFOL/Base_IFOL_Soundness.v
 theories/Semantics/IFOL/Base_IFOL_Completeness.v
 theories/Semantics/IFOL/IFOL_Soundness.v
 theories/Semantics/IFOL/IFOL_Completeness.v
+theories/Semantics/IFOL/H5_Algebra.v
 theories/Semantics/IFOL/DualDrinker.v
 theories/Semantics/EpsilonFull/FiniteHeytingExamples.v
 theories/Semantics/Metatheory/IFOL_EpsilonFull_Translation.v
@@ -108,3 +116,4 @@ theories/Semantics/Metatheory/DualDrinker.v
 theories/Semantics/Metatheory/IFOLFull_NonConservativity.v
 theories/Semantics/Metatheory/Pasquali_Epsilon.v
 theories/Semantics/Metatheory/EpsilonFull_Substitutivity.v
+theories/Semantics/Metatheory/DerivationExtractionInstances.v

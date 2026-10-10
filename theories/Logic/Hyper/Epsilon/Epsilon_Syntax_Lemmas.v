@@ -1,4 +1,3 @@
-(* theories/Logic/Hyper/Epsilon/Epsilon_Syntax_Lemmas.v *)
 
 Require Import List.
 Import ListNotations.

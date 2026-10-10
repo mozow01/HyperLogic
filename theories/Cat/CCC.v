@@ -2,34 +2,21 @@ Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
 Require Import Coq.Classes.Morphisms.
 
-(* ================================================================= *)
-(* CARTESIAN CLOSED CATEGORY (Extends CartesianCategory)             *)
-(* ================================================================= *)
-
-(* A Ct : CartesianCategory C paraméter jelzi, hogy erre épülünk *)
+(** Closed structure over a fixed cartesian structure. *)
 Class CartesianClosedCategory (C : SetoidCategory) {Ct : CartesianCategory C} := mk_CartesianClosedCategory {
   
-  (* --- EXPONENTIAL OBJECT --- *)
   exp : @obj C -> @obj C -> @obj C;
   
-  (* Constructor: Lambda g / curry g *)
-  (* prod_map a CC-ből jön! *)
   exp_map : forall {x y z} (g : hom (prod x y) z), hom x (exp z y);
   
-  (* Destructor: eval / apply *)
   eval : forall {y z}, hom (prod (exp z y) y) z;
   
-  (* Equations *)
-  
-  (* Beta rule *)
   exp_beta : forall {x y z} (g : hom (prod x y) z),
     compose eval (prod_map (compose (exp_map g) prod_fst) (compose (id y) prod_snd)) ≅ g;
                       
-  (* Eta rule *)
   exp_eta : forall {x y z} (h : hom x (exp z y)),
     exp_map (compose eval (prod_map (compose h prod_fst) (compose (id y) prod_snd))) ≅ h;
 
-  (* Proper instance *)
   exp_map_proper_ax : forall {x y z},
     Proper (hom_equiv ==> hom_equiv) (@exp_map x y z)
 }. 
@@ -44,10 +31,7 @@ Arguments exp_beta {C} {Ct} {_} {x y z} _.
 Arguments exp_eta {C} {Ct} {_} {x y z} _.
 Arguments exp_map_proper_ax {C} {Ct} {_} {x y z}.
 
-(* --- Notations --- *)
 Notation "z ^ y" := (exp z y) (at level 30, right associativity) : type_scope.
-
-(* --- Theorems --- *)
 
 Theorem exp_unique {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} : 
   forall {x y z} (g : hom (prod x y) z) (h : hom x (exp z y)),
@@ -59,7 +43,6 @@ Proof.
   apply exp_map_proper_ax; exact H_eq.
 Defined.
 
-(* Naturality of Currying *)
 Theorem compos_exp {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} : 
   forall x y z w (g : y × w → z) (h : x → y),
   exp_map g ∘ h ≅ exp_map (g ∘ (h Π (id w))).
@@ -90,13 +73,11 @@ Proof.
   apply id_right. 
 Defined.
 
-(* --- Thin CCC Constructor --- *) 
-(* Ez most már csak az Exponenciális részt építi fel! *)
-(* A felhasználónak előbb fel kell építenie a CC-t a Build_Thin_CC-vel. *)
+(** Builds closed structure once the cartesian structure is fixed. *)
 Definition Build_Thin_CCC 
   (C : SetoidCategory)          
   (HThin : Thin C)              
-  {Ct : CartesianCategory C} (* Elvárjuk, hogy ez már meglegyen *)
+  {Ct : CartesianCategory C}
   (exp_item : @obj C -> @obj C -> @obj C)
   (eval_item : forall {y z}, hom (prod (exp_item z y) y) z)
   (exp_map_item : forall {x y z} (g : hom (prod x y) z), hom x (exp_item z y))
@@ -116,9 +97,6 @@ Proof.
   destruct HA as [toA fromA toA_fromA fromA_toA].
   destruct HB as [toB fromB toB_fromB fromB_toB].
 
-  (* ========================================================= *)
-  (* ALAP LEMMÁK (Szigorú zárójelezéssel!)                     *)
-  (* ========================================================= *)
   
   assert (H_swap_gen : forall (X Y Z W : @obj C) (E : hom X Z) (f : hom W Y),
     ((prod_fst ∏ (f ∘ prod_snd)) ∘ (E Π id W)) ≅ ((E ∘ prod_fst) ∏ (f ∘ prod_snd))).
@@ -150,10 +128,6 @@ Proof.
     - repeat rewrite comp_assoc. rewrite prod_map_fst. rewrite prod_map_fst. reflexivity.
     - repeat rewrite comp_assoc. rewrite prod_map_snd. rewrite <- comp_assoc. rewrite prod_map_snd. rewrite comp_assoc. rewrite Hfg. rewrite id_left. reflexivity. }
 
-  (* ========================================================= *)
-  (* MAKRÓ LEMMÁK (Gyökérszintű cserék a Coq helyett!)         *)
-  (* ========================================================= *)
-  
   assert (H_step1 : forall (X Y Z W V U : @obj C) (g : hom V U) (h : hom (prod Z Y) V) (E : hom X Z) (f : hom W Y),
     (g ∘ (h ∘ ((prod_fst ∏ (f ∘ prod_snd)) ∘ (E Π id W)))) ≅ 
     (g ∘ (h ∘ ((E ∘ prod_fst) ∏ (f ∘ prod_snd))))).
@@ -176,7 +150,7 @@ Proof.
     { apply H_id_gen. exact H. }
     rewrite K. apply id_right. }
 
-  (* ÚJ: Törlő makrók, amik PONTOSAN a Coq balra-zárójelező (AST) formátumát várják! *)
+  (* These cancellation lemmas match Coq's left-associated composition tree. *)
   assert (H_cancel_toA_AST : forall (X1 X2 X3 : @obj C) (h1 : hom X3 A') (h2 : hom X2 X3) (h3 : hom X1 X2),
     (toA ∘ (((fromA ∘ h1) ∘ h2) ∘ h3)) ≅ (h1 ∘ (h2 ∘ h3))).
   { intros.
@@ -198,9 +172,7 @@ Proof.
     iso_from := exp_map (fromA ∘ eval ∘ (prod_fst ∏ (toB ∘ prod_snd)))
   |}.
   
-  - (* ========================================================= *)
-    (* 1. Irány: iso_to ∘ iso_from ≅ id                          *)
-    (* ========================================================= *)
+  -
     etransitivity. { apply compos_exp. }
     
     assert (H_arg : ((toA ∘ eval ∘ (prod_fst ∏ (fromB ∘ prod_snd))) ∘ (exp_map (fromA ∘ eval ∘ (prod_fst ∏ (toB ∘ prod_snd))) Π id B')) ≅ eval).
@@ -211,10 +183,8 @@ Proof.
         rewrite H_step2.
         rewrite H_step3.
         
-        (* A varázslat: A Coq balra-zárójelező fája PONTOSAN illeszkedik a makróra! *)
         rewrite H_cancel_toA_AST.
         
-        (* És a H_step4 pedig pontosan azt a h1 ∘ (h2 ∘ h3) fát várja, amit a makró kiad! *)
         apply H_step4. exact toB_fromB.
       }
       assert (H_assoc : ((toA ∘ eval ∘ (prod_fst ∏ (fromB ∘ prod_snd))) ∘ (exp_map (fromA ∘ eval ∘ (prod_fst ∏ (toB ∘ prod_snd))) Π id B')) ≅ 
@@ -225,9 +195,7 @@ Proof.
     rewrite H_arg.
     symmetry. apply eval_and_id.
 
-  - (* ========================================================= *)
-    (* 2. Irány: iso_from ∘ iso_to ≅ id                          *)
-    (* ========================================================= *)
+  -
     etransitivity. { apply compos_exp. }
     
     assert (H_arg : ((fromA ∘ eval ∘ (prod_fst ∏ (toB ∘ prod_snd))) ∘ (exp_map (toA ∘ eval ∘ (prod_fst ∏ (fromB ∘ prod_snd))) Π id B)) ≅ eval).
@@ -238,7 +206,6 @@ Proof.
         rewrite H_step2.
         rewrite H_step3.
         
-        (* Ugyanez a csoda a második iránynál! *)
         rewrite H_cancel_fromA_AST.
         
         apply H_step4. exact fromB_toB.

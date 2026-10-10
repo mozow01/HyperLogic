@@ -1,4 +1,3 @@
-(* theories/Semantics/EpsilonFull/EpsilonFull_Soundness.v *)
 Require Import Coq.Classes.Morphisms.
 Require Import List Arith PeanoNat Lia.
 Import ListNotations.
@@ -16,9 +15,7 @@ Require Import HyperLogic.Logic.Hyper.EpsilonFull.Hyper_Syntax.
 Require Import HyperLogic.Logic.Hyper.EpsilonFull.Hyper_Syntax_Lemmas.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_Fibration.
 
-(* ================================================================= *)
-(* 1. STRUKTURÁLIS KOMPATIBILITÁSI LEMMÁK                            *)
-(* ================================================================= *)
+(** Soundness for the intuitionistic epsilon-exists calculus. *)
 
 Lemma form_subst_iso :
   forall {Sign Func Pred : Type}
@@ -74,9 +71,6 @@ Proof.
     + symmetry. apply pb_prod_iso.
 Defined.
 
-(* ================================================================= *)
-(* 2. KONVERZIÓS LEMMÁK                                              *)
-(* ================================================================= *)
 
 Lemma interp_subst_cong : forall {Sign Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
@@ -311,9 +305,6 @@ Proof.
     + apply interp_form_equiv. exact f.
 Defined.
 
-(* ================================================================= *)
-(* 3. SOUNDNESS TÉTEL                                                *)
-(* ================================================================= *)
 
 Theorem soundness :
   forall {Sign Func Pred : Type}

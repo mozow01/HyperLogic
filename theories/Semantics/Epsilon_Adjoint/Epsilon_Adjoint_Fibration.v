@@ -1,10 +1,8 @@
-(* theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Fibration.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import List. 
 Import ListNotations.
 
-(* Kategóriaelméleti alapok *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
 Require Import HyperLogic.Cat.CCC.
@@ -13,13 +11,10 @@ Require Import HyperLogic.Cat.Functor.
 Require Import HyperLogic.Cat.Adjoint.
 Require Import HyperLogic.Cat.Fibration.
 
-(* Szintaxis és Orákulum (CSAK AZ ÚJ, ADJOINT MAPPÁBÓL!) *)
 Require Import HyperLogic.Logic.Base.Epsilon_Adjoint.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Epsilon_Adjoint.Hyper_Syntax.
 
-(* ================================================================= *)
-(* 1. BÁZIS SZEMANTIKA ÉS INTERPRETÁCIÓ                              *)
-(* ================================================================= *)
+(** Semantic interface for the signature-indexed epsilon calculus. *)
 
 Fixpoint interp_ty {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
   (A : b_ty) : @obj C :=
@@ -47,7 +42,6 @@ Fixpoint interp_tm {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C}
   | @BT_Const _ I' A' s => i_const I' A' s
   end.
   
-(* --- A KOHERENCIA KÖVETELMÉNY (TÖRVÉNY) --- *)
 Class CoherentBaseModel 
   {Sign : Type} {C : SetoidCategory} {CC : CartesianCategory C} 
   {TSC : TwoSortCategory C} {BEM : @BaseEpsilonModel Sign C CC TSC} := {
@@ -56,9 +50,6 @@ Class CoherentBaseModel
     interp_tm d1 ≅ interp_tm d2
 }.
 
-(* ================================================================= *)
-(* 2. HYPER SZEMANTIKA (Atomok és Kvantorok)                         *)
-(* ================================================================= *)
 
 Class EpsilonHyperModel 
   {Sign : Type} 
@@ -105,9 +96,6 @@ Fixpoint interp_h_ctx
   | Phi :: G' => prod (interp_h_ctx I G') (interp_h_ty I Phi)
   end.
 
-(* ================================================================= *)
-(* 3. ADJUNGÁLT FIBRÁCIÓ OSZTÁLY                                     *)
-(* ================================================================= *)
 
 Class AdjointEpsilonFibration 
   {Sign : Type} {SM : SkolemMapping Sign} 
@@ -116,7 +104,7 @@ Class AdjointEpsilonFibration
   {EHM : EpsilonHyperModel} := {
 
   eps_is_left_adj_obj : forall (I A : b_ty) (Phi : @h_ty Sign),
-    WellFormed (b_Prod I A) Phi -> (* <--- Megköveteljük a helyes szintaxist *)
+    WellFormed (b_Prod I A) Phi -> (* Restricts epsilon structure to well-formed formulas. *)
     @left_adj_obj _ _ _ pullback_has_left_adjoint 
       (interp_h_ty (b_Prod I A) Phi)
     ≅O 

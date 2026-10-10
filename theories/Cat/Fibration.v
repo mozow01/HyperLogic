@@ -7,48 +7,28 @@ Require Import HyperLogic.Cat.Adjoint.
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Classes.RelationClasses.
 
-(** * 1. The Core Fibration (Hyperdoctrine) *)
-
-(** WHAT IT IS:
-  The [GoodFibration] class defines a categorical hyperdoctrine, serving as the 
-  semantic foundation for our logic. It maps a Cartesian base category of individuals 
-  to a family of BiCartesian Closed Categories (fibers) representing propositions.
-
-  WHY WE CHOSE THIS SOLUTION:
-  1. Local Proof Irrelevance: We explicitly require [fiber_is_thin]. This enforces 
-     that the logic is Proof Irrelevant (at most one proof exists between any two 
-     propositions), collapsing the logic into a preorder.
-  2. Explicit Preservation Axioms: Even though right/left adjoints mathematically 
-     preserve limits/colimits (and the fibers are Thin), we explicitly include 
-     preservation isomorphisms (e.g., [pb_prod_iso]). In Coq, omitting these would 
-     force us to manually reconstruct the isomorphisms from adjunctions every time 
-     we rewrite, which severely hinders proof automation.
-*)
+(** [GoodFibration] packages thin BiCCC fibers, reindexing, chosen
+    preservation isomorphisms, projection adjoints, and Beck-Chevalley laws. *)
 
 Class GoodFibration (B : SetoidCategory) {CB : CartesianCategory B} := mk_GoodFibration {
   
-  (** The indexed category mapping contexts to logical fibers *)
   Fiber : @obj B -> SetoidCategory;
   
-  (** Fibers are locally Proof Irrelevant (Thin categories) *)
   fiber_is_thin : forall (I : @obj B), Thin (Fiber I);
 
-  (** Logical structure of each fiber (Propositional logic / Heyting algebra) *)
   Fiber_is_Cartesian : forall (I : @obj B), CartesianCategory (Fiber I);
   Fiber_is_Closed    : forall (I : @obj B), @CartesianClosedCategory (Fiber I) (Fiber_is_Cartesian I);
   Fiber_is_BiClosed  : forall (I : @obj B), @BiCartesianClosedCategory (Fiber I) (Fiber_is_Cartesian I) (Fiber_is_Closed I);
   
-  (** Substitution functor between fibers *)
   Pullback : forall {I J : @obj B}, (hom I J) -> Functor (Fiber J) (Fiber I);
   
-  (** Structural isomorphisms for substitution *)
   pullback_id_iso : forall {I : @obj B} (A : @obj (Fiber I)),
       (@fobj _ _ (Pullback (id I)) A) ≅O A;
   pullback_comp_iso : forall {I J K : @obj B} (g : hom J K) (f : hom I J) (A : @obj (Fiber K)),
       (@fobj _ _ (Pullback (compose g f)) A) ≅O
       (@fobj _ _ (Pullback f) (@fobj _ _ (Pullback g) A));
 
-  (** Logical preservation isomorphisms (convenience for rewriting) *)
+  (** Chosen preservation maps make reindexing laws directly available to rewriting. *)
   pb_term_iso : forall {I J : @obj B} (f : hom I J),
       (@fobj _ _ (Pullback f) (@terminal _ (Fiber_is_Cartesian J))) ≅O
       (@terminal _ (Fiber_is_Cartesian I));
@@ -65,11 +45,10 @@ Class GoodFibration (B : SetoidCategory) {CB : CartesianCategory B} := mk_GoodFi
       (@fobj _ _ (Pullback f) (@exp _ _ (Fiber_is_Closed J) A B)) ≅O
       (@exp _ _ (Fiber_is_Closed I) (@fobj _ _ (Pullback f) A) (@fobj _ _ (Pullback f) B));
 
- (** Quantifiers as Adjoints to substitution (Kizárólag a projekciók mentén!) *)
+  (** Quantifiers are adjoints only to reindexing along projections. *)
   pullback_has_left_adjoint : forall {I A : @obj B}, IsRightAdjoint (Pullback (@prod_fst B CB I A));
   pullback_has_right_adjoint : forall {I A : @obj B}, IsLeftAdjoint (Pullback (@prod_fst B CB I A));
 
-  (** Beck-Chevalley conditions for quantifier commutation *)
   beck_chevalley_sigma : forall {I J K : @obj B} (f : hom K I) (A : @obj (Fiber (@prod B CB I J))),
       (@fobj _ _ (Pullback f) (@left_adj_obj _ _ _ pullback_has_left_adjoint A)) ≅O
       (@left_adj_obj _ _ _ pullback_has_left_adjoint
@@ -80,12 +59,9 @@ Class GoodFibration (B : SetoidCategory) {CB : CartesianCategory B} := mk_GoodFi
       (@right_adj_obj _ _ _ pullback_has_right_adjoint
           (@fobj _ _ (Pullback (@prod_map B CB (prod K J) I J (compose f (@prod_fst B CB K J)) (@prod_snd B CB K J))) A));
 
-  (** Congruence of base morphisms over substitution *)
   pb_iso : forall {I J : @obj B} (f g : hom I J),
       f ≅ g -> forall (A : @obj (Fiber J)), (@fobj _ _ (Pullback f) A) ≅O (@fobj _ _ (Pullback g) A)
 }.
-
-(** ** Typeclass Registrations for Fibers *)
 
 Global Instance GF_Fiber_CC
   {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B} (I : @obj B)
@@ -103,7 +79,7 @@ Global Instance GF_Fiber_Thin
   {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B} (I : @obj B)
   : Thin (Fiber I) := fiber_is_thin I.
 
-(** ** BiCCC-valued view of a fibration *)
+(** A BiCCC-valued view of a fibration. *)
 
 (** [Iso] is Type-valued, while [SetoidCategory] expects Prop-valued
     hom-equivalences.  This wrapper is the Prop-valued reading of object
@@ -111,7 +87,6 @@ Global Instance GF_Fiber_Thin
 Inductive IsoProp {C : SetoidCategory} (A B : @obj C) : Prop :=
 | iso_prop_intro : A ≅O B -> IsoProp A B.
 
-(** The opposite of a setoid category. *)
 Definition OppositeCategory (C : SetoidCategory) : SetoidCategory.
 Proof.
   refine {|
@@ -134,7 +109,6 @@ Proof.
     apply comp_proper; [exact Hhi | exact Hfg].
 Defined.
 
-(** A BiCCC object packages a setoid category with chosen BiCCC structure. *)
 Record BiCCCObject := mk_BiCCCObject {
   biccc_cat : SetoidCategory;
   biccc_cartesian : CartesianCategory biccc_cat;
@@ -142,8 +116,6 @@ Record BiCCCObject := mk_BiCCCObject {
   biccc_biclosed : @BiCartesianClosedCategory biccc_cat biccc_cartesian biccc_closed
 }.
 
-(** A morphism of BiCCC objects is a functor preserving the BiCCC structure up
-    to the object isomorphisms already used throughout [GoodFibration]. *)
 Record BiCCCFunctor (X Y : BiCCCObject) := mk_BiCCCFunctor {
   biccc_functor : Functor (biccc_cat X) (biccc_cat Y);
 
@@ -321,26 +293,14 @@ Proof.
 Defined.
 
 
-(** * 2. The Total Category (Grothendieck Construction) *)
-
-(** WHAT IT IS:
-  The construction of the Total Space (often denoted as E), which mathematically 
-  flattens the indexed category into a single large category containing both 
-  base individuals and fiber propositions.
-
-  WHY WE CHOSE THIS SOLUTION:
-  Instead of using Coq's 'Record' keyword (which binds projections tightly), 
-  we use 'Class' alongside 'Arguments' overriding. This allows us to manually 
-  control Coq's implicit resolution mechanism, ensuring that dependent 
-  typeclasses don't aggressively hide our target objects, preventing 
-  "Non-functional construction" errors later.
-*)
+(** The total category is the Grothendieck construction of [GoodFibration].
+    Explicit projection arguments prevent dependent typeclass inference from
+    hiding the target objects. *)
 
 Class TotalObj {B : SetoidCategory} {CB : CartesianCategory B} (GF : GoodFibration B) := mk_TotalObj {
   t_base : @obj B;
   t_fib  : @obj (Fiber t_base)
 }.
-(** Force projection parameters to be explicit to avoid typeclass overreach. *)
 Arguments t_base {_ _ _} _.
 Arguments t_fib {_ _ _} _.
 
@@ -351,7 +311,6 @@ Class TotalHom {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibrati
 Arguments h_base {_ _ _ _ _} _.
 Arguments h_fib {_ _ _ _ _} _.
 
-(** Equivalence in the Total Category relies on base equivalence and fiber isomorphism. *)
 Definition TotalHom_equiv {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B} 
                           {X Y : TotalObj GF} (M1 M2 : TotalHom X Y) : Prop :=
   exists (H_base : h_base M2 ≅ h_base M1),
@@ -376,19 +335,8 @@ Proof.
 Defined.
 
 
-(** * 3. Constructing the Total Setoid Category *)
-
-(** WHAT IT IS:
-  The formal instantiation of [SetoidCategory] for the Total Space.
-
-  WHY WE CHOSE THIS SOLUTION:
-  We construct identities and compositions with highly explicit annotations 
-  (using the @ symbol). This prevents Coq's unification from guessing wrong 
-  implicits for the fibered functors. We use the 'refine' tactic to construct 
-  the category, allowing us to interactively prove the category laws (Assoc, 
-  IdL, IdR). The derived [global_pi] lemma reduces these laws to their base
-  components.
-*)
+(** Explicit annotations keep unification from choosing the wrong fiber
+    arguments; [global_pi] then reduces category laws to their base maps. *)
 
 Definition total_id {B : SetoidCategory} {CB : CartesianCategory B} {GF : GoodFibration B} 
                     (X : TotalObj GF) : TotalHom X X :=
@@ -447,18 +395,13 @@ Proof.
 Defined.
 
 
-(** * 4. Logical Quantifiers and the Base Individual Type *)
-
-(** The Category representing two sorts: the standard terminal object and 
-  the sort of individuals (S).
-*)
+(** A base with the terminal sort and a distinct individual sort [S]. *)
 Class TwoSortCategory (B : SetoidCategory) {CB : CartesianCategory B} := mk_TwoSortCategory {
   S : @obj B;
   S_is_not_Terminal : S <> terminal 
 }.
 Arguments S {B CB}.
 
-(** The 'bang' morphism mapping the individual sort to the terminal object. *)
 Definition bang (B : SetoidCategory) {CB : CartesianCategory B} {TSC : TwoSortCategory B} : hom (@S B CB TSC) terminal :=
   terminal_map.
 

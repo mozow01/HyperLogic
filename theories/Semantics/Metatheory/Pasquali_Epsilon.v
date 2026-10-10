@@ -1,4 +1,3 @@
-(* theories/Semantics/Metatheory/Pasquali_Epsilon.v *)
 
 Require Import List.
 Import ListNotations.
@@ -15,51 +14,15 @@ Require Import HyperLogic.Logic.Hyper.Epsilon.Hyper_Syntax.
 Require Import HyperLogic.Semantics.Epsilon.Epsilon_Fibration.
 Require Import HyperLogic.Semantics.Epsilon.Epsilon_Soundness.
 
-(* Reading guide for Pasquali 2016 and 2019:
+(** Correspondence with Pasquali 2016 and 2019. Definitions 2.1 and 6.1
+    correspond to [eps_instance] and [eps_unit], Proposition 6.2 to [soundness],
+    and Pasquali 2019, Definition 2.1 to
+    [pasquali_has_enough_epsilon_terms_semantic]. Results requiring regular
+    epis, subobjects, AC, wLEM, empty base types, or topos structure lie outside
+    [Cat.Fibration]. *)
 
-   - Definition 2.1 introduces the typed epsilon calculus by the rules
-     epsilon-form and epsilon-I.  In this development epsilon terms are stored
-     as Skolem constants in the base syntax; the formula-level epsilon instance
-     is [eps_instance].
-
-   - Section 4 interprets substitution by pullback and quantifiers by
-     adjoints to pullback.  The wrapper lemmas below name the corresponding
-     facts already proved in [Epsilon_Soundness].
-
-   - Definition 6.1 defines an epsilon-category by the condition
-     Sigma_pi psi <= <id, epsilon_psi>^* psi.  In the indexed/fibrational
-     presentation here this is represented by [eps_unit], and substitution
-     along a witness gives [eps_intro].
-
-   - Pasquali 2019, Definition 2.1 calls this "having enough epsilon terms":
-     for every predicate psi over Gamma x A there is an epsilon map such that
-     P(<id, epsilon_psi>)(psi) <= theta iff psi <= P(pi_Gamma)(theta).
-     The lemma [pasquali_has_enough_epsilon_terms_semantic] proves this
-     adjunction-style property from [EpsilonGoodFibration].
-
-   - Proposition 6.2 is the soundness theorem for pointed interpretations of
-     epsilon calculi.  The corresponding formal theorem is [soundness].
-
-   - Definitions 3.4 and 3.5 isolate AC and wLEM; Propositions 6.3 and 6.4
-     use regular epis, subobjects, AC and wLEM.  Those structures are not
-     currently present in [Cat.Fibration], so they are good future targets
-     rather than wrappers here.
-
-   - Proposition 5.3 says projections between pointed objects have sections.
-     The syntactic representative below is [pasquali_projection_section_term].
-
-   - Section 7 says that product/unit/arrow/sum type constructors behave well
-     for pointed objects, while an empty base type degenerates the semantics.
-     Our base type language has unit, products and a distinguished sort, but
-     no empty base type; [Ty_Void] is a logical formula, not a base type.
-
-   - Section 8 compares epsilon-categories with Bell's Hilbertian toposes.
-     That needs topos-specific structure not currently represented here.
-*)
-
-(* Pasquali 2016, Remark 2.2: every type becomes inhabited by an epsilon term
-   obtained from the always-true formula.  Syntactically this is represented
-   by the Skolem constant attached to [Ty_Unit]. *)
+(** Pasquali 2016, Remark 2.2: the Skolem constant for [Ty_Unit] supplies a
+    default epsilon term for every type. *)
 Definition pasquali_default_epsilon_term
   {Sign Func Pred : Type} `{SkolemMapping Sign Func Pred}
   (A : b_ty) : @b_tm Sign Func :=
@@ -76,9 +39,8 @@ Proof.
   apply BT_Const.
 Defined.
 
-(* Pasquali 2016, Proposition 5.3: in pointed objects, a projection has a
-   section.  Syntactically, for the first projection I x A -> I, the section is
-   <id_I, epsilon_A_top>. *)
+(** Pasquali 2016, Proposition 5.3: the first projection has the syntactic
+    section [<id_I, epsilon_A_top>]. *)
 Definition pasquali_projection_section_term
   {Sign Func Pred : Type} `{SkolemMapping Sign Func Pred}
   (I A : b_ty) : @b_tm Sign Func :=
@@ -98,8 +60,7 @@ Proof.
   - apply pasquali_default_epsilon_term_typing.
 Defined.
 
-(* Pasquali 2016, Section 4, "Substitution": formula substitution is
-   interpreted as pullback along the interpretation of the substituting term. *)
+(** Pasquali 2016, Section 4: formula substitution is interpreted by pullback. *)
 Lemma pasquali_formula_substitution_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred}
@@ -115,8 +76,8 @@ Proof.
   apply form_subst_iso.
 Defined.
 
-(* Pasquali 2016, Section 4, "Quantifications": the displayed instance is the
-   projection-substitution part used for quantification over a fresh variable. *)
+(** Pasquali 2016, Section 4: projection substitution interprets passage under
+    a fresh quantifier. *)
 Lemma pasquali_context_projection_substitution_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred}
@@ -132,18 +93,16 @@ Proof.
   apply ctx_subst_iso.
 Defined.
 
-(* Pasquali 2016, Definition 2.1 and Definition 6.1: this is the formula
-   obtained by substituting the epsilon term into the body.  It plays the role
-   of "psi[epsilon x psi / x]" in the pure epsilon fragment. *)
+(** Pasquali 2016, Definitions 2.1 and 6.1: [pasquali_eps_exists] is the body
+    with its epsilon term substituted for the bound variable. *)
 Definition pasquali_eps_exists
   {Sign Func Pred : Type} `{SkolemMapping Sign Func Pred}
   (A : b_ty) (Phi : @h_ty Sign Func Pred) : @h_ty Sign Func Pred :=
   eps_instance A Phi.
 
-(* Pasquali 2016, Definition 6.1: the epsilon-category condition
-   Sigma_pi psi <= <id, epsilon_psi>^* psi, written in the fiber over
-   Gamma x A.  By adjunction this is the semantic core of the transfinite
-   axiom. *)
+(** Pasquali 2016, Definition 6.1: [eps_unit] represents
+    [Sigma_pi psi <= <id, epsilon_psi>^* psi], the adjoint form of the
+    transfinite axiom. *)
 Lemma pasquali_epsilon_category_condition_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
@@ -159,14 +118,14 @@ Proof.
   apply eps_unit. exact Hwf.
 Defined.
 
-(* Pasquali 2019, Definition 2.1: "has enough epsilon terms".
+(** Pasquali 2019, Definition 2.1: "has enough epsilon terms".
    In order notation this says:
 
       P(<id, epsilon_phi>)(phi) <= theta
         iff
       phi <= P(pi_Gamma)(theta).
 
-   Our fibers use morphisms for entailment.  The left side is the epsilon
+   Fiber morphisms represent entailment. The left side is the epsilon
    instance [pasquali_eps_exists A Phi]; the right side is the projection
    substitution [form_subst b_fst Theta]. *)
 Class PasqualiEnoughEpsilonTerms
@@ -254,11 +213,10 @@ Proof.
   apply pasquali_enough_epsilon_terms; assumption.
 Defined.
 
-(* Pasquali 2016, Definition 2.1, epsilon-I, and Pasquali 2019, Lemma 2.4:
-   after substituting an actual witness [f] into the body, epsilon-introduction
-   transports the proof to the epsilon instance.  Since this fragment has no
-   primitive existential formula, this is the witness-specialized form of the
-   transfinite axiom. *)
+(** Pasquali 2016, Definition 2.1, epsilon-I, and Pasquali 2019, Lemma 2.4:
+    [eps_intro] transports an actual witness to the epsilon instance. This is
+    the witness-specialized transfinite axiom because the fragment has no
+    primitive existential formula. *)
 Lemma pasquali_eps_intro_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
@@ -276,10 +234,9 @@ Proof.
   apply eps_intro; assumption.
 Defined.
 
-(* Pasquali 2016, Definition 2.1, epsilon-E, and Pasquali 2019, Proposition
-   2.5: epsilon substitution serves as existential quantification.  In this
-   formalization the existential object is represented by [pasquali_eps_exists],
-   and this is its elimination/Frobenius rule. *)
+(** Pasquali 2016, Definition 2.1, epsilon-E, and Pasquali 2019, Proposition
+    2.5: [pasquali_eps_exists] represents existential quantification, with
+    [eps_elim_frobenius] as its elimination rule. *)
 Lemma pasquali_eps_elim_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
@@ -301,9 +258,8 @@ Proof.
   apply eps_elim_frobenius; assumption.
 Defined.
 
-(* Pasquali 2016, Definition 6.1: epsilon terms are attached to subobjects.
-   This wrapper records that equivalent predicates give equivalent epsilon
-   instances in the fiber. *)
+(** Pasquali 2016, Definition 6.1: equivalent predicates induce equivalent
+    epsilon instances in the fiber. *)
 Lemma pasquali_eps_functorial_semantic :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
@@ -321,9 +277,9 @@ Proof.
   apply eps_functorial_iso; assumption.
 Defined.
 
-(* Pasquali 2016, Section 4 plus Definition 6.1: epsilon instances must be
-   stable under change of context/substitution.  This is the indexed
-   Beck-Chevalley form needed by the syntax rule [FE_Eps_BC]. *)
+(** Pasquali 2016, Section 4 and Definition 6.1: formula-level epsilon
+    instances satisfy the indexed Beck-Chevalley rule [FE_Eps_BC]. This does
+    not assert equality of the underlying epsilon base terms. *)
 Lemma pasquali_eps_beck_chevalley :
   forall {Sign Func Pred : Type}
     `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}

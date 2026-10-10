@@ -1,4 +1,4 @@
-(* Canonical epsilon-exists models over finite Heyting chains. *)
+(** Canonical epsilon-exists models over finite Heyting chains. *)
 
 Require Import Coq.Lists.List.
 Require Import Coq.Wellfounded.Inverse_Image.

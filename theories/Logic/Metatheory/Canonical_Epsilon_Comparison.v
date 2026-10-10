@@ -1,4 +1,4 @@
-(* Canonical comparison between epsilon-only and epsilon-exists syntax. *)
+(** Canonical comparison between epsilon-only and epsilon-exists syntax. *)
 
 Require Import List.
 Import ListNotations.

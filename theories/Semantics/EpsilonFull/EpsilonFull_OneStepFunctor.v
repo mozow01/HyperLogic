@@ -1,4 +1,3 @@
-(* theories/Semantics/EpsilonFull/EpsilonFull_OneStepFunctor.v *)
 
 Require Import Coq.Classes.RelationClasses.
 Require Import Coq.Program.Equality.

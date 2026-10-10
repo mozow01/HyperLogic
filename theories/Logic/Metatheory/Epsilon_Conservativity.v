@@ -1,4 +1,3 @@
-(* theories/Logic/Metatheory/Epsilon_Conservativity.v *)
 
 Require Import HyperLogic.Logic.Metatheory.EpsilonFull_Translation.
 Require Import HyperLogic.Logic.Metatheory.EpsilonFull_Erasure.
@@ -74,9 +73,8 @@ Context `{HSkolemEps : EpsHyper.SkolemMapping SignEps Func Pred}.
 Context `{HSkolemFull : FullHyper.SkolemMapping SignFull Func Pred}.
 Context `{HSkolemErasure : @SkolemErasure SignFull SignEps Func Pred HSkolemEps HSkolemFull}.
 
-(* This is the useful conservative direction: every Full derivation erases to
-   an Epsilon derivation.  The signature morphism and its skolem-index law are
-   packaged in [SkolemErasure]. *)
+(** Every full derivation erases to an epsilon-only derivation using the
+    signature coherence packaged by [SkolemErasure]. *)
 Definition epsilonfull_erasure_conservative_over_epsilon : Type :=
   forall (I : FullBase.b_ty)
          (G : @FullHyper.h_context SignFull Func Pred)

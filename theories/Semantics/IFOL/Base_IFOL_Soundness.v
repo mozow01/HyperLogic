@@ -1,4 +1,3 @@
-(* theories/Semantics/IFOL/Base_IFOL_Soundness.v *)
 
 Require Import Coq.Classes.Morphisms.
 
@@ -9,9 +8,7 @@ Require Import HyperLogic.Cat.Fibration.
 Require Import HyperLogic.Logic.Base.IFOL.Base_Syntax.
 Require Import HyperLogic.Semantics.IFOL.IFOL_Fibration.
 
-(* ================================================================= *)
-(* Soundness theorems for the iFOL base syntax. *)
-(* ================================================================= *)
+(** Soundness for the iFOL base syntax. *)
 
 Theorem base_soundness_inhabitational :
   forall {Func : Type} `{HFunc : FunctionSignature Func}

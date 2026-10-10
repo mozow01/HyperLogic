@@ -1,4 +1,4 @@
-(* The canonical inclusion of epsilon-free iFOL syntax into EpsilonFull. *)
+(** The canonical inclusion of epsilon-free iFOL syntax into EpsilonFull. *)
 
 Require Import List.
 Import ListNotations.

@@ -1,7 +1,8 @@
-(* Syntax-independent semantic epsilon selection in a good fibration. *)
+(** Syntax-independent semantic epsilon selection in a good fibration. *)
 
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
+Require Import HyperLogic.Cat.CCC.
 Require Import HyperLogic.Cat.Functor.
 Require Import HyperLogic.Cat.Adjoint.
 Require Import HyperLogic.Cat.Fibration.
@@ -49,6 +50,97 @@ Definition chosen_epsilon_selection_exists
   epsilon_selection_exists X A Q
     (chosen_epsilon_morphism X A Q S)
     (chosen_epsilon_is_selection X A Q S).
+
+(* A chosen instance of the existential unit at the selected predicate. *)
+Definition EpsilonSelectionUnit
+  (X A : @obj B)
+  (Q : @obj (Fiber (@prod B CB X A)))
+  (e : @hom B X A) : Type :=
+  @hom (Fiber (@prod B CB X A)) Q
+    (@fobj _ _ (Pullback (@prod_fst B CB X A))
+      (@fobj _ _ (Pullback (epsilon_section X A e)) Q)).
+
+Definition epsilon_section_reindex_iso
+  (X A : @obj B) (e : @hom B X A)
+  (R : @obj (Fiber X)) :
+  @fobj _ _ (Pullback (epsilon_section X A e))
+    (@fobj _ _ (Pullback (@prod_fst B CB X A)) R) ≅O R.
+Proof.
+  eapply iso_trans.
+  - apply iso_sym.
+    apply pullback_comp_iso.
+  - eapply iso_trans.
+    + apply pb_iso.
+      unfold epsilon_section.
+      apply prod_map_fst.
+    + apply pullback_id_iso.
+Defined.
+
+Definition epsilon_selection_from_unit
+  (X A : @obj B)
+  (Q : @obj (Fiber (@prod B CB X A)))
+  (e : @hom B X A)
+  (u : EpsilonSelectionUnit X A Q e) : EpsilonSelection X A Q e.
+Proof.
+  refine {|
+    iso_to := @left_adj_mor _ _ _
+      (@pullback_has_left_adjoint B CB GF X A) _ _ u;
+    iso_from := @compose (Fiber X) _ _ _
+      (@iso_to _ _ _
+        (epsilon_section_reindex_iso X A e
+          (@left_adj_obj _ _ _
+            (@pullback_has_left_adjoint B CB GF X A) Q)))
+      (@fmap _ _ (Pullback (epsilon_section X A e)) _ _
+        (@unit _ _ _ (@pullback_has_left_adjoint B CB GF X A) Q))
+  |}.
+  - apply (fiber_is_thin X).
+  - apply (fiber_is_thin X).
+Defined.
+
+Definition epsilon_selection_to_unit
+  (X A : @obj B)
+  (Q : @obj (Fiber (@prod B CB X A)))
+  (e : @hom B X A)
+  (S : EpsilonSelection X A Q e) : EpsilonSelectionUnit X A Q e :=
+  @compose (Fiber (@prod B CB X A)) _ _ _
+    (@fmap _ _ (Pullback (@prod_fst B CB X A)) _ _
+      (@iso_to _ _ _ S))
+    (@unit _ _ _ (@pullback_has_left_adjoint B CB GF X A) Q).
+
+Definition epsilon_selection_unit_equivalence
+  (X A : @obj B)
+  (Q : @obj (Fiber (@prod B CB X A)))
+  (e : @hom B X A) :
+  ((EpsilonSelectionUnit X A Q e -> EpsilonSelection X A Q e) *
+   (EpsilonSelection X A Q e -> EpsilonSelectionUnit X A Q e))%type :=
+  (epsilon_selection_from_unit X A Q e,
+   epsilon_selection_to_unit X A Q e).
+
+Record ChosenEpsilonSelectionUnit
+  (X A : @obj B)
+  (Q : @obj (Fiber (@prod B CB X A))) : Type := {
+  chosen_unit_morphism : @hom B X A;
+  chosen_unit_arrow : EpsilonSelectionUnit X A Q chosen_unit_morphism
+}.
+
+Definition chosen_unit_to_selection
+  (X A : @obj B)
+  (Q : @obj (Fiber (@prod B CB X A)))
+  (U : ChosenEpsilonSelectionUnit X A Q) :
+  ChosenEpsilonSelection X A Q :=
+  {| chosen_epsilon_morphism := chosen_unit_morphism X A Q U;
+     chosen_epsilon_is_selection := epsilon_selection_from_unit X A Q
+       (chosen_unit_morphism X A Q U) (chosen_unit_arrow X A Q U) |}.
+
+Definition chosen_selection_to_unit
+  (X A : @obj B)
+  (Q : @obj (Fiber (@prod B CB X A)))
+  (S : ChosenEpsilonSelection X A Q) :
+  ChosenEpsilonSelectionUnit X A Q :=
+  {| chosen_unit_morphism := chosen_epsilon_morphism X A Q S;
+     chosen_unit_arrow := epsilon_selection_to_unit X A Q
+       (chosen_epsilon_morphism X A Q S)
+       (chosen_epsilon_is_selection X A Q S) |}.
 
 (* The hom-set presentation uses the already chosen Sigma adjunction.  It
    contains no naturality or extensionality requirement on epsilon choices. *)
@@ -216,6 +308,75 @@ Proof.
       (inhabits
         (@unit _ _ _ (@pullback_has_left_adjoint B CB GF X A) Q))) as [h_from].
     constructor 1 with e.
+    refine {|
+      iso_to := @left_adj_mor _ _ _
+        (@pullback_has_left_adjoint B CB GF X A) _ _ h_to;
+      iso_from := h_from
+    |}.
+    + apply (fiber_is_thin X).
+    + apply (fiber_is_thin X).
+Defined.
+
+(* Contextual elimination follows from the selected Sigma object and
+   pullback preservation of products and exponentials. *)
+Definition epsilon_selection_contextual_elimination
+  (X A : @obj B)
+  (Q : @obj (Fiber (@prod B CB X A)))
+  (E G R : @obj (Fiber X))
+  (S : @Iso (Fiber X)
+    (@left_adj_obj _ _ _ (@pullback_has_left_adjoint B CB GF X A) Q) E)
+  (h : @hom (Fiber (@prod B CB X A))
+    (@prod (Fiber (@prod B CB X A)) _
+      (@fobj _ _ (Pullback (@prod_fst B CB X A)) G) Q)
+    (@fobj _ _ (Pullback (@prod_fst B CB X A)) R)) :
+  @hom (Fiber X) (@prod (Fiber X) _ G E) R.
+Proof.
+  pose (pi := @prod_fst B CB X A).
+  pose (Gup := @fobj _ _ (Pullback pi) G).
+  pose (Rup := @fobj _ _ (Pullback pi) R).
+  pose (swap := @prod_map (Fiber (@prod B CB X A)) _
+    _ _ _ (@prod_snd (Fiber (@prod B CB X A)) _ Q Gup)
+    (@prod_fst (Fiber (@prod B CB X A)) _ Q Gup)).
+  pose (curried := @exp_map (Fiber (@prod B CB X A)) _ _
+    _ _ _ (@compose (Fiber (@prod B CB X A)) _ _ _ h swap)).
+  pose (into_pullback := @compose (Fiber (@prod B CB X A)) _ _ _
+    (@iso_from _ _ _ (@pb_exp_iso B CB GF (@prod B CB X A) X pi R G))
+    curried).
+  pose (transposed := @left_adj_mor _ _ _
+    (@pullback_has_left_adjoint B CB GF X A) _ _ into_pullback).
+  exact (@compose (Fiber X) _ _ _
+    (@eval (Fiber X) _ _ G R)
+    (@prod_map (Fiber X) _ _ _ _
+      (@compose (Fiber X) _ _ _
+        (@compose (Fiber X) _ _ _ transposed (@iso_from _ _ _ S))
+        (@prod_snd (Fiber X) _ G E))
+      (@prod_fst (Fiber X) _ G E))).
+Defined.
+
+Lemma epsilon_selection_unit_iff_inhabited_adjunction
+  (X A : @obj B)
+  (Q : @obj (Fiber (@prod B CB X A)))
+  (e : @hom B X A) :
+  inhabited (EpsilonSelectionUnit X A Q e) <->
+  EpsilonSelectionAdjunctionInhabited X A Q e.
+Proof.
+  split.
+  - intros [u].
+    apply epsilon_selection_adjunction_inhabited.
+    apply epsilon_selection_to_adjunction.
+    exact (epsilon_selection_from_unit X A Q e u).
+  - intro Hinh.
+    destruct (proj1
+      (Hinh (@fobj _ _ (Pullback (epsilon_section X A e)) Q))
+      (inhabits (@id (Fiber X)
+        (@fobj _ _ (Pullback (epsilon_section X A e)) Q)))) as [h_to].
+    destruct (proj2
+      (Hinh (@left_adj_obj _ _ _
+        (@pullback_has_left_adjoint B CB GF X A) Q))
+      (inhabits
+        (@unit _ _ _ (@pullback_has_left_adjoint B CB GF X A) Q))) as [h_from].
+    constructor.
+    apply epsilon_selection_to_unit.
     refine {|
       iso_to := @left_adj_mor _ _ _
         (@pullback_has_left_adjoint B CB GF X A) _ _ h_to;

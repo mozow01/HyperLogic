@@ -1,9 +1,7 @@
-(*theories/Semantics/Simple/DualDrinker.v*)
 
 
 Require Import Coq.Classes.Morphisms.
 
-(* Importáljuk az eddigi fájlokat a szintaxishoz és a kategóriákhoz *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
 Require Import HyperLogic.Cat.CCC.
@@ -18,12 +16,9 @@ Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Lemmas.
 Require Import HyperLogic.Semantics.Simple.Base_Simple_Soundness.
 Require Import HyperLogic.Semantics.Simple.Simple_Soundness.
 
-(* Tegyük fel, hogy a Simple_Completeness.v-ben van a Base_SetoidCategory nat *)
 Require Import HyperLogic.Semantics.Simple.Simple_Completeness.
 
-(* ================================================================= *)
-(* 1. A 5-ELEMŰ "SÁRKÁNY" (KITE) HEYTING ALGEBRA (H5)                *)
-(* ================================================================= *)
+(** Five-element Heyting algebra used by the countermodel. *)
 
 Inductive H5 : Type := HBot | H1 | H2 | H12 | HTop.
 
@@ -77,29 +72,22 @@ Definition H5_impl (x y : H5) : H5 :=
 
 
 
-(* ================================================================= *)
-(* 2. A PREDIKÁTUM SZÁLAK ÉS A FIBRÁCIÓ                              *)
-(* ================================================================= *)
 
 Definition H5_Pred (X : Type) := X -> H5.
 Definition H5_Pred_le {X : Type} (P Q : H5_Pred X) : Prop := forall x, H5_le (P x) (Q x).
-(* A VÉGSŐ, TÖKÉLETESÍTETT Favágó Taktika (Kifejezés-alapú specializációval!) *)
 Ltac h5_pred_crush :=
   repeat intro;
   
-  (* 1. Alapvető relációk kibontása *)
   repeat match goal with
   | |- Proper _ _ => red
   | |- respectful _ _ _ _ => red
   | |- RelationClasses.Equivalence _ => split; red
   end;
   
-  (* 2. Kategóriaelméleti dobozok feltörése *)
   cbn in *;
   try unfold hom in *;
   try unfold H5_Pred_le in *; 
   
-  (* 3. Elrejtett forall-ok kényszerített láthatóvá tétele *)
   repeat match goal with
   | H : ?T |- _ => 
       let T' := eval hnf in T in
@@ -118,8 +106,6 @@ Ltac h5_pred_crush :=
   
   repeat intro;
   
-  (* 4. INTELLIGENS SPECIALIZÁCIÓ: Kifejezéseket keresünk, nem csak változókat! *)
-  (* Ha P-t vagy Q-t valamilyen 'z' kifejezéssel (pl. f y) hívják meg, azzal specializálunk! *)
   repeat match goal with
   | H : forall w, H5_le (?P w) _ |- context [ ?P ?z ] => 
       specialize (H z)
@@ -133,7 +119,6 @@ Ltac h5_pred_crush :=
   
   simpl in *;
   
-  (* 5. LÉZERPONTOS BONTÁS AZ 'is_var' TRÜKKEL *)
   repeat match goal with
   | |- context [ ?P ?x ] =>
       is_var P;
@@ -152,7 +137,6 @@ Ltac h5_pred_crush :=
   | y : H5 |- _ => is_var y; destruct y; simpl in *
   end;
   
-  (* 6. Tisztítás *)
   intuition; auto; try exact I.
 
 Instance H5_Pred_Setoid (X : Type) : SetoidCategory.
@@ -173,7 +157,7 @@ Defined.
 Instance H5_Pred_Closed (X : Type) : CartesianClosedCategory (H5_Pred_Setoid X).
 Proof. 
   refine (mk_CartesianClosedCategory _ (H5_Pred_Cartesian X) 
-    (fun P Q x => H5_impl (Q x) (P x)) (* <--- HIER SIND DIE BEMENETEK UMGEKEHRT! *)
+    (fun P Q x => H5_impl (Q x) (P x))
     _ _ _ _ _). 
   Unshelve. all: h5_pred_crush. 
 Defined.
@@ -186,31 +170,23 @@ Proof.
   Unshelve. all: h5_pred_crush. 
 Defined.
 
-(* ================================================================= *)
-(* 3. A VISSZAHÚZÁS (Pullback / Substitution Functor)                *)
-(* ================================================================= *)
 
 Instance Subst_Functor {X Y : Type} (f : Y -> X) : Functor (H5_Pred_Setoid X) (H5_Pred_Setoid Y).
 Proof. 
   refine (mk_Functor (H5_Pred_Setoid X) (H5_Pred_Setoid Y) 
-          (* Itt a varázslat: Explicit megmondjuk, hogy P egy H5_Pred X függvény! *)
           (fun (P : H5_Pred X) (y : Y) => P (f y)) 
           _ _ _ _). 
   Unshelve. all: h5_pred_crush. 
 Defined.
 
 
-(* ================================================================= *)
-(* 3. A VÉGES BÁZISKATEGÓRIA (FinObj)                                *)
-(* ================================================================= *)
+(** Finite base category used for computation. *)
 
-(* 1. A Kategória Objektumai: Csak a Terminális, a Bool és a Szorzat létezik *)
 Inductive FinObj : Type :=
   | F_Unit : FinObj
   | F_Bool : FinObj
   | F_Prod : FinObj -> FinObj -> FinObj.
 
-(* 2. Az objektumok "lefordítása" valódi Coq típusokra *)
 Fixpoint interp_F (A : FinObj) : Type :=
   match A with
   | F_Unit => Coq.Init.Datatypes.unit
@@ -218,11 +194,9 @@ Fixpoint interp_F (A : FinObj) : Type :=
   | F_Prod A B => Coq.Init.Datatypes.prod (interp_F A) (interp_F B)
   end.
 
-(* 3. A Morfizmusok (Sima függvények a lefordított típusok között) *)
 Definition FinHom (A B : FinObj) := interp_F A -> interp_F B.
 Definition FinEquiv {A B : FinObj} (f g : FinHom A B) : Prop := forall x, f x = g x.
 
-(* Egy villámgyors favágó taktika a kategória törvényeihez *)
 Ltac fin_crush :=
   repeat intro;
   repeat match goal with
@@ -235,9 +209,9 @@ Ltac fin_crush :=
 Instance Fin_Setoid : SetoidCategory.
 Proof.
   refine (mk_SetoidCategory FinObj FinHom
-    (fun A x => x)                   (* Identitás *)
-    (fun A B C f g x => f (g x))     (* Kompozíció *)
-    (@FinEquiv)                      (* Egyenlőség *)
+    (fun A x => x)
+    (fun A B C f g x => f (g x))
+    (@FinEquiv)
     _ _ _ _ _).
   Unshelve. all: fin_crush.
 Defined.
@@ -251,33 +225,23 @@ Proof.
     _ _ _ _).
   Unshelve.
   all: fin_crush.
-  (* 1. A Terminális objektumba menő morfizmusok egyenlősége *)
   - destruct (f x0). reflexivity.
-  (* 2. A Szorzat morfizmus unicitása (Párok egyenlősége) *)
   - destruct (h x0). reflexivity.
 Defined.
 
-(* ================================================================= *)
-(* 4. A KÉT-FAJTÁJÚ (Two-Sort) STRUKTÚRA                             *)
-(* ================================================================= *)
 
 Instance Fin_TwoSort : TwoSortCategory Fin_Setoid.
 Proof.
   unshelve econstructor.
-  - exact F_Bool. (* A megkülönböztetett tartomány a 'bool' *)
-  - (* Itt jön a mágia: mivel a FinObj egy Inductive típus, a Coq 
-       számára triviális, hogy a F_Bool konstruktor nem egyenlő a F_Unit-tal! *)
+  - exact F_Bool.
+  -
     intro Heq. discriminate Heq.
 Defined.
 
 Require Import Coq.Bool.Bool.
-   (* or just: Require Import Bool. *)
 
-(* ================================================================= *)
-(* 4. A KISZÁMÍTHATÓ KVANTOROK (Adjunktok) Véges Típusokon           *)
-(* ================================================================= *)
+(** Quantifiers are computed as finite joins and meets. *)
 
-(* 1. Szuprémum (Létezik) kiszámítása véges iterációval *)
 Fixpoint Fin_sup {Y : FinObj} : (interp_F Y -> H5) -> H5 :=
   match Y return (interp_F Y -> H5) -> H5 with
   | F_Unit => fun P => P tt
@@ -285,7 +249,6 @@ Fixpoint Fin_sup {Y : FinObj} : (interp_F Y -> H5) -> H5 :=
   | F_Prod A B => fun P => Fin_sup (fun a => Fin_sup (fun b => P (a, b)))
   end.
 
-(* 2. Infimum (Minden) kiszámítása véges iterációval *)
 Fixpoint Fin_inf {Y : FinObj} : (interp_F Y -> H5) -> H5 :=
   match Y return (interp_F Y -> H5) -> H5 with
   | F_Unit => fun P => P tt
@@ -293,7 +256,6 @@ Fixpoint Fin_inf {Y : FinObj} : (interp_F Y -> H5) -> H5 :=
   | F_Prod A B => fun P => Fin_inf (fun a => Fin_inf (fun b => P (a, b)))
   end.
 
-(* 3. Egyenlőség-vizsgáló algoritmus véges típusokon (az inverz képhez) *)
 Fixpoint eq_fin {X : FinObj} : interp_F X -> interp_F X -> bool :=
   match X return interp_F X -> interp_F X -> bool with
   | F_Unit => fun _ _ => true
@@ -301,24 +263,15 @@ Fixpoint eq_fin {X : FinObj} : interp_F X -> interp_F X -> bool :=
   | F_Prod A B => fun p1 p2 => andb (eq_fin (fst p1) (fst p2)) (eq_fin (snd p1) (snd p2))
   end.
 
-(* ================================================================= *)
-(* 5. AZ ADJUNGÁLTAK FUNKTORAI ÉS A BIZONYÍTÁSOK                     *)
-(* ================================================================= *)
 
-(* Létezik (Bal Adjungált) Algoritmusa: *)
 Definition Fin_Exists_val {X Y : FinObj} (f : FinHom Y X) (P : interp_F Y -> H5) (x : interp_F X) : H5 :=
   Fin_sup (fun y => if eq_fin x (f y) then P y else HBot).
 
-(* Minden (Jobb Adjungált) Algoritmusa: *)
 Definition Fin_Forall_val {X Y : FinObj} (f : FinHom Y X) (P : interp_F Y -> H5) (x : interp_F X) : H5 :=
   Fin_inf (fun y => if eq_fin x (f y) then P y else HTop).
 
 Require Import Coq.Bool.Bool.
-   (* or just: Require Import Bool. *)
 
-(* ================================================================= *)
-(* 5. A VÉGES KVANTOROK MATEMATIKAI BIZONYÍTÁSAI                     *)
-(* ================================================================= *)
 
 Lemma eq_fin_refl : forall (X : FinObj) (x : interp_F X), eq_fin x x = true.
 Proof.
@@ -380,9 +333,6 @@ Proof.
   - apply IHY1. intros a. apply IHY2. intros b. apply H.
 Qed.
 
-(* ================================================================= *)
-(* 5.5. AZ ADJUNKCIÓK (KVANTOROK) PÉLDÁNYOSÍTÁSA                     *)
-(* ================================================================= *)
 
 Instance Fin_Subst_Functor {X Y : FinObj} (f : FinHom Y X) : Functor (H5_Pred_Setoid (interp_F X)) (H5_Pred_Setoid (interp_F Y)).
 Proof. 
@@ -392,26 +342,23 @@ Proof.
   Unshelve. all: h5_pred_crush. 
 Defined.
 
-(* 1. A HELYETTESÍTÉS MINT JOBB ADJUNGÁLT (Ez adja az Egzisztenciális Kvantort!) *)
 Instance Fin_Subst_IsRightAdjoint {X Y : FinObj} (f : FinHom Y X) : IsRightAdjoint (Fin_Subst_Functor f).
 Proof.
   refine (mk_IsRightAdjoint _ _ (Fin_Subst_Functor f)
     (fun P => Fin_Exists_val f P)
     
-    (* Unit: P(y) <= Exists P (f y) *)
     ltac:(
       intros P y; unfold Fin_Exists_val;
       pose proof (Fin_sup_upper_bound Y (fun y' => if eq_fin (f y) (f y') then P y' else HBot) y) as Hsup;
-      simpl in Hsup; (* <--- KIKÉNYSZERÍTJÜK A FÜGGVÉNY KIÉRTÉKELÉSÉT *)
+      simpl in Hsup;
       rewrite eq_fin_refl in Hsup; 
       exact Hsup
     )
     
-    (* Bal Adjungált Morfizmus: Ha P <= Subst Q, akkor Exists P <= Q *)
     ltac:(
       intros P Q Hle x; unfold Fin_Exists_val;
       apply Fin_sup_least_bound; intro y;
-      simpl; (* <--- KIKÉNYSZERÍTJÜK A CÉL KIÉRTÉKELÉSÉT A DESTRUCT ELŐTT *)
+      simpl;
       destruct (eq_fin x (f y)) eqn:Heq;
       [ apply eq_fin_eq in Heq; subst; apply Hle | exact I ]
     )
@@ -421,26 +368,23 @@ Proof.
   all: h5_pred_crush.
 Defined.
 
-(* 2. A HELYETTESÍTÉS MINT BAL ADJUNGÁLT (Ez adja az Univerzális Kvantort!) *)
 Instance Fin_Subst_IsLeftAdjoint {X Y : FinObj} (f : FinHom Y X) : IsLeftAdjoint (Fin_Subst_Functor f).
 Proof.
   refine (mk_IsLeftAdjoint _ _ (Fin_Subst_Functor f)
     (fun P => Fin_Forall_val f P)
     
-    (* Counit: Forall P (f y) <= P(y) *)
     ltac:(
       intros P y; unfold Fin_Forall_val;
       pose proof (Fin_inf_lower_bound Y (fun y' => if eq_fin (f y) (f y') then P y' else HTop) y) as Hinf;
-      simpl in Hinf; (* <--- ITT IS *)
+      simpl in Hinf;
       rewrite eq_fin_refl in Hinf; 
       exact Hinf
     )
     
-    (* Jobb Adjungált Morfizmus: Ha Subst Q <= P, akkor Q <= Forall P *)
     ltac:(
       intros Q P Hle x; unfold Fin_Forall_val;
       apply Fin_inf_greatest_bound; intro y;
-      simpl; (* <--- ÉS ITT IS *)
+      simpl;
       destruct (eq_fin x (f y)) eqn:Heq;
       [ apply eq_fin_eq in Heq; subst; apply Hle | destruct (Q x); exact I ]
     )
@@ -450,9 +394,7 @@ Proof.
   all: h5_pred_crush.
 Defined.
 
-(* ================================================================= *)
-(* 6. A FIBRÁCIÓ ÉS A HIPERMODELL                                    *)
-(* ================================================================= *)
+(** Finite hyperdoctrine countermodel. *)
 
 Instance Fin_GoodFibration : GoodFibration Fin_Setoid.
 Proof.
@@ -467,10 +409,6 @@ Proof.
     pullback_has_right_adjoint := fun X Y => Fin_Subst_IsLeftAdjoint _
   |}.
   Unshelve.(interp_F Y -> H5)
- (* ÚJ TAKTIKA: A triviális izomorfizmusok bizonyításához *)
-  (* Ezzel soha semmi nem kerül a polcra, mindent azonnal megoldunk! *)
- (* ÚJ TAKTIKA: A triviális izomorfizmusok bizonyításához *)
-  (* A 'try' kombinációval kezeljük az elvont egyenlőségeket ÉS a True-ra egyszerűsödőket is! *)
   Ltac solve_trivial_iso :=
     intros; unshelve econstructor;
     [ intros x; simpl; try apply H5_le_refl; try exact Logic.I
@@ -478,19 +416,17 @@ Proof.
     | unfold hom_equiv; compute; exact Logic.I
     | unfold hom_equiv; compute; exact Logic.I ].
 
-  - solve_trivial_iso. (* 1. Identitás *)
-  - solve_trivial_iso. (* 2. Kompozíció *)
-  - solve_trivial_iso. (* 3. Terminális *)
-  - solve_trivial_iso. (* 4. Szorzat *)
-  - solve_trivial_iso. (* 5. Kezdeti *)
-  - solve_trivial_iso. (* 6. Koszorzat *)
-  - solve_trivial_iso. (* 7. Exponenciális *)
-(* 8. Beck-Chevalley (Bal) - Egzisztenciális Kvantor felcserélhetősége *)
+  - solve_trivial_iso.
+  - solve_trivial_iso.
+  - solve_trivial_iso.
+  - solve_trivial_iso.
+  - solve_trivial_iso.
+  - solve_trivial_iso.
+  - solve_trivial_iso.
   - intros I J K f A.
     unshelve econstructor.
-    + (* LHS <= RHS *)
+    +
       intros k. simpl. unfold Fin_Exists_val. simpl.
-      (* Sima apply-ok, a Coq magától kitalálja a rétegeket! *)
       apply Fin_sup_least_bound. intros i.
       apply Fin_sup_least_bound. intros j.
       destruct (eq_fin (f k) i) eqn:Heq.
@@ -501,7 +437,7 @@ Proof.
         simpl in H2; rewrite eq_fin_refl in H2.
         exact (H5_le_trans _ _ _ H1 H2).
       * simpl. reflexivity.
-    + (* RHS <= LHS *)
+    +
       intros k. simpl. unfold Fin_Exists_val. simpl.
       apply Fin_sup_least_bound. intros k'.
       apply Fin_sup_least_bound. intros j.
@@ -516,10 +452,9 @@ Proof.
     + unfold hom_equiv; compute; reflexivity.
     + unfold hom_equiv; compute; reflexivity.
 
-  (* 9. Beck-Chevalley (Jobb) - Univerzális Kvantor felcserélhetősége *)
   - intros I_obj J_obj K_obj f A.
     unshelve econstructor.
-    + (* LHS <= RHS *)
+    +
       intros k. simpl. unfold Fin_Forall_val. simpl.
       apply Fin_inf_greatest_bound. intros k'.
       apply Fin_inf_greatest_bound. intros j.
@@ -531,7 +466,7 @@ Proof.
         simpl in H2; rewrite eq_fin_refl in H2.
         exact (H5_le_trans _ _ _ H2 H1).
       * match goal with |- H5_le ?x _ => destruct x; exact Logic.I end.
-    + (* RHS <= LHS *)
+    +
       intros k. simpl. unfold Fin_Forall_val. simpl.
       apply Fin_inf_greatest_bound. intros i.
       apply Fin_inf_greatest_bound. intros j.
@@ -546,7 +481,6 @@ Proof.
     + unfold hom_equiv; compute; reflexivity.
     + unfold hom_equiv; compute; reflexivity.
 
-  (* 10. Morfizmusok egyenlősége *)
   - intros I_obj J_obj f g Heq A.
     unshelve econstructor.
     + intros x; simpl; rewrite (Heq x); apply H5_le_refl.
@@ -554,7 +488,6 @@ Proof.
     + unfold hom_equiv; compute; reflexivity.
     + unfold hom_equiv; compute; reflexivity.
 
-  (* ITT JÖN A POLC TAKARÍTÁSA *)
   Unshelve.
   all: try (intros; econstructor; h5_pred_crush).
 Defined.
@@ -564,24 +497,19 @@ Instance Fin_StrictGoodFibration : StrictGoodFibration Fin_Setoid Fin_GoodFibrat
 Proof.
   econstructor.
   intros X Y M1 M2 H.
-  (* Kézzel adjuk meg a bázisbeli egyenlőség megfordítását! *)
   exists (fun x => eq_sym (H x)).
   exact I.
 Defined.
 
-(* ================================================================= *)
-(* 7. A DUAL DRINKER CÁFOLATA SZINTAKTIKAI SZINTEN                   *)
-(* ================================================================= *)
 
-(* 1. A cáfoló predikátum (A bool-on): P(true)=H1, P(false)=H2 *)
+(* The predicate maps the booleans to the two incomparable values. *)
 Definition Drinker_Pred (b : bool) : H5 :=
   if b then H1 else H2.
 
-(* 2. A HyperModel bekötése a Drinker_Pred-del *)
 Instance Fin_HyperModel : HyperModel Fin_StrictGoodFibration.
 Proof.
   unshelve econstructor.
-  - (* 1. Cél: Az i_atom függvény megadása (Szemantikai illesztéssel) *)
+  -
     intros p t I A dt env.
     exact (
       match interp_ty A as FA return interp_F FA -> H5 with
@@ -590,67 +518,57 @@ Proof.
       end (interp_tm dt env)
     ).
     
-  - (* 2. Cél: Atom Pullback izomorfizmus (Morfizmus egyenlőség a Szálban) *)
+  -
     intros. unshelve econstructor.
     + intros env; simpl; apply H5_le_refl.
     + intros env; simpl; apply H5_le_refl.
     + exact Logic.I.
     + exact Logic.I.
     
-  - (* 3. Cél: Bázis kategória (STLC) helyessége *)
+  -
     intros I J f g df dg Heq.
     apply base_soundness_equational. exact Heq.
     
-  - (* 4. Cél: Atom Kongruencia (Egyenlő kifejezések azonos predikátumot adnak) *)
+  -
     intros p t1 t2 I A d1 d2 H.
     unshelve econstructor.
-    + (* d1 <= d2 *)
+    +
       intros env. simpl.
-      (* 1. Felvesszük a kategóriaelméleti egyenlőséget (így működik az apply!) *)
       assert (Heq : interp_tm d1 ≅ interp_tm d2).
       { apply base_soundness_equational. exact H. }
       
-      (* 2. Kicsomagoljuk belőle a pontonkénti egyenlőséget az 'env'-re *)
       pose proof (Heq env) as Heq_env.
       
-      (* 3. Behelyettesítjük az egyenlőséget és lezárjuk a reflexivitással *)
       rewrite Heq_env. apply H5_le_refl.
       
-    + (* d2 <= d1 *)
+    +
       intros env. simpl.
       assert (Heq : interp_tm d1 ≅ interp_tm d2).
       { apply base_soundness_equational. exact H. }
       pose proof (Heq env) as Heq_env.
       
-      (* Mivel a Heq_env (d1 = d2) formájú, a rewrite a jobb oldali d1-et is d2-re cseréli *)
       rewrite Heq_env. apply H5_le_refl.
       
     + exact Logic.I.
     + exact Logic.I.
 Defined.
 
-(* 3. Segédlemma a kontextushoz (ugyanaz, mint a LEM.v-ben) *)
 Lemma wf_ctx_nil_valid : forall (I : b_ty), wf_ctx I nil.
 Proof. intro I; constructor. Defined.
 
-(* 4. A Dual Drinker formula felépítése a Hyper_Syntax használatával *)
 Definition P_x (I D : b_ty) : h_ty := Ty_Atom 0 b_snd.
 Definition Ex_P (I D : b_ty) : h_ty := Ty_Ex D (P_x I D).
 
 Definition DualDrinkerFormula (I D : b_ty) : h_ty :=
   Ty_Ex D (Ty_Arrow (form_pullback b_fst (Ex_P I D)) (P_x I D)).
 
-(* 5. Jólformáltság (WF) *)
 Lemma DualDrinker_WellFormed : forall I D, WellFormed I (DualDrinkerFormula I D).
 Proof.
   intros I D.
   unfold DualDrinkerFormula, Ex_P, P_x.
-  (* Mivel ez tisztán szintaktikai faépítés, a Coq beépített 
-     automatizációja jó eséllyel megoldja magától: *)
   repeat econstructor.
-Defined. (* <- KULCSFONTOSSÁGÚ: Qed helyett Defined, hogy futtatható maradjon! *)
+Defined. (* [Defined] keeps the witness reducible for computation. *)
 
-(* 6. A metatétel: Szemantikai cáfolat a mi H5 modellünkkel *)
 Theorem DualDrinker_Refuted : 
   ~ (forall (C : SetoidCategory) (CC : CartesianCategory C)
             (TSC : TwoSortCategory C) (GF : GoodFibration C) 
@@ -661,7 +579,6 @@ Theorem DualDrinker_Refuted :
 Proof.
   intro H_univ.
   
-  (* Specializálunk a mi 5-elemű logikánkra, a b_Unit bázisra és a BT_Bool tartományra! *)
   specialize (H_univ 
                Fin_Setoid 
                Fin_Cartesian
@@ -674,34 +591,26 @@ Proof.
                
   destruct H_univ as [f_drinker].
   
-  (* 1. Alkalmazzuk a morfizmust a 'tt' (üres) kontextusra! 
-     Így a 'forall x, H5_le ...' állításból eltűnik a változó. *)
   pose proof (f_drinker tt) as f_eval.
   
-  (* 2. A 'compute' taktika brutális erővel mindent kiszámol a legkisebb építőelemekig.
-     Végigmegy a Fin_sup-on, kiértékeli az implikációkat, és mivel az eredmény
-     H5_le HTop H12 lesz, azt is azonnal False-ra redukálja! *)
+  (* Finiteness lets [compute] reduce the semantic claim to [False]. *)
   compute in f_eval.
   
-  (* Az f_eval típusa most már szó szerint False! Kész vagyunk! *)
   exact f_eval.
 Defined.
 
 
-(* 7. A Végső Metatétel: A Dual Drinker nem levezethető *)
+(** The dual drinker formula is not derivable. *)
 Theorem DualDrinker_Underivable : 
   (forall (I D : b_ty), { p : h_tm & h_derivation I nil p (DualDrinkerFormula I D) }) -> False.
 Proof.
   intro H_all_der.
   
-  (* Alkalmazzuk a cáfolatunkat *)
   apply DualDrinker_Refuted.
   intros C CC TSC GF SGF HM I_any D_any.
   
-  (* Az indirekt feltevésből kinyerjük a levezetést *)
   destruct (H_all_der I_any D_any) as [p H_der].
   constructor.
   
-  (* A Soundness tétellel átkonvertáljuk a szintaktikai levezetést egy szemantikai morfizmussá! *)
   apply (hyper_soundness_inhabited H_der (wf_ctx_nil_valid I_any) (DualDrinker_WellFormed I_any D_any)).
 Defined.

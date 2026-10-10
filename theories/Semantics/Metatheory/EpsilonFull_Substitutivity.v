@@ -1,4 +1,4 @@
-(* A semantic countermodel for base-level epsilon substitutivity. *)
+(** A semantic countermodel for base-level epsilon substitutivity. *)
 
 Require Import Coq.Bool.Bool.
 Require Import Coq.Classes.Morphisms.
@@ -15,6 +15,7 @@ Require Import HyperLogic.Cat.Fibration.
 
 Require Import HyperLogic.Logic.Base.EpsilonFull.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.EpsilonFull.Hyper_Syntax.
+Require Import HyperLogic.Logic.Hyper.EpsilonFull.Hyper_Syntax_Lemmas.
 Require Import HyperLogic.Logic.Hyper.EpsilonFull.Canonical_Skolem.
 Require Import HyperLogic.Semantics.EpsilonFull.Base_EpsilonFull_Soundness.
 Require Import HyperLogic.Semantics.EpsilonFull.Base_EpsilonFull_Completeness.
@@ -24,16 +25,38 @@ Require Import HyperLogic.Semantics.EpsilonFull.LEM_disproved.
 
 Module EpsilonFullSubstitutivity.
 
+(* These are properties of the existing calculus, not additional rules. *)
+Definition DefinitionalSubstitutivity
+  {Sign Func Pred : Type} `{FunctionSignature Func}
+  `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} : Prop :=
+  forall (I J A : b_ty) (g : @b_tm Sign Func)
+    (dg : base_typing I g J) (Phi : @h_ty Sign Func Pred)
+    (wf : WellFormed (b_Prod J A) Phi),
+    @base_equiv_typed Sign Func H I A
+      (b_const A (skolem_index A (form_subst (b_subst_ext g) Phi)))
+      (b_comp (b_const A (skolem_index A Phi)) g).
+
+Definition DefinitionalExtensionality
+  {Sign Func Pred : Type} `{FunctionSignature Func}
+  `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} : Prop :=
+  forall (I A : b_ty) (Phi Psi : @h_ty Sign Func Pred)
+    (wf_Phi : WellFormed (b_Prod I A) Phi)
+    (wf_Psi : WellFormed (b_Prod I A) Psi),
+    form_equiv (b_Prod I A) Phi Psi ->
+    @base_equiv_typed Sign Func H I A
+      (b_const A (skolem_index A Phi))
+      (b_const A (skolem_index A Psi)).
+
 Module CanonicalLabels :=
   HyperLogic.Logic.Hyper.EpsilonFull.Canonical_Skolem.CanonicalEpsilonFull.
 
 Inductive TestFunc : Type := .
 
-Definition test_func_dom (f : TestFunc) : b_ty := match f with end.
-Definition test_func_cod (f : TestFunc) : b_ty := match f with end.
+Definition counterexample_func_dom (f : TestFunc) : b_ty := match f with end.
+Definition counterexample_func_cod (f : TestFunc) : b_ty := match f with end.
 
 Instance TestFunctionSignature : FunctionSignature TestFunc :=
-  {| func_dom := test_func_dom; func_cod := test_func_cod |}.
+  {| func_dom := counterexample_func_dom; func_cod := counterexample_func_cod |}.
 
 Instance TestPredicateSignature : PredicateSignature Datatypes.unit :=
   {| pred_dom _ := b_S |}.
@@ -42,69 +65,69 @@ Instance TestPredicateSignature : PredicateSignature Datatypes.unit :=
 Definition TestSign : Type :=
   CanonicalLabels.EpsilonLabel TestFunc Datatypes.unit.
 
-Notation test_skolem := CanonicalLabels.epsilon_label.
+Notation counterexample_skolem := CanonicalLabels.epsilon_label.
 
 Instance TestSkolemMapping : SkolemMapping TestSign TestFunc Datatypes.unit :=
   CanonicalLabels.CanonicalSkolemMapping TestFunc Datatypes.unit.
 
-Definition test_g : @b_tm TestSign TestFunc :=
+Definition counterexample_substitution : @b_tm TestSign TestFunc :=
   b_const b_S (skolem_index b_S Ty_Unit).
 
-Definition test_g_typing :
-  @base_typing TestSign TestFunc TestFunctionSignature b_Unit test_g b_S :=
+Definition counterexample_substitution_typing :
+  @base_typing TestSign TestFunc TestFunctionSignature b_Unit counterexample_substitution b_S :=
   BT_Const.
 
-Definition test_Phi : @h_ty TestSign TestFunc Datatypes.unit :=
+Definition substitution_counterexample_formula : @h_ty TestSign TestFunc Datatypes.unit :=
   Ty_Atom tt b_fst.
 
-Definition test_Phi_wellformed :
+Definition substitution_counterexample_formula_wellformed :
   @WellFormed TestSign TestFunc Datatypes.unit
     TestFunctionSignature TestPredicateSignature
-    (b_Prod b_S b_S) test_Phi :=
+    (b_Prod b_S b_S) substitution_counterexample_formula :=
   WF_Atom (b_Prod b_S b_S) tt b_fst BT_Fst.
 
-Definition test_Phi_sub : @h_ty TestSign TestFunc Datatypes.unit :=
-  form_subst (b_subst_ext test_g) test_Phi.
+Definition substituted_counterexample_formula : @h_ty TestSign TestFunc Datatypes.unit :=
+  form_subst (b_subst_ext counterexample_substitution) substitution_counterexample_formula.
 
-Definition test_Phi_sub_wellformed :
+Definition substituted_counterexample_formula_wellformed :
   @WellFormed TestSign TestFunc Datatypes.unit
     TestFunctionSignature TestPredicateSignature
-    (b_Prod b_Unit b_S) test_Phi_sub.
+    (b_Prod b_Unit b_S) substituted_counterexample_formula.
 Proof.
-  unfold test_Phi_sub, test_Phi, b_subst_ext.
+  unfold substituted_counterexample_formula, substitution_counterexample_formula, b_subst_ext.
   apply WF_Atom.
   refine (@BT_Comp TestSign TestFunc TestFunctionSignature
     (b_Prod b_Unit b_S) (b_Prod b_S b_S) b_S
     b_fst
-    (b_pair (b_comp test_g b_fst) b_snd)
+    (b_pair (b_comp counterexample_substitution b_fst) b_snd)
     (@BT_Fst TestSign TestFunc TestFunctionSignature b_S b_S)
     _).
   refine (@BT_Pair TestSign TestFunc TestFunctionSignature
     (b_Prod b_Unit b_S) b_S b_S
-    (b_comp test_g b_fst) b_snd _
+    (b_comp counterexample_substitution b_fst) b_snd _
     (@BT_Snd TestSign TestFunc TestFunctionSignature b_Unit b_S)).
   exact (@BT_Comp TestSign TestFunc TestFunctionSignature
     (b_Prod b_Unit b_S) b_Unit b_S
-    test_g b_fst test_g_typing
+    counterexample_substitution b_fst counterexample_substitution_typing
     (@BT_Fst TestSign TestFunc TestFunctionSignature b_Unit b_S)).
 Defined.
 
-Definition test_eps_sub : @b_tm TestSign TestFunc :=
-  b_const b_S (skolem_index b_S test_Phi_sub).
+Definition witness_of_substituted_formula : @b_tm TestSign TestFunc :=
+  b_const b_S (skolem_index b_S substituted_counterexample_formula).
 
-Definition test_eps_comp : @b_tm TestSign TestFunc :=
-  b_comp (b_const b_S (skolem_index b_S test_Phi)) test_g.
+Definition substituted_witness : @b_tm TestSign TestFunc :=
+  b_comp (b_const b_S (skolem_index b_S substitution_counterexample_formula)) counterexample_substitution.
 
-Definition test_eps_sub_typing :
-  @base_typing TestSign TestFunc TestFunctionSignature b_Unit test_eps_sub b_S :=
+Definition witness_of_substituted_formula_typing :
+  @base_typing TestSign TestFunc TestFunctionSignature b_Unit witness_of_substituted_formula b_S :=
   BT_Const.
 
-Definition test_eps_comp_typing :
-  @base_typing TestSign TestFunc TestFunctionSignature b_Unit test_eps_comp b_S :=
+Definition substituted_witness_typing :
+  @base_typing TestSign TestFunc TestFunctionSignature b_Unit substituted_witness b_S :=
   BT_Comp BT_Const BT_Const.
 
-Definition test_substitutivity_judgement : Prop :=
-  test_eps_sub ≡_[b_Unit,b_S] test_eps_comp.
+Definition counterexample_substitutivity_equation : Prop :=
+  witness_of_substituted_formula ≡_[b_Unit,b_S] substituted_witness.
 
 (* A finite Cartesian base in which the individual sort is [bool]. *)
 Inductive FinObj : Type :=
@@ -193,14 +216,14 @@ Fixpoint fin_default (A : b_ty) : fin_carrier (fin_interp_ty A) :=
   end.
 
 Definition selected_epsilon_sign : TestSign :=
-  skolem_index b_S test_Phi_sub.
+  skolem_index b_S substituted_counterexample_formula.
 
 Definition fin_epsilon_value (s : TestSign) : bool :=
   match s with
-  | test_skolem b_S
+  | counterexample_skolem b_S
       (Ty_Atom tt
         (b_comp b_fst
-          (b_pair (b_comp (b_const b_S (test_skolem b_S Ty_Unit)) b_fst) b_snd))) => true
+          (b_pair (b_comp (b_const b_S (counterexample_skolem b_S Ty_Unit)) b_fst) b_snd))) => true
   | _ => false
   end.
 
@@ -247,48 +270,48 @@ Proof.
   - destruct f.
 Defined.
 
-Lemma interp_test_eps_sub :
+Lemma interp_witness_of_substituted_formula :
   @interp_tm TestSign TestFunc TestFunctionSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort Fin_BaseModel
-    b_Unit b_S test_eps_sub test_eps_sub_typing =
+    b_Unit b_S witness_of_substituted_formula witness_of_substituted_formula_typing =
   (fun _ : Datatypes.unit => true).
 Proof. reflexivity. Defined.
 
-Lemma interp_test_eps_comp :
+Lemma interp_substituted_witness :
   @interp_tm TestSign TestFunc TestFunctionSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort Fin_BaseModel
-    b_Unit b_S test_eps_comp test_eps_comp_typing =
+    b_Unit b_S substituted_witness substituted_witness_typing =
   (fun _ : Datatypes.unit => false).
 Proof. reflexivity. Defined.
 
 Lemma finite_base_countermodel :
   ~ (@interp_tm TestSign TestFunc TestFunctionSignature
        Fin_Setoid Fin_Cartesian Fin_TwoSort Fin_BaseModel
-       b_Unit b_S test_eps_sub test_eps_sub_typing
+       b_Unit b_S witness_of_substituted_formula witness_of_substituted_formula_typing
      ≅
      @interp_tm TestSign TestFunc TestFunctionSignature
        Fin_Setoid Fin_Cartesian Fin_TwoSort Fin_BaseModel
-       b_Unit b_S test_eps_comp test_eps_comp_typing).
+       b_Unit b_S substituted_witness substituted_witness_typing).
 Proof.
   intro H.
-  rewrite interp_test_eps_sub in H.
-  rewrite interp_test_eps_comp in H.
+  rewrite interp_witness_of_substituted_formula in H.
+  rewrite interp_substituted_witness in H.
   specialize (H tt).
   discriminate H.
 Defined.
 
 (* This is the syntactic conclusion: the finite semantic separation is fed
    through base soundness, so no base-term equality derivation can exist. *)
-Theorem test_substitutivity_not_derivable :
-  ~ test_substitutivity_judgement.
+Theorem counterexample_equation_not_derivable :
+  ~ counterexample_substitutivity_equation.
 Proof.
   intro H.
   apply finite_base_countermodel.
   eapply (@base_soundness_equational
     TestSign TestFunc TestFunctionSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort Fin_BaseModel Fin_CoherentBaseModel
-    b_Unit b_S test_eps_sub test_eps_comp
-    test_eps_sub_typing test_eps_comp_typing).
+    b_Unit b_S witness_of_substituted_formula substituted_witness
+    witness_of_substituted_formula_typing substituted_witness_typing).
   exact H.
 Defined.
 
@@ -418,21 +441,21 @@ Definition separating_EpsilonFullModel :
      efm_hyper_model := Fin_H3_EpsilonHyperModel;
      efm_adjoint_epsilon := Fin_H3_AdjointEpsilonFullFibration |}.
 
-Definition test_substitutivity_valid_in
+Definition counterexample_equation_valid_in
   (M : @EpsilonFullModel TestSign TestFunc Datatypes.unit
     TestFunctionSignature TestPredicateSignature TestSkolemMapping) : Prop :=
-  EpsilonFull_ModelCategory.efm_interp_tm M test_eps_sub_typing
+  EpsilonFull_ModelCategory.efm_interp_tm M witness_of_substituted_formula_typing
   ≅
-  EpsilonFull_ModelCategory.efm_interp_tm M test_eps_comp_typing.
+  EpsilonFull_ModelCategory.efm_interp_tm M substituted_witness_typing.
 
 Theorem finite_hyperdoctrine_countermodel :
   ~ (@interp_tm TestSign TestFunc TestFunctionSignature
        Fin_Setoid Fin_Cartesian Fin_TwoSort Fin_BaseModel
-       b_Unit b_S test_eps_sub test_eps_sub_typing
+       b_Unit b_S witness_of_substituted_formula witness_of_substituted_formula_typing
      ≅
      @interp_tm TestSign TestFunc TestFunctionSignature
        Fin_Setoid Fin_Cartesian Fin_TwoSort Fin_BaseModel
-       b_Unit b_S test_eps_comp test_eps_comp_typing).
+       b_Unit b_S substituted_witness substituted_witness_typing).
 Proof. exact finite_base_countermodel. Defined.
 
 (* A second, equally valid EpsilonFull hyperdoctrine uses a uniform default
@@ -507,41 +530,148 @@ Definition uniform_EpsilonFullModel :
      efm_hyper_model := UniformFin_H3_EpsilonHyperModel;
      efm_adjoint_epsilon := UniformFin_H3_AdjointEpsilonFullFibration |}.
 
-Lemma uniform_interp_test_eps_sub :
+Lemma uniform_interp_witness_of_substituted_formula :
   @interp_tm TestSign TestFunc TestFunctionSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort UniformFin_BaseModel
-    b_Unit b_S test_eps_sub test_eps_sub_typing =
+    b_Unit b_S witness_of_substituted_formula witness_of_substituted_formula_typing =
   (fun _ : Datatypes.unit => false).
 Proof. reflexivity. Defined.
 
-Lemma uniform_interp_test_eps_comp :
+Lemma uniform_interp_substituted_witness :
   @interp_tm TestSign TestFunc TestFunctionSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort UniformFin_BaseModel
-    b_Unit b_S test_eps_comp test_eps_comp_typing =
+    b_Unit b_S substituted_witness substituted_witness_typing =
   (fun _ : Datatypes.unit => false).
 Proof. reflexivity. Defined.
 
 Theorem uniform_hyperdoctrine_validates_substitutivity :
   @interp_tm TestSign TestFunc TestFunctionSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort UniformFin_BaseModel
-    b_Unit b_S test_eps_sub test_eps_sub_typing
+    b_Unit b_S witness_of_substituted_formula witness_of_substituted_formula_typing
   ≅
   @interp_tm TestSign TestFunc TestFunctionSignature
     Fin_Setoid Fin_Cartesian Fin_TwoSort UniformFin_BaseModel
-    b_Unit b_S test_eps_comp test_eps_comp_typing.
+    b_Unit b_S substituted_witness substituted_witness_typing.
 Proof.
-  rewrite uniform_interp_test_eps_sub.
-  rewrite uniform_interp_test_eps_comp.
+  rewrite uniform_interp_witness_of_substituted_formula.
+  rewrite uniform_interp_substituted_witness.
   intro x.
   reflexivity.
 Defined.
 
 Theorem separating_model_refutes_substitutivity :
-  ~ test_substitutivity_valid_in separating_EpsilonFullModel.
+  ~ counterexample_equation_valid_in separating_EpsilonFullModel.
 Proof. exact finite_hyperdoctrine_countermodel. Defined.
 
 Theorem uniform_model_validates_substitutivity :
-  test_substitutivity_valid_in uniform_EpsilonFullModel.
+  counterexample_equation_valid_in uniform_EpsilonFullModel.
 Proof. exact uniform_hyperdoctrine_validates_substitutivity. Defined.
+
+(* An identity substitution preserves formula conversion but changes the raw
+   label used by the chosen epsilon constant. *)
+Definition identity_substituted_formula : @h_ty TestSign TestFunc Datatypes.unit :=
+  form_subst b_id substituted_counterexample_formula.
+
+Definition identity_substituted_formula_wellformed :
+  @WellFormed TestSign TestFunc Datatypes.unit
+    TestFunctionSignature TestPredicateSignature
+    (b_Prod b_Unit b_S) identity_substituted_formula :=
+  wf_subst b_id BT_Id substituted_counterexample_formula
+    substituted_counterexample_formula_wellformed.
+
+Definition counterexample_formulas_convertible :
+  form_equiv (b_Prod b_Unit b_S)
+    substituted_counterexample_formula identity_substituted_formula.
+Proof.
+  apply FE_Sym.
+  apply FE_Pullback_Id.
+  exact substituted_counterexample_formula_wellformed.
+Defined.
+
+Definition witness_of_identity_substituted_formula :
+  @b_tm TestSign TestFunc :=
+  b_const b_S (skolem_index b_S identity_substituted_formula).
+
+Definition witness_of_identity_substituted_formula_typing :
+  @base_typing TestSign TestFunc TestFunctionSignature
+    b_Unit witness_of_identity_substituted_formula b_S := BT_Const.
+
+Lemma counterexample_labels_distinct :
+  skolem_index b_S substituted_counterexample_formula <>
+  skolem_index b_S identity_substituted_formula.
+Proof.
+  intro H.
+  apply skolem_inj in H.
+  destruct H as [_ H].
+  unfold substituted_counterexample_formula,
+    identity_substituted_formula, substitution_counterexample_formula in H.
+  discriminate H.
+Defined.
+
+Lemma separating_model_distinguishes_convertible_witnesses :
+  ~ (efm_interp_tm separating_EpsilonFullModel
+      witness_of_substituted_formula_typing
+     ≅
+     efm_interp_tm separating_EpsilonFullModel
+      witness_of_identity_substituted_formula_typing).
+Proof.
+  intro H.
+  specialize (H tt).
+  discriminate H.
+Defined.
+
+Lemma uniform_model_identifies_convertible_witnesses :
+  efm_interp_tm uniform_EpsilonFullModel
+    witness_of_substituted_formula_typing
+  ≅
+  efm_interp_tm uniform_EpsilonFullModel
+    witness_of_identity_substituted_formula_typing.
+Proof.
+  intro x.
+  destruct x.
+  reflexivity.
+Defined.
+
+Theorem convertible_witnesses_not_definitionally_equal :
+  ~ @base_equiv_typed TestSign TestFunc TestFunctionSignature
+      b_Unit b_S witness_of_substituted_formula
+      witness_of_identity_substituted_formula.
+Proof.
+  intro H.
+  apply separating_model_distinguishes_convertible_witnesses.
+  eapply (@base_soundness_equational
+    TestSign TestFunc TestFunctionSignature
+    Fin_Setoid Fin_Cartesian Fin_TwoSort Fin_BaseModel Fin_CoherentBaseModel
+    b_Unit b_S witness_of_substituted_formula
+    witness_of_identity_substituted_formula
+    witness_of_substituted_formula_typing
+    witness_of_identity_substituted_formula_typing).
+  exact H.
+Defined.
+
+Theorem counterexample_refutes_definitional_extensionality :
+  ~ @DefinitionalExtensionality TestSign TestFunc Datatypes.unit
+      TestFunctionSignature TestPredicateSignature TestSkolemMapping.
+Proof.
+  intro H.
+  apply convertible_witnesses_not_definitionally_equal.
+  exact (H b_Unit b_S substituted_counterexample_formula
+    identity_substituted_formula
+    substituted_counterexample_formula_wellformed
+    identity_substituted_formula_wellformed
+    counterexample_formulas_convertible).
+Defined.
+
+Theorem counterexample_refutes_definitional_substitutivity :
+  ~ @DefinitionalSubstitutivity TestSign TestFunc Datatypes.unit
+      TestFunctionSignature TestPredicateSignature TestSkolemMapping.
+Proof.
+  intro H.
+  apply counterexample_equation_not_derivable.
+  exact (H b_Unit b_S b_S counterexample_substitution
+    counterexample_substitution_typing
+    substitution_counterexample_formula
+    substitution_counterexample_formula_wellformed).
+Defined.
 
 End EpsilonFullSubstitutivity.

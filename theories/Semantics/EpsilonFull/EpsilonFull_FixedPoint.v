@@ -1,4 +1,3 @@
-(* theories/Semantics/EpsilonFull/EpsilonFull_FixedPoint.v *)
 
 Require Import Coq.Classes.RelationClasses.
 Require Import Coq.Program.Equality.

@@ -1,4 +1,3 @@
-(* theories/Semantics/Epsilon/Epsilon_Fibration.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import List.
@@ -15,9 +14,7 @@ Require Import HyperLogic.Cat.Fibration.
 Require Import HyperLogic.Logic.Base.Epsilon.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Epsilon.Hyper_Syntax.
 
-(* ================================================================= *)
-(* 1. BASE SEMANTICS                                                 *)
-(* ================================================================= *)
+(** Semantic interface for the epsilon-only calculus. *)
 
 Fixpoint interp_ty {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
   (A : b_ty) : @obj C :=
@@ -62,9 +59,6 @@ Class CoherentBaseModel
     interp_tm d1 ≅ interp_tm d2
 }.
 
-(* ================================================================= *)
-(* 2. HYPER SEMANTICS                                                *)
-(* ================================================================= *)
 
 Class EpsilonHyperModel
   {Sign Func Pred : Type}
@@ -117,9 +111,7 @@ Definition eps_instance
   (A : b_ty) (Phi : @h_ty Sign Func Pred) : @h_ty Sign Func Pred :=
   form_subst (b_pair b_id (b_const A (skolem_index A Phi))) Phi.
 
-(* ================================================================= *)
-(* 3. PASQUALI-STYLE EPSILON STRUCTURE                               *)
-(* ================================================================= *)
+(** Pasquali-style epsilon structure on well-formed formulas. *)
 
 Class EpsilonGoodFibration
   {Sign Func Pred : Type}

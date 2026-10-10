@@ -1,17 +1,12 @@
-(* Logic/Hyper/Simple/Simple_Syntax_Lemmas.v *)
 
 Require Import HyperLogic.Logic.Base.Simple_Ext.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Simple_Ext.Hyper_Syntax.
-(* Ha van saját Notations fájlod a Simple szintaxishoz, azt is importáld ide! *)
+(** Base and substitution lemmas for the legacy syntax. *)
 Require Import HyperLogic.Logic.Hyper.Simple_Ext.Notations. 
 
 Open Scope logic_scope.
 
-(* ================================================================= *)
-(* 1. BÁZIS-SZINTŰ IDENTITÁSOK (A Dual Drinker-hez)                  *)
-(* ================================================================= *)
 
-(* A <id, t> kompozíciója a projekcióval helyesen gépelhető *)
 Lemma BT_Comp_Pair_Id_Fst_Correct {Sign : Type} {I D : b_ty} {t : @b_tm Sign} 
   (Ht : I ⊢b t : D) :
   I ⊢b (π₁ ∘ ⟨ id , t ⟩) : I.
@@ -21,8 +16,7 @@ Proof.
   - eapply BT_Pair. { apply BT_Id. } { exact Ht. }
 Defined.
 
-(* Bázis Axióma: A párosítás és a balra-projekció kompozíciója kioltja egymást. 
-   Olvasat: π₁ ∘ ⟨id, t⟩ ≡ id ⟶ I *)
+(* Pairing followed by the first projection is the identity. *)
 Lemma BE_Comp_Pair_Id_Fst_Correct {Sign : Type} {I D : b_ty} {t : @b_tm Sign} 
   (Ht : I ⊢b t : D) :
   I ⊢b (π₁ ∘ ⟨ id , t ⟩) ≡ id ⟶ I by (BT_Comp_Pair_Id_Fst_Correct Ht) & BT_Id.
@@ -30,12 +24,8 @@ Proof.
   apply BE_BetaFst.
 Defined.
 
-(* ================================================================= *)
-(* 2. BÁZIS-SZINTŰ HELYETTESÍTÉS (A Gépterem)                        *)
-(* ================================================================= *)
 
-(* A helyettesítés kategóriaelméleti alapja.
-   Olvasat: (f × id) ∘ ⟨id, t⟩ ≡ ⟨f, t⟩ ⟶ J ▹ D *)
+(* Extending [f] commutes with substitution by [t]. *)
 Lemma BE_Substitution_Law : forall {Sign : Type} I J D (f t : @b_tm Sign) 
   (df : I ⊢b f : J) (dt : I ⊢b t : D),
   I ⊢b (b_pullback_ext f ∘ ⟨ id , t ⟩) 
@@ -52,12 +42,8 @@ Proof.
   - apply BE_BetaSnd.
 Defined.
 
-(* ================================================================= *)
-(* 3. HYPER-SZINTŰ HELYETTESÍTÉS (A Fő Logikai Fegyver)              *)
-(* ================================================================= *)
 
-(* Ha egy formulát visszahúzunk f mentén, és behelyettesítjük a t-t, 
-   az logikailag ekvivalens azzal, mintha az ⟨f, t⟩ mentén húztuk volna vissza. *)
+(* Pullback followed by substitution equals pullback along the paired map. *)
 Lemma FE_Substitution_Law : forall {Sign : Type} I J D 
   (f t : @b_tm Sign) (Phi : @Hyper_Syntax.h_ty Sign)
   (df : I ⊢b f : J) (dt : I ⊢b t : D),
@@ -79,13 +65,8 @@ Proof.
   - exact Hwf.
 Defined.
 
-(* ================================================================= *)
-(* 4. LOKÁLIS IDENTITÁS ÉS A "DUAL DRINKER" GYILKOS                  *)
-(* ================================================================= *)
 
-(* Segédlemma: A módosítatlan változókontextus mentén vett visszahúzás
-   logikailag nem változtatja meg a formulát. 
-   Olvasat: Phi[⟨π₁, π₂⟩] ≡ Phi *)
+(* Reindexing along the unchanged variable context preserves the formula. *)
 Lemma FE_Local_Id : forall {Sign : Type} I D (Phi : @h_ty Sign),
   (I ▹ D) ⊢ Phi wff ->
   (I ▹ D) ⊢ Phi [ ⟨ π₁ , π₂ ⟩ ]* ≡ Phi.
@@ -104,7 +85,6 @@ Proof.
   - exact Hwf.
 Defined.
 
-(* A VÉGSŐ FEGYVER: A Dual Drinker cáfolásához szükséges levezetésekre. *)
 Lemma FE_Pullback_Ext_Fst_Snd : forall {Sign : Type} I D (Phi : @h_ty Sign),
   (I ▹ D) ⊢ Phi wff ->
   (I ▹ D) ⊢ (Phi [ b_pullback_ext π₁ ]*) [ π₂ ] ≡ Phi.

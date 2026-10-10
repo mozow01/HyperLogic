@@ -1,4 +1,4 @@
-(* Full finite-valued predicate hyperdoctrines and epsilon selection. *)
+(** Full finite-valued predicate hyperdoctrines and epsilon selection. *)
 
 Require Import Coq.Lists.List.
 Require Import Coq.Classes.Morphisms.

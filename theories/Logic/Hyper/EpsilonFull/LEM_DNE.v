@@ -1,4 +1,3 @@
-(* theories/Logic/Hyper/EpsilonFull/LEM_DNE.v *)
 
 Require Import List.
 Import ListNotations.

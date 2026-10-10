@@ -1,4 +1,3 @@
-(* Logic/Base/EpsilonFull/Base_Syntax_Lemmas.v *)
 
 Require Import Setoid.
 Require Import Relation_Definitions.

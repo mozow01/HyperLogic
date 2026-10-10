@@ -1,7 +1,6 @@
 Require Import List PeanoNat Coq.Classes.Morphisms.
 Import ListNotations.
 
-(* --- HyperLogic Modules --- *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.   
 Require Import HyperLogic.Cat.CCC.
@@ -14,9 +13,7 @@ Require Import HyperLogic.Semantics.STLC_PI_Sum.STLC_PI_Sum_Soundness.
 
 Open Scope stlc_scope_sum.
 
-(* ================================================================= *)
-(* 1. CATEGORY CONSTRUCTION (BiSTLC_Category)                        *)
-(* ================================================================= *)
+(** Syntactic category and completeness for STLC with sums. *)
 
 Definition obj_stlc_cat := ty.
 
@@ -57,9 +54,6 @@ Defined.
 Instance STLC_Thin : Thin STLC_Category.
 Proof. intros x y f g. apply generic_axiom_proof. Defined.
 
-(* ================================================================= *)
-(* 2. CC & CCC CONSTRUCTION                                          *)
-(* ================================================================= *)
 
 Definition terminal_term (A : ty) := (tm_lam A tm_unit).
 Lemma terminal_typing (A : ty) : ⊢ (terminal_term A) [:] (A ⊃ Ty_Unit).
@@ -92,7 +86,6 @@ Lemma snd_typing (x y : ty) : ⊢ (snd_term x y) [:] ((Ty_Prod x y) ⊃ y).
 Proof. unfold snd_term; apply T_Lam; eapply T_Snd; apply T_Var0. Defined.
 Definition snd_stlc {x y : ty} : hom_stlc (Ty_Prod x y) y := exist _ _ (snd_typing x y).
 
-(* ÚJ: STLC_CC Instance *)
 Instance STLC_CC : CartesianCategory STLC_Category.
 Proof.
   apply (Build_Thin_CC _ STLC_Thin 
@@ -100,7 +93,6 @@ Proof.
     Ty_Prod (@prod_map_stlc) (@fst_stlc) (@snd_stlc)).
 Defined.
 
-(* Exponentials *)
 Definition eval_term (y z : ty) :=
   tm_lam (Ty_Prod (Ty_Arrow z y) z) (tm_app (tm_fst (tm_var 0)) (tm_snd (tm_var 0))).
 Lemma eval_typing (y z : ty) : ⊢ eval_term y z [:] (Ty_Prod (Ty_Arrow z y) z ⊃ y).
@@ -120,7 +112,6 @@ Defined.
 Definition curry_stlc {x y z : ty} (g : hom_stlc (Ty_Prod x y) z) : hom_stlc x (Ty_Arrow y z) :=
   exist _ _ (curry_typing x y z g).
 
-(* ÚJ: STLC_CCC Instance (refine-nal) *)
 Instance STLC_CCC : CartesianClosedCategory STLC_Category.
 Proof.
   refine (Build_Thin_CCC _ STLC_Thin
@@ -130,9 +121,6 @@ Proof.
   ).
 Defined.
 
-(* ================================================================= *)
-(* 3. BiCCC CONSTRUCTION (Extensions for Sum Types)                  *)
-(* ================================================================= *)
 
 Definition initial_term (A : ty) := (tm_lam Ty_Void (tm_absurd A (tm_var 0))).
 Lemma initial_typing (A : ty) : ⊢ (initial_term A) [:] (Ty_Void ⊃ A).
@@ -178,9 +166,7 @@ Proof.
   ).
 Defined.
 
-(* ================================================================= *)
-(* 4. CANONICAL MODEL INSTANCE                                       *)
-(* ================================================================= *)
+(** Canonical syntactic model. *)
 
 Fixpoint make_ctx_ty (Gamma : context) : ty :=
   match Gamma with
@@ -208,23 +194,18 @@ Instance STLC_Model : Model STLC_Category := {
   interp_base := Ty_Atomic
 }.
 
-(* Identity Lemmas *)
-(* Itt már nem kell átadni az explicit CC, CCC, BCC-t *)
 Lemma val_identity : forall A, interp_ty STLC_Category STLC_Model A = A.
 Proof. induction A; simpl; auto; try (rewrite IHA1; rewrite IHA2); auto. Defined.
 
 Lemma ctx_identity : forall Gamma, interp_ctx STLC_Category STLC_Model Gamma = make_ctx_ty Gamma.
 Proof. induction Gamma; simpl; auto. rewrite IHGamma. rewrite val_identity. auto. Defined.
 
-(* ================================================================= *)
-(* 5. COMPLETENESS THEOREMS                                          *)
-(* ================================================================= *)
+(** Completeness theorems. *)
 
 Theorem Completeness_Equational :
   forall (Gamma : context) (A : ty) (t1 t2 : tm)
          (d1 : derivation Gamma t1 A)
          (d2 : derivation Gamma t2 A),
-  (* Hozzáadva: Ct *)
   (forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C),
       interp_derivation d1 ≅ interp_derivation d2) ->
   tm_equiv_rel t1 t2.
@@ -236,7 +217,6 @@ Proof.
 Defined.
 
 Theorem Completeness : forall Gamma A,
-  (* Hozzáadva: Ct, és implicitek törlése a hívásból *)
   (forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C),
       inhabited (hom (interp_ctx C M Gamma) (interp_ty C M A))) ->
   (exists t, (Gamma ⊢ t [:] A)).

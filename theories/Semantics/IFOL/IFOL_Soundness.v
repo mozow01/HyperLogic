@@ -1,4 +1,3 @@
-(* theories/Semantics/IFOL/IFOL_Soundness.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import List Arith PeanoNat Lia.

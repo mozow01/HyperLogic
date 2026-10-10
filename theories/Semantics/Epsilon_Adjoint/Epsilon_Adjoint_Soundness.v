@@ -1,9 +1,7 @@
-(* theories/Semantics/Epsilon_Adjoint/Epsilon_Adjoint_Soundness.v *)
 Require Import Coq.Classes.Morphisms.
 Require Import List Arith PeanoNat Lia.
 Import ListNotations. 
 
-(* Kategóriaelméleti alapok *)
 Require Import HyperLogic.Cat.Core. 
 Require Import HyperLogic.Cat.CC.
 Require Import HyperLogic.Cat.CCC. 
@@ -12,15 +10,12 @@ Require Import HyperLogic.Cat.Functor.
 Require Import HyperLogic.Cat.Adjoint.
 Require Import HyperLogic.Cat.Fibration. 
 
-(* Szintaxis és Adjungált Szemantika *)
 Require Import HyperLogic.Logic.Base.Epsilon_Adjoint.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Epsilon_Adjoint.Hyper_Syntax.
 Require Import HyperLogic.Logic.Hyper.Epsilon_Adjoint.Hyper_Syntax_Lemmas.
 Require Import HyperLogic.Semantics.Epsilon_Adjoint.Epsilon_Adjoint_Fibration.
 
-(* ================================================================= *)
-(* 1. STRUKTURÁLIS KOMPATIBILITÁSI LEMMÁK                            *)
-(* ================================================================= *)
+(** Soundness for the signature-indexed epsilon calculus. *)
 
 Lemma typing_subst_ext :
   forall {Sign : Type} {I J b : b_ty} {g : @b_tm Sign} (dg : base_typing I g J),
@@ -33,7 +28,7 @@ Proof.
   - apply BT_Snd.
 Defined.
 
-(* Helyettesítési izomorfizmusok a belső nyelv és a Fibrációs funktorok között. *)
+(** Substitution is interpreted by the fibration's reindexing functors. *)
 Lemma form_subst_iso : 
   forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C} 
@@ -43,8 +38,7 @@ Lemma form_subst_iso :
   interp_h_ty I (form_subst f Phi) ≅O @fobj _ _ (Pullback (interp_tm df)) (interp_h_ty A Phi).
 Proof.
   intros Sign SM C CC TSC BEM GF EHM.
-  (* Mivel a Phi a lemma végén van, revertáljuk a többit, hogy az indukciós hipotézis (IH) 
-     megkapja az I, A, f, df paramétereket (hogy a kvantorok ágaiban frissülhessenek a kontextusok). *)
+  (* Generalize the base data so induction applies under quantifiers. *)
   intros I A f df Phi.
   revert I A f df.
   
@@ -63,12 +57,10 @@ Proof.
   - symmetry. apply (i_atom_pb n b I J g dg).
   - eapply iso_trans.
     + apply pi_iso_cong.
-      (* JAVÍTVA: b_pullback_ext -> b_subst_ext, typing_pullback_ext -> typing_subst_ext *)
       exact (IHPhi (b_Prod I b) (b_Prod J b) (b_subst_ext g) (typing_subst_ext dg)).
     + symmetry. apply beck_chevalley_pi.
   - eapply iso_trans.
     + apply sigma_iso_cong.
-      (* JAVÍTVA: Itt is frissítve lettek a strukturális lemmák nevei! *)
       exact (IHPhi (b_Prod I b) (b_Prod J b) (b_subst_ext g) (typing_subst_ext dg)).
     + symmetry. apply beck_chevalley_sigma.
 Defined.
@@ -84,21 +76,17 @@ Lemma ctx_subst_iso :
 Proof.
   intros Sign SM C CC TSC BEM GF EHM I A G.
   induction G as [| Phi G' IHG']; simpl.
-  - (* Báziseset: Üres kontextus (terminális objektum) visszahúzása *)
+  -
     symmetry. apply pb_term_iso.
-  - (* Indukciós lépés: Kontextus kiterjesztése (szorzat) *)
+  -
     eapply iso_trans.
-    + (* Itt hívjuk meg az általános form_subst_iso-t a b_fst-re (pi1) a régi fst_iso helyett! *)
+    +
       apply (prod_iso_cong IHG' (form_subst_iso (b_Prod I A) I b_fst (BT_Fst (Sign:=Sign) (A:=I) (B:=A)) Phi)).
-    + (* A szorzat visszahúzása izomorf a visszahúzások szorzatával *)
+    +
       symmetry. apply pb_prod_iso.
 Defined.
 
-(* ================================================================= *)
-(* 2. KONVERZIÓS LEMMÁK                                              *)
-(* ================================================================= *)
 
-(* --- SEGÉDLEMMÁK A HELYETTESÍTÉSHEZ --- *)
 
 Lemma interp_subst_cong : forall {Sign : Type} {SM : SkolemMapping Sign} 
   {C : SetoidCategory} {CC : CartesianCategory C} 
@@ -114,8 +102,8 @@ Proof.
   revert I f g df dg Heq.
   induction Hwf; intros I' f' g' df' dg' Heq'; simpl.
   
-  - apply iso_refl. (* Unit *)
-  - apply iso_refl. (* Void *)
+  - apply iso_refl.
+  - apply iso_refl.
   - apply prod_iso_cong. { eapply IHHwf1. exact Heq'. } { eapply IHHwf2. exact Heq'. }
   - apply coprod_iso_cong. { eapply IHHwf1. exact Heq'. } { eapply IHHwf2. exact Heq'. }
   - apply exp_iso_cong. { eapply IHHwf2. exact Heq'. } { eapply IHHwf1. exact Heq'. }
@@ -149,7 +137,7 @@ Proof.
   - simpl. apply exp_iso_cong; assumption.
   - simpl. eapply i_atom_cong_global. apply BE_IdR.
   - simpl. apply pi_iso_cong. eapply iso_trans.
-    + eapply (interp_subst_cong (b_Prod I A) (b_Prod I A) (b_subst_ext b_id) b_id Phi). (* JAVÍTVA: Body -> Phi *)
+    + eapply (interp_subst_cong (b_Prod I A) (b_Prod I A) (b_subst_ext b_id) b_id Phi).
       * unfold b_subst_ext. eapply BE_Trans. 2: { apply BE_EtaPair. }
         eapply BE_CongPair.
         -- eapply BE_Trans. apply BE_IdL. eapply BE_Sym. apply BE_IdR.
@@ -157,7 +145,7 @@ Proof.
       * exact Hwf.
     + exact IHHwf.
   - simpl. apply sigma_iso_cong. eapply iso_trans.
-    + eapply (interp_subst_cong (b_Prod I A) (b_Prod I A) (b_subst_ext b_id) b_id Phi). (* JAVÍTVA: Body -> Phi *)
+    + eapply (interp_subst_cong (b_Prod I A) (b_Prod I A) (b_subst_ext b_id) b_id Phi).
       * unfold b_subst_ext. eapply BE_Trans. 2: { apply BE_EtaPair. }
         eapply BE_CongPair.
         -- eapply BE_Trans. apply BE_IdL. eapply BE_Sym. apply BE_IdR.
@@ -189,7 +177,7 @@ Proof.
   - apply pi_iso_cong. eapply iso_trans.
     + eapply (interp_subst_cong (b_Prod I0 A) (b_Prod I A) 
                              (b_subst_ext (b_comp f0 g0)) 
-                             (b_comp (b_subst_ext f0) (b_subst_ext g0)) Phi). (* JAVÍTVA: Body -> Phi *)
+                             (b_comp (b_subst_ext f0) (b_subst_ext g0)) Phi).
       * unfold b_subst_ext. eapply BE_Trans. 
         { eapply BE_CongPair. - eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ BT_Fst dg0 df0). - exact (BE_Refl _ _ _ BT_Snd BT_Snd). }
         eapply BE_Sym. eapply BE_Trans. 
@@ -205,7 +193,7 @@ Proof.
   - apply sigma_iso_cong. eapply iso_trans.
     + eapply (interp_subst_cong (b_Prod I0 A) (b_Prod I A) 
                              (b_subst_ext (b_comp f0 g0)) 
-                             (b_comp (b_subst_ext f0) (b_subst_ext g0)) Phi). (* JAVÍTVA: Body -> Phi *)
+                             (b_comp (b_subst_ext f0) (b_subst_ext g0)) Phi).
       * unfold b_subst_ext. eapply BE_Trans. 
         { eapply BE_CongPair. - eapply BE_Sym. exact (BE_Assoc _ _ _ _ _ _ _ BT_Fst dg0 df0). - exact (BE_Refl _ _ _ BT_Snd BT_Snd). }
         eapply BE_Sym. eapply BE_Trans. 
@@ -221,7 +209,6 @@ Proof.
 Defined.
 
 
-(* --- FŐ KONVERZIÓS LEMMÁK --- *)
 
 Lemma pullback_fmap_iso : 
   forall {C : SetoidCategory} {CC : CartesianCategory C} {GF : GoodFibration C} {X Y : obj} (f : hom X Y)
@@ -250,83 +237,66 @@ Proof.
   intros Sign SM C CC TSC BEM GF EHM AdEHM I Phi Psi Heq.
   induction Heq; simpl.
 
-  - (* FE_Atom *) eapply i_atom_cong_global. exact b.
-  - (* FE_Refl *) apply iso_refl.
-  - (* FE_Sym *) symmetry. apply IHHeq.
-  - (* FE_Trans *) eapply iso_trans. { apply IHHeq1. } { apply IHHeq2. }
-  - (* FE_Prod *) apply prod_iso_cong. { apply IHHeq1. } { apply IHHeq2. }
-  - (* FE_Sum *) apply coprod_iso_cong. { apply IHHeq1. } { apply IHHeq2. }
-  - (* FE_Arrow *) apply exp_iso_cong. { apply IHHeq2. } { apply IHHeq1. }
-  - (* FE_All *) apply pi_iso_cong. apply IHHeq.
-  - (* FE_Ex *) apply sigma_iso_cong. apply IHHeq.
+  -   eapply i_atom_cong_global. exact b.
+  -   apply iso_refl.
+  -   symmetry. apply IHHeq.
+  -   eapply iso_trans. { apply IHHeq1. } { apply IHHeq2. }
+  -   apply prod_iso_cong. { apply IHHeq1. } { apply IHHeq2. }
+  -   apply coprod_iso_cong. { apply IHHeq1. } { apply IHHeq2. }
+  -   apply exp_iso_cong. { apply IHHeq2. } { apply IHHeq1. }
+  -   apply pi_iso_cong. apply IHHeq.
+  -   apply sigma_iso_cong. apply IHHeq.
 
-  (* AZ ÚJ ADJUNGÁLT AXIÓMÁK BEKÖTÉSE *)
-  - (* FE_Eps_Adjoint_Iso *)
+  -
     apply eps_is_left_adj_obj.
     exact w. 
- - (* FE_Eps_Functorial *)
+ -
     apply eps_functorial.
-    + (* 1. GÓL: WellFormed (b_Prod I A) Phi *)
-      (* Kinyerjük a jólformáltságot a 'Heq' ekvivalenciából *)
-      (* Ide írd a saját lemmád nevét, pl. form_equiv_wf1 vagy hasonló! *)
+    +
       eapply form_equiv_wf1. exact Heq.
       
-    + (* 2. GÓL: WellFormed (b_Prod I A) Psi *)
-      (* Szintén a 'Heq'-ből nyerjük ki a jobb oldalra *)
+    +
       eapply form_equiv_wf2. exact Heq.
       
-    + (* 3. GÓL: Az Izomorfizmus *)
-      (* Ide tökéletesen illeszkedik az Indukciós Hipotézis! *)
+    +
       exact IHHeq.
-  (* FIBRÁCIÓS SZABÁLYOK *)
-  - (* FE_Pullback_Id *)
+  -
     apply interp_subst_id. exact w.
-  - (* FE_Pullback_Comp *)
+  -
     symmetry. apply (interp_subst_comp I J K). exact df. exact dg. exact w.
-  - (* FE_Pullback_Cong *)
+  -
     eapply interp_subst_cong. exact b. exact w.
-  - (* FE_Eps_BC: Beck-Chevalley axióma az Epszilonra *)
+  -
     
-    (* 1. LÉPÉS: A bal oldalon az Epszilont átalakítjuk Bal Adjungálttá *)
     eapply iso_trans.
     { symmetry. 
       apply eps_is_left_adj_obj.
       
       eapply wf_subst.
-      - (* ITT VOLT AZ ADMIT: Most automatikusan felépítjük a bázis típust! *)
+      -
         repeat econstructor; eauto.
-      - (* 2. Al-gól: Maga a w premissza *)
+      -
         exact w.
     }
     
-    (* 2. LÉPÉS: Betoljuk az izomorfizmust a bal adjungált mögé. 
-       Mivel a Coq nem tudja kitalálni a kiterjesztett helyettesítés 
-       típuslevezetését, expliciten megadjuk neki! *)
+    (* Supply the extended substitution derivation explicitly under the left adjoint. *)
     eapply iso_trans.
     { apply sigma_iso_cong. 
       eapply form_subst_iso with (df := BT_Pair (BT_Comp dt BT_Fst) BT_Snd). }
       
-    (* 3. LÉPÉS: A fibrációs mágia! A Bal Adjungáltban lévő Pullback-et 
-       kihúzzuk kívülre a beck_chevalley_sigma lemmával. *)
     eapply iso_trans.
     { symmetry. apply beck_chevalley_sigma. }
     
-    (* 4. LÉPÉS: A belsejében lévő Bal Adjungáltat visszaalakítjuk Epszilonná. *)
     eapply iso_trans.
     { apply pullback_fmap_iso. 
       apply eps_is_left_adj_obj.
       
-      (* Az axióma által kért jólformáltság hajszálpontosan megegyezik 
-         a kiindulási feltételünkkel, úgyhogy csak odaadjuk neki: *)
       exact w.
     }
       
-    (* 5. LÉPÉS: A külső Pullback-et visszaalakítjuk szintaktikus helyettesítéssé a Jobb oldalon.
-       Itt is megadjuk expliciten a t term levezetését (ami dt a kontextusban). *)
     eapply iso_trans.
     { symmetry. eapply form_subst_iso with (df := dt). }
     
-    (* Befejezés: A jólformáltsági (WellFormed) bizonyítások lezárása *)
     { apply iso_refl. }
 Defined. 
 
@@ -350,9 +320,6 @@ Proof.
 Defined.
 
 
-(* ================================================================= *)
-(* 3. SOUNDNESS TÉTEL                                                *)
-(* ================================================================= *)
 
 Theorem soundness : 
   forall {Sign : Type} {SM : SkolemMapping Sign} 
@@ -367,10 +334,8 @@ Proof.
   intros Sign SM C CC TSC BEM GF EHM AdEHM I G p Phi H_der.
   induction H_der.
   
-  (* VÁLTOZÓK ÉS STRUKTURÁLIS SZABÁLYOK *)
   - apply prod_snd.
   - eapply compose. exact IHH_der. apply prod_fst.
-  (* 3. HD_Unit *)
   - apply terminal_map.
   - eapply compose. apply (@iso_to _ _ _ (interp_form_equiv I _ _ f)). exact IHH_der.
   - eapply compose. exact IHH_der. apply (@iso_from _ _ _ (interp_ctx_equiv I _ _ c)).
@@ -397,19 +362,16 @@ Proof.
     + eapply (prod_map (id _) IHH_der1).
   - eapply compose. apply initial_map. exact IHH_der.
 
-  (* --------------------------------------------------------------- *)
-  (* KVANTOROK (ÚJ, SUBST alapú levezetés)                           *)
-  (* --------------------------------------------------------------- *)
 
-  - (* HD_All_Intro *)
+  -
     apply right_adj_mor. 
     eapply compose.
     + exact IHH_der.
     + apply (@iso_from _ _ _ (ctx_subst_iso I A G)). 
 
-  - (* HD_All_Elim *)
+  -
     eapply compose.
-    + (* JAVÍTÁS ITT: Expliciten átadjuk a b_pair b_id f morfizmust és a BT_Pair BT_Id b bizonyítást! *)
+    +
       exact (@iso_from _ _ _ (form_subst_iso I (b_Prod I A) (b_pair b_id f) (BT_Pair BT_Id b) Phi)). 
     + eapply compose.
       * eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id b))) _ _).
@@ -424,7 +386,7 @@ Proof.
               ** apply (@iso_from _ _ _ (pullback_id_iso (interp_h_ty I (Ty_All A Phi)))).
               ** exact IHH_der.
 
-  - (* HD_Ex_Intro *)
+  -
     eapply compose.
     + apply (@iso_to _ _ _ (pullback_id_iso (interp_h_ty I (Ty_Ex A Phi)))). 
     + assert (H_eq : compose prod_fst (prod_map (id (interp_ty I)) (interp_tm b)) ≅ id (interp_ty I)).
@@ -437,16 +399,16 @@ Proof.
            ++ eapply (@fmap _ _ (Pullback (interp_tm (BT_Pair BT_Id b))) _ _).
               apply (@unit _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) pullback_has_left_adjoint). 
            ++ eapply compose.
-              ** (* JAVÍTÁS ITT IS: Expliciten megkapja a <id, f> párt! *)
+              **
                  exact (@iso_to _ _ _ (form_subst_iso I (b_Prod I A) (b_pair b_id f) (BT_Pair BT_Id b) Phi)). 
               ** exact IHH_der.
 
-  - (* HD_Ex_Elim *)
+  -
     assert (H_premissza : hom (prod (@fobj _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (interp_h_ctx I G)) 
                                     (interp_h_ty (b_Prod I A) Phi)) 
                               (@fobj _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (interp_h_ty I Chi))).
     { eapply compose.
-      + (* JAVÍTÁS: A hibás fst_iso helyett a tökéletes, általános form_subst_iso-t hívjuk a b_fst-tel! *)
+      +
         exact (@iso_to _ _ _ (form_subst_iso (b_Prod I A) I b_fst BT_Fst Chi)). 
       + eapply compose.
         * exact IHH_der2.
@@ -486,7 +448,7 @@ Proof.
       * eapply compose. { exact H_sigma. } { exact IHH_der1. } 
       * apply id. 
 
- - (* HD_Eps_Intro *)
+ -
     assert (Hwf_Phi : WellFormed (b_Prod I A) Phi).
     { 
       eapply h_derivation_wf_inv. 
@@ -495,10 +457,9 @@ Proof.
     }
 
     eapply compose. 
-    + (* 2. Bedobjuk az axiómába a kész jólformáltságot *)
+    +
       apply (@iso_to _ _ _ (eps_is_left_adj_obj I A Phi Hwf_Phi)).
-    + (* 3. ZSENIÁLIS TRÜKK: Innentől a gólod HAJSZÁLPONTOSAN a HD_Ex_Intro! 
-         Szó szerint lemásoltam ide neked a saját HD_Ex_Intro bizonyításodat: *)
+    +
       eapply compose.
       * apply (@iso_to _ _ _ (pullback_id_iso (interp_h_ty I (Ty_Ex A Phi)))). 
       * assert (H_eq : compose prod_fst (prod_map (id (interp_ty I)) (interp_tm b)) ≅ id (interp_ty I)).
@@ -513,9 +474,8 @@ Proof.
               ** eapply compose.
                  --- exact (@iso_to _ _ _ (form_subst_iso I (b_Prod I A) (b_pair b_id f) (BT_Pair BT_Id b) Phi)). 
                  --- exact IHH_der.
-- (* HD_Eps_Elim *)
+-
   
-    (* 1. Itt is a lemmával bizonyítjuk a jólformáltságot, zéró admit! *)
     assert (Hwf_Phi : WellFormed (b_Prod I A) Phi).
     { 
       eapply h_derivation_wf_inv. 
@@ -523,7 +483,6 @@ Proof.
       - exact H_der1. 
     }
 
-    (* 2. A kapott IHH_der1-et (ami Epszilonra mutat), átalakítjuk Egzisztenciális premisszává! *)
     assert (IHH_der1_Ex : hom (interp_h_ctx I G) (interp_h_ty I (Ty_Ex A Phi))).
     {
       eapply compose.
@@ -531,7 +490,6 @@ Proof.
       + exact IHH_der1.
     }
 
-    (* 3. Jön a masszív HD_Ex_Elim kategóriaelméleti levezetés *)
     assert (H_premissza : hom (prod (@fobj _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (interp_h_ctx I G)) 
                                     (interp_h_ty (b_Prod I A) Phi)) 
                               (@fobj _ _ (Pullback (interp_tm (BT_Fst (Sign:=Sign) (A:=I) (B:=A)))) (interp_h_ty I Chi))).
@@ -569,7 +527,6 @@ Proof.
       exact H_pb. 
     }
 
-    (* 4. A végső kompozíció összerakása, már az IHH_der1_Ex felhasználásával *)
     eapply compose.
     + apply (@eval (Fiber (interp_ty I)) _ _ (interp_h_ctx I G) (interp_h_ty I Chi)). 
     + apply prod_map.

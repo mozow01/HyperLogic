@@ -1,16 +1,14 @@
-(* Logic/Base/Simple_Ext/Base_Syntax.v *)
+(** Cartesian base syntax with typed rigid constants indexed by [Sign]. *)
 
 Require Import Setoid.
 Require Import Relation_Definitions.
 Require Import Morphisms.   
   
-(* 1. OBJEKTUMOK (Marad az eredeti) *)
 Inductive b_ty : Type :=
   | b_Unit : b_ty
   | b_S    : b_ty
   | b_Prod : b_ty -> b_ty -> b_ty.
 
-(* 2. NYERS MORFIZMUSOK (Bővítve az implicit {Sign} paraméterrel) *)
 Inductive b_tm {Sign : Type} : Type :=
   | b_id   : b_tm
   | b_comp : b_tm -> b_tm -> b_tm
@@ -18,13 +16,9 @@ Inductive b_tm {Sign : Type} : Type :=
   | b_pair : b_tm -> b_tm -> b_tm
   | b_fst  : b_tm
   | b_snd  : b_tm
-  (* ÚJ: A rigid konstans hordozója. 
-     Tartalmazza a típusát (b_ty) és az azonosítóját (Sign). *)
+  (* A rigid constant carries its result type and signature index. *)
   | b_const : b_ty -> Sign -> b_tm.
 
-(* 3. TIPUSOLASI SZABALYOK (B1 |- f : B2) *)
-
-(* 3. TIPUSOLASI SZABALYOK (B1 |- f : B2) *)
 Inductive base_typing {Sign : Type} : b_ty -> b_tm (Sign:=Sign) -> b_ty -> Type :=
   | BT_Id : forall A, base_typing A b_id A
   | BT_Comp : forall A B C g f, base_typing B g C -> base_typing A f B -> base_typing A (b_comp g f) C
@@ -32,12 +26,8 @@ Inductive base_typing {Sign : Type} : b_ty -> b_tm (Sign:=Sign) -> b_ty -> Type 
   | BT_Pair : forall A B C f g, base_typing A f B -> base_typing A g C -> base_typing A (b_pair f g) (b_Prod B C)
   | BT_Fst : forall A B, base_typing (b_Prod A B) b_fst A
   | BT_Snd : forall A B, base_typing (b_Prod A B) b_snd B
-  (* ÚJ: A konstans tipizálási szabálya. *)
   | BT_Const : forall I A (s : Sign), base_typing I (b_const A s) A.
 
-(* --- 1. LÉPÉS: Argumentumok implicitté tétele --- *)
-(* Mivel bevezettük a {Sign} paramétert a b_tm és base_typing típusokba, 
-   ez a paraméter lesz az ELSŐ implicit argumentum minden konstruktornál. *)
 Arguments BT_Id {Sign A}.
 Arguments BT_Comp {Sign A B C g f}.
 Arguments BT_Unit {Sign A}.
@@ -46,12 +36,9 @@ Arguments BT_Fst {Sign A B}.
 Arguments BT_Snd {Sign A B}.
 Arguments BT_Const {Sign I A s}.
 
-(* --- 2. LÉPÉS: A tiszta ekvivalencia reláció --- *)
-(* Ide is bejön a {Sign : Type} explicit implicit paraméterként. *)
 Inductive base_equiv {Sign : Type} : forall (A B : b_ty) (f g : @b_tm Sign), 
   @base_typing Sign A f B -> @base_typing Sign A g B -> Prop :=
 
-    (* --- Ekvivalencia relacio alapjai --- *)
     | BE_Refl : forall A B (f : @b_tm Sign) (df dg : @base_typing Sign A f B),
         base_equiv A B f f df dg
         
@@ -61,7 +48,6 @@ Inductive base_equiv {Sign : Type} : forall (A B : b_ty) (f g : @b_tm Sign),
     | BE_Trans : forall A B (f g h : @b_tm Sign) (df : @base_typing Sign A f B) (dg : @base_typing Sign A g B) (dh : @base_typing Sign A h B),
         base_equiv A B f g df dg -> base_equiv A B g h dg dh -> base_equiv A B f h df dh
 
-    (* --- Kongruencia --- *)
     | BE_CongComp : forall A B C (f f' g g' : @b_tm Sign)
         (df : @base_typing Sign A f B) (df' : @base_typing Sign A f' B)
         (dg : @base_typing Sign B g C) (dg' : @base_typing Sign B g' C),
@@ -76,7 +62,6 @@ Inductive base_equiv {Sign : Type} : forall (A B : b_ty) (f g : @b_tm Sign),
         base_equiv A C g g' dg dg' ->
         base_equiv A (b_Prod B C) (b_pair f g) (b_pair f' g') (BT_Pair df dg) (BT_Pair df' dg')
 
-    (* --- Kategoria axiomak --- *)
     | BE_Assoc : forall A B C D (f g h : @b_tm Sign) 
         (df: @base_typing Sign A f B) (dg: @base_typing Sign B g C) (dh: @base_typing Sign C h D),
         base_equiv A D (b_comp h (b_comp g f)) (b_comp (b_comp h g) f) 
@@ -88,7 +73,6 @@ Inductive base_equiv {Sign : Type} : forall (A B : b_ty) (f g : @b_tm Sign),
     | BE_IdR : forall A B (f : @b_tm Sign) (df: @base_typing Sign A f B),
         base_equiv A B (b_comp f b_id) f (BT_Comp df BT_Id) df
 
-    (* --- Cartesian (Beta/Eta) axiomak --- *)
     | BE_BetaFst : forall A B C (f g : @b_tm Sign) (df: @base_typing Sign A f B) (dg: @base_typing Sign A g C),
         base_equiv A B (b_comp b_fst (b_pair f g)) f (BT_Comp BT_Fst (BT_Pair df dg)) df
 
@@ -108,19 +92,15 @@ Inductive base_equiv {Sign : Type} : forall (A B : b_ty) (f g : @b_tm Sign),
                    (BT_Comp (BT_Pair df dg) dh) (BT_Pair (BT_Comp df dh) (BT_Comp dg dh)).
 
 
-(* --- 5. AZ ÚJ, TERMEKRE VONATKOZÓ EKVIVALENCIA (SETOID INTERFÉSZ) --- *)
-
 Arguments base_equiv {Sign A B f g}.
 
-(* A bizonyítás-független (proof-irrelevant) reláció a termekre *)
+(** Existentially hiding typing derivations makes term equivalence
+    independent of derivation choice. *)
 Definition base_equiv_typed {Sign : Type} (I J : b_ty) (f g : @b_tm Sign) : Prop :=
   exists (df : base_typing I f J) (dg : base_typing I g J),
     base_equiv df dg.
 
-(* Szintaktikai cukorka *)
 Notation "f '≡_[' I ',' J ']' g" := (base_equiv_typed I J f g) (at level 70).
-
-(* --- Reláció Tulajdonságainak Bizonyítása --- *)
 
 Lemma bet_refl : forall {Sign : Type} {I J : b_ty} {f : @b_tm Sign} (df : base_typing I f J),
   base_equiv_typed I J f f.
@@ -143,11 +123,10 @@ Proof.
   eapply BE_Trans.
   - exact H1.
   - eapply BE_Trans.
-    + apply BE_Refl. (* VARÁZSLAT: dg1 és dg2 ugyanannak a 'g' termnek a levezetései, a Refl összeköti őket! *)
+    + apply BE_Refl.
     + exact H2.
 Qed.
 
-(* --- Typeclass Regisztráció a 'rewrite' taktikához --- *)
 Require Import Coq.Classes.RelationClasses.
 
 Instance bet_sym_inst {Sign : Type} {I J : b_ty} : Symmetric (@base_equiv_typed Sign I J).
@@ -156,26 +135,19 @@ Proof. exact (@bet_sym Sign I J). Defined.
 Instance bet_trans_inst {Sign : Type} {I J : b_ty} : Transitive (@base_equiv_typed Sign I J).
 Proof. exact (@bet_trans Sign I J). Defined.
 
-(* --- MORFIZMUSOK REGISZTRÁLÁSA --- *)
-
-(* Morfizmus regisztrálása a kompozícióra *)
 Add Parametric Morphism (Sign : Type) (A B C : b_ty) : (@b_comp Sign)
   with signature (@base_equiv_typed Sign B C) ==> (@base_equiv_typed Sign A B) ==> (@base_equiv_typed Sign A C)
   as comp_typed_mor.
 Proof.
-  (* 1. Lépés: Helyes zárójelezés az egymásba ágyazott exists miatt! *)
   intros g g' [dg [dg' Hg]] f f' [df [df' Hf]].
   
-  (* 2. Lépés: Megadjuk a kompozíció típuslevezetéseit (ezek elégítik ki az új exists-t a célban) *)
   exists (BT_Comp dg df), (BT_Comp dg' df').
   
-  (* 3. Lépés: Hívjuk a belső (motor szintű) kongruencia axiómát *)
   apply BE_CongComp.
   - exact Hf.
   - exact Hg.
 Defined.
 
-(* Morfizmus regisztrálása a párosításra *)
 Add Parametric Morphism (Sign : Type) (A B C : b_ty) : (@b_pair Sign)
   with signature (@base_equiv_typed Sign A B) ==> (@base_equiv_typed Sign A C) ==> (@base_equiv_typed Sign A (b_Prod B C))
   as pair_typed_mor.

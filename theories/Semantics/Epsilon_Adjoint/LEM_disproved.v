@@ -1,8 +1,6 @@
-(* theories/Semantics/Epsilon_Adjoint/LEM_disproved.v *)
 
 Require Import Coq.Classes.Morphisms.
 
-(* Kategóriaelméleti alapok *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
 Require Import HyperLogic.Cat.CCC.
@@ -11,7 +9,6 @@ Require Import HyperLogic.Cat.Functor.
 Require Import HyperLogic.Cat.Adjoint.
 Require Import HyperLogic.Cat.Fibration.
 
-(* Szintaxis és Epsilon Szemantika *)
 Require Import HyperLogic.Logic.Base.Epsilon_Adjoint.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Epsilon_Adjoint.Hyper_Syntax.
 Require Import HyperLogic.Logic.Hyper.Epsilon_Adjoint.Hyper_Syntax_Lemmas.
@@ -19,16 +16,12 @@ Require Import HyperLogic.Logic.Hyper.Epsilon_Adjoint.Hyper_Syntax_Lemmas.
 Require Import HyperLogic.Semantics.Epsilon_Adjoint.Base_Epsilon_Completeness.
 Require Import HyperLogic.Semantics.Epsilon_Adjoint.Epsilon_Adjoint_Fibration.
 
-(* FONTOS: Ide be kell húznod az Epsilon Soundness fájlodat! *)
 Require Import HyperLogic.Semantics.Epsilon_Adjoint.Epsilon_Adjoint_Soundness.
 
-(* ================================================================= *)
-(* 1. A 3-ELEMŰ HEYTING ALGEBRA (H3)                                 *)
-(* ================================================================= *)
+(** Three-element Heyting algebra used by the countermodel. *)
 
 Inductive H3 : Type := HBot | HMid | HTop.
 
-(* Részbenrendezés: Bot <= Mid <= Top *)
 Definition H3_le (x y : H3) : Prop :=
   match x, y with
   | HBot, _ => True
@@ -43,7 +36,6 @@ Proof. destruct x; simpl; exact I. Defined.
 Lemma H3_le_trans : forall x y z, H3_le y z -> H3_le x y -> H3_le x z.
 Proof. destruct x, y, z; simpl; tauto. Defined.
 
-(* Logikai művelet H3-on (inf)*)
 Definition H3_meet (x y : H3) : H3 :=
   match x, y with
   | HBot, _ | _, HBot => HBot
@@ -51,7 +43,6 @@ Definition H3_meet (x y : H3) : H3 :=
   | HMid, HMid => HMid
   end.
 
-(* Logikai művelet H3-on (sup)*)
 Definition H3_join (x y : H3) : H3 :=
   match x, y with
   | HTop, _ | _, HTop => HTop
@@ -59,7 +50,6 @@ Definition H3_join (x y : H3) : H3 :=
   | HMid, HMid => HMid
   end.
 
-(* Logikai művelet H3-on (imp)*)
 Definition H3_impl (x y : H3) : H3 :=
   match x, y with
   | HBot, _ => HTop
@@ -69,7 +59,6 @@ Definition H3_impl (x y : H3) : H3 :=
   | HTop, a => a
   end.
 
-(* A Végleges Fázisos Favágó Taktika *)
 Ltac h3_crush :=
   repeat intro;
   repeat match goal with
@@ -87,9 +76,6 @@ Ltac h3_crush :=
   simpl in *;
   auto.
 
-(* ================================================================= *)
-(* 2. A H3 KATEGÓRIA (BiCartesian Closed)                            *)
-(* ================================================================= *)
 
 Instance H3_Setoid : SetoidCategory.
 Proof.
@@ -127,9 +113,7 @@ Proof.
   all: h3_crush.
 Defined.
 
-(* ================================================================= *)
-(* 3. A KONSTANS H3 FIBRÁCIÓ                                         *)
-(* ================================================================= *)
+(** Constant H3 fibration. *)
 
 Instance H3_IdentityFunctor : Functor H3_Setoid H3_Setoid.
 Proof.
@@ -149,7 +133,6 @@ Proof.
   Unshelve. all: h3_crush.
 Defined.
 
-(* ÁLTALÁNOSÍTOTT JAVÍTÁS: A Bázis Kategória itt az Epsilon szintaxis bázisa *)
 Instance H3_GoodFibration {Sign : Type} {SM : SkolemMapping Sign} : GoodFibration (Base_SetoidCategory Sign).
 Proof.
   refine {|
@@ -166,9 +149,7 @@ Proof.
   all: intros; h3_crush. all: reflexivity.
 Defined.
 
-(* ================================================================= *)
-(* 4. A H3 EPSZILON HIPERMODELL                                      *)
-(* ================================================================= *)
+(** Epsilon hyperdoctrine over the constant H3 fibration. *)
 
 Instance H3_EpsilonHyperModel {Sign : Type} {SM : SkolemMapping Sign}
   : @EpsilonHyperModel Sign
@@ -180,23 +161,21 @@ Instance H3_EpsilonHyperModel {Sign : Type} {SM : SkolemMapping Sign}
 Proof.
   unshelve econstructor.
 
-  - (* i_atom *)
+  -
     exact (fun p t I => HMid).
 
-  - (* i_atom_pb *)
+  -
     intros p t I A f df.
     simpl.
     reflexivity.
 
-  - (* i_atom_cong_global *)
+  -
     intros p I A t1 t2 d1 d2 Heq.
     simpl.
     reflexivity.
 Defined.
 
-(* ================================================================= *)
-(* 4.5 A KONSTANS H3 MODELL EPSILON-ADJUNKT FIBRÁCIÓJA               *)
-(* ================================================================= *)
+(** Epsilon-adjoint structure on the constant H3 model. *)
 
 Lemma H3_interp_h_ty_subst_const :
   forall {Sign : Type} {SM : SkolemMapping Sign}
@@ -230,29 +209,29 @@ Proof.
   - reflexivity.
   - reflexivity.
 
-  - (* Ty_Prod *)
+  -
     rewrite (IHPhi1 I J f).
     rewrite (IHPhi2 I J f).
     reflexivity.
 
-  - (* Ty_Sum *)
+  -
     rewrite (IHPhi1 I J f).
     rewrite (IHPhi2 I J f).
     reflexivity.
 
-  - (* Ty_Arrow *)
+  -
     rewrite (IHPhi1 I J f).
     rewrite (IHPhi2 I J f).
     reflexivity.
 
-  - (* Ty_Atom *)
+  -
     reflexivity.
 
-  - (* Ty_All *)
+  -
     rewrite (IHPhi (b_Prod I b) (b_Prod J b) (b_subst_ext f)).
     reflexivity.
 
-  - (* Ty_Ex *)
+  -
     rewrite (IHPhi (b_Prod I b) (b_Prod J b) (b_subst_ext f)).
     reflexivity.
 Defined.
@@ -269,7 +248,7 @@ Instance H3_AdjointEpsilonFibration {Sign : Type} {SM : SkolemMapping Sign}
 Proof.
   constructor.
 
-  - (* eps_is_left_adj_obj *)
+  -
     intros I A Phi Hwf_Phi.
 
     cbn [left_adj_obj
@@ -287,7 +266,7 @@ Proof.
 
     reflexivity.
 
-  - (* eps_functorial *)
+  -
     intros I A Phi Psi Hwf_Phi Hwf_Psi H_iso.
 
     rewrite
@@ -308,9 +287,6 @@ Proof.
 
     exact H_iso.
 Defined.
-(* ================================================================= *)
-(* 5. A KIZÁRT HARMADIK CÁFOLATA                                     *)
-(* ================================================================= *)
 
 Definition P_atom {Sign : Type} (I : b_ty) : @h_ty Sign := 
   Ty_Atom 0 b_unit.
@@ -329,16 +305,13 @@ Proof.
     + apply WF_Void.
 Defined. 
 
-(* Epsilon-specifikus Nil kontextus *)
 Lemma wf_ctx_nil_valid : forall {Sign : Type} (I : b_ty), @All_WellFormed Sign I nil.
 Proof.
   intro I.
   apply AWF_Nil.
 Defined.
 
-(* ================================================================= *)
-(* 5. A KIZÁRT HARMADIK CÁFOLATA ÉS SZINTAKTIKUS NEM-LEVEZETHETŐSÉGE *)
-(* ================================================================= *)
+(** The H3 model refutes excluded middle and yields syntactic underivability. *)
 
 Theorem LEM_Refuted_WF : 
   forall {Sign : Type} {SM : SkolemMapping Sign},

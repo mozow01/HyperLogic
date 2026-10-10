@@ -1,20 +1,17 @@
-(* Logic/STLC_PI_Sum/STLC_PI_Sum.v *)
 
 Require Import List PeanoNat Arith Lia.
 Import ListNotations.
 Require Import Coq.Classes.Morphisms.
 
-(* ================================================================= *)
-(* TYPES AND TERMS                                                 *)
-(* ================================================================= *)
+(** Simply typed lambda calculus with products, sums, and void. *)
 
 Inductive ty : Set :=
   | Ty_Atomic : nat -> ty
-  | Ty_Unit   : ty                 (* Terminal Object (1) *)
-  | Ty_Void   : ty                 (* Initial Object (0) *)
-  | Ty_Arrow  : ty -> ty -> ty     (* Exponential (=>) *)
-  | Ty_Prod   : ty -> ty -> ty     (* Product (⋅) *)
-  | Ty_Sum    : ty -> ty -> ty.    (* Coproduct (+) *)
+  | Ty_Unit   : ty
+  | Ty_Void   : ty
+  | Ty_Arrow  : ty -> ty -> ty
+  | Ty_Prod   : ty -> ty -> ty
+  | Ty_Sum    : ty -> ty -> ty.
 
 Inductive tm : Set :=
   | tm_unit   : tm                 
@@ -24,25 +21,18 @@ Inductive tm : Set :=
   | tm_pair   : tm -> tm -> tm     
   | tm_fst    : tm -> tm           
   | tm_snd    : tm -> tm           
-  (* Extensions for BiCCC *)
-  (* We annotate Injections with the type of the *other* side for unique typing *)
-  | tm_inl    : ty -> tm -> tm     (* tm_inl B t : A + B (where t:A) *)
-  | tm_inr    : ty -> tm -> tm     (* tm_inr A t : A + B (where t:B) *)
-  | tm_case   : tm -> tm -> tm -> tm (* case t of (x.t1) | (y.t2) *)
-  | tm_absurd : ty -> tm -> tm.    (* explicit type A, term of Void -> A *)
+  (* Sum injections carry the other summand to make typing unique. *)
+  | tm_inl    : ty -> tm -> tm
+  | tm_inr    : ty -> tm -> tm
+  | tm_case   : tm -> tm -> tm -> tm
+  | tm_absurd : ty -> tm -> tm.
 
 Definition context := list ty.
 
-(* ================================================================= *)
-(* SCOPE DEFINITION                                                *)
-(* ================================================================= *)
 
 Declare Scope stlc_scope_sum.
 Delimit Scope stlc_scope_sum with stlc_sum.
 
-(* ================================================================= *)
-(* TYPING SYSTEM (LOGIC LAYER - Prop)                              *)
-(* ================================================================= *)
 
 Inductive typeability : context -> tm -> ty -> Prop :=
   | T_Unit : forall Gamma, 
@@ -77,32 +67,27 @@ Inductive typeability : context -> tm -> ty -> Prop :=
       typeability Gamma t (Ty_Prod A B) ->
       typeability Gamma (tm_snd t) B
 
-  (* --- Rules for Sums (Coproducts) --- *)
 
   | T_Inl : forall Gamma t A B,
       typeability Gamma t A ->
-      (* We explicitly state B comes from the annotation *)
       typeability Gamma (tm_inl B t) (Ty_Sum A B)
 
   | T_Inr : forall Gamma t A B,
       typeability Gamma t B ->
-      (* We explicitly state A comes from the annotation *)
       typeability Gamma (tm_inr A t) (Ty_Sum A B)
 
   | T_Case : forall Gamma t t1 t2 A B C,
       typeability Gamma t (Ty_Sum A B) ->
-      typeability (A :: Gamma) t1 C -> (* t1 binds a variable of type A *)
-      typeability (B :: Gamma) t2 C -> (* t2 binds a variable of type B *)
+      typeability (A :: Gamma) t1 C ->
+      typeability (B :: Gamma) t2 C ->
       typeability Gamma (tm_case t t1 t2) C
 
-  (* --- Rule for Void (Initial) --- *)
   
   | T_Absurd : forall Gamma t A,
       typeability Gamma t Ty_Void ->
       typeability Gamma (tm_absurd A t) A.
 
 
-(* Notation definitions *)
 Notation "Gamma '⊢' t '[:]' A" := (typeability Gamma t A) (at level 70, no associativity) : stlc_scope_sum.
 Notation "'⊢' t '[:]' A" := (typeability nil t A) (at level 70, no associativity) : stlc_scope_sum.
 
@@ -112,9 +97,6 @@ Notation "∅" := (Ty_Void) (at level 0) : stlc_scope_sum.
 
 Open Scope stlc_scope_sum.
 
-(* ================================================================= *)
-(* DERIVATION TREES (DATA LAYER - Set)                             *)
-(* ================================================================= *)
 
 Inductive derivation : context -> tm -> ty -> Set :=
   | D_Unit : forall Gamma, 
@@ -149,7 +131,6 @@ Inductive derivation : context -> tm -> ty -> Set :=
       derivation Gamma t (Ty_Prod A B) -> 
       derivation Gamma (tm_snd t) B
 
-  (* --- Derivations for Sums --- *)
 
   | D_Inl : forall Gamma t A B,
       derivation Gamma t A ->
@@ -165,13 +146,12 @@ Inductive derivation : context -> tm -> ty -> Set :=
       derivation (B :: Gamma) t2 C ->
       derivation Gamma (tm_case t t1 t2) C
 
-  (* --- Derivation for Void --- *)
 
   | D_Absurd : forall Gamma t A,
       derivation Gamma t Ty_Void ->
       derivation Gamma (tm_absurd A t) A.
 
-(* Bridge between Derivation (Set) and Typeability (Prop) *)
+(** Forgets a derivation tree to Prop-valued typeability. *)
 Fixpoint forget_derivation {Gamma t A} (d : derivation Gamma t A) : typeability Gamma t A.
 Proof.
   induction d.
@@ -183,17 +163,12 @@ Proof.
   - apply T_Pair; assumption.
   - eapply T_Fst; eassumption.
   - eapply T_Snd; eassumption.
-  (* Sum cases *)
   - apply T_Inl; assumption.
   - apply T_Inr; assumption.
   - eapply T_Case; eassumption.
-  (* Void case *)
   - apply T_Absurd; assumption.
 Defined.
 
-(* ================================================================= *)
-(* PROOF IRRELEVANCE LOGIC                                         *)
-(* ================================================================= *)
 
 Inductive tm_equiv_rel : tm -> tm -> Prop :=
   | PI_rule : forall Gamma A t s,

@@ -4,9 +4,7 @@ Require Import Core.
 Require Import Functor.
 Require Import Adjoint.
 
-(** * Monads and Comonads *)
-
-(** ** Definitions *)
+(** Monads and comonads on setoid categories. *)
 
 Class Monad {C : SetoidCategory} (M : Functor C C) := mk_monad {
   return_op : forall {A}, @hom C A (@fobj C C M A);
@@ -60,7 +58,7 @@ Class Comonad {C : SetoidCategory} (W : Functor C C) := mk_comonad {
       (@duplicate A)
 }.
 
-(** ** Bind/Extend Style definitions *)
+(** Bind and extend presentations. *)
 
 Class Monad_Bind_Style {Cat : SetoidCategory} (M : Functor Cat Cat) := mk_Monad_Bind_Style {
   return_b : forall {A}, @hom Cat A (@fobj Cat Cat M A);
@@ -90,7 +88,7 @@ Class CoMonad_Extend_Style {Cat : SetoidCategory} (W : Functor Cat Cat) := mk_Co
     ≅ extend_b (@compose Cat (@fobj Cat Cat W C) (@fobj Cat Cat W B) A g (extend_b f))
 }.
 
-(** ** Conversions *)
+(** Conversions between the two presentations. *)
 
 Definition bind_from_join {Cat : SetoidCategory} {M : Functor Cat Cat} {MJ : Monad M} {A B}
   (f : @hom Cat A (@fobj Cat Cat M B)) : @hom Cat (@fobj Cat Cat M A) (@fobj Cat Cat M B) :=
@@ -103,32 +101,23 @@ Definition join_from_bind {Cat : SetoidCategory} {M : Functor Cat Cat}  {MB : Mo
   @bind_b Cat M MB (@fobj Cat Cat M A) A (@id Cat (@fobj Cat Cat M A)).
 
 
-(** ** Adjunctions generate Monads and Comonads *)
-
-(* Every Adjunction G -| F (where G:C->D is Right Adjoint) induces a Monad on D.
-   T = G o F
-*)
+(** Every adjunction [F ⊣ G] induces a monad [G ∘ F]. *)
 Instance AdjFuncMonad (C D : SetoidCategory) (G : Functor C D) (RA : IsRightAdjoint G): 
   Monad_Bind_Style (ComposeFunctors (C:=D) (D:=C) (E:=D) G (LeftAdjointFunctor G RA)).
 Proof.
-  (* Explicitly define F with explicit types to ensure F : D -> C *)
+  (* Explicit types keep the adjoint functor's direction unambiguous. *)
   set (F := @LeftAdjointFunctor C D G RA).
   
   apply mk_Monad_Bind_Style with
-  (* 1. Unit (Return) *)
   (return_b := fun (A : @obj D) => @unit C D G RA A)
-  (* 2. Bind *)
   (bind_b := fun (A B : @obj D) (f : @hom D A (@fobj D D (ComposeFunctors G F) B)) =>
-     (* f : A -> G(F(B)) *)
-     (* left_adj_mor f : F(A) -> F(B) *)
-     (* G (left_adj_mor f) : G(F(A)) -> G(F(B)) *)
      @fmap C D G (@fobj D C F A) (@fobj D C F B) (@left_adj_mor C D G RA A (@fobj D C F B) f)).
   
-  - intros A B f. (* bind_law1 *)
+  - intros A B f.
     simpl.
     apply (@lambek_1_dual C D G RA).
     
-  - intros A. (* bind_law2 *)
+  - intros A.
     simpl.
     assert (H: @left_adj_mor C D G RA A (@fobj D C F A) (@unit C D G RA A) ≅ @id C (@fobj D C F A)).
     {
@@ -136,80 +125,62 @@ Proof.
        apply (@left_adj_mor_proper C D G RA).
        simpl. rewrite fmap_id. rewrite id_left. reflexivity.
     }
-    (* Explicitly Step 1: Replace the LHS with fmap(id) using the Proper instance *)
     transitivity (@fmap C D G _ _ (@id C (@fobj D C F A))).
     { 
       apply (@fmap_proper C D G).
       exact H. 
     }
 
-    (* Explicitly Step 2: Simplify fmap(id) to id *)
     apply fmap_id.
     
-  - intros X Y Z f g. (* bind_law3 *)
+  - intros X Y Z f g.
     simpl.
     rewrite <- fmap_comp.
     apply fmap_proper.
-    (* 1. Use transitivity to introduce the Lambek form for (L g ∘ L f) *)
-    (* We want to show: (L g ∘ L f) ≅ L (G (L g ∘ L f) ∘ unit) *)
    transitivity (@left_adj_mor C D G RA X (@fobj D C F Z)
        (@compose D X (@fobj C D G (@fobj D C F X)) (@fobj C D G (@fobj D C F Z))
-          (* Part 1: G (L g ∘ L f) *)
           (@fmap C D G (@fobj D C F X) (@fobj D C F Z)
              (@compose C (@fobj D C F X) (@fobj D C F Y) (@fobj D C F Z)
                 (@left_adj_mor C D G RA Y (@fobj D C F Z) g)
                 (@left_adj_mor C D G RA X (@fobj D C F Y) f)))
-          (* Part 2: unit *)
           (@unit C D G RA X))).
     {
-      (* This direction is exactly lambek_2_dual applied to the composition (L g ∘ L f) *)
       rewrite <- (@lambek_2_dual C D G RA X (@fobj D C F Z)).
       reflexivity.
     }
 
-    (* Now peel off the outer L *)
     apply (@left_adj_mor_proper C D G RA).
 
-    (* Distribute G over composition: G (L g ∘ L f) ≅ G (L g) ∘ G (L f) *)
     rewrite fmap_comp.
 
-    (* Re-associate: (G (L g) ∘ G (L f)) ∘ unit ≅ G (L g) ∘ (G (L f) ∘ unit) *)
     rewrite <- comp_assoc.
 
-    (* Focus on the right side: G (L f) ∘ unit *)
     apply comp_proper.
     + reflexivity. 
-    + (* Apply lambek_1_dual: G (L f) ∘ unit ≅ f *)
+    +
       apply (@lambek_1_dual C D G RA).
 Defined.
 
 
-(* Every Adjunction F -| G (where F:D->C is Left Adjoint) induces a Comonad on C.
-   W = F o G
-*)
+(** Every adjunction [F ⊣ G] induces a comonad [F ∘ G]. *)
 Instance AdjFuncCoMonad (C D : SetoidCategory) (F : Functor D C) (LA : IsLeftAdjoint F): 
   CoMonad_Extend_Style (ComposeFunctors (C:=C) (D:=D) (E:=C) F (RightAdjointFunctor F LA)).
 Proof.
-  (* Explicitly define G to ensure G : C -> D *)
+  (* Explicit types keep the adjoint functor's direction unambiguous. *)
   set (G := @RightAdjointFunctor C D F LA).
 
   apply mk_CoMonad_Extend_Style with
-  (* 1. Counit (Extract) *)
   (extract_b := fun (A : @obj C) => @epsilon C D F LA A)
-  (* 2. Extend *)
   (extend_b := fun (A B : @obj C) (f : @hom C (@fobj C C (ComposeFunctors F G) B) A) =>
-     (* f : F(G(B)) -> A *)
-     (* Pass G(B) as the domain in D *)
      @fmap D C F (@right_adj_obj C D F LA B) (@right_adj_obj C D F LA A) 
         (@right_adj_mor C D F LA (@right_adj_obj C D F LA B) A f)).
 
-  - intros A B f. (* extend_law1 *)
+  - intros A B f.
     simpl.
     apply (@lambek_1 C D F LA).
 
-  - intros A. (* extend_law2 *)
+  - intros A.
     simpl.
-    (* Assert R(epsilon) = id *)
     assert (H: @right_adj_mor C D F LA (@right_adj_obj C D F LA A) A 
                (@epsilon C D F LA A) ≅ @id D (@right_adj_obj C D F LA A)).
     {
@@ -223,43 +194,33 @@ Proof.
 
     apply fmap_id.
 
-  - intros X Y Z f g. (* extend_law3 *)
+  - intros X Y Z f g.
     simpl.
     
-    (* LHS: F(R g) o F(R f) ≅ F(R g o R f) *)
     rewrite <- fmap_comp.
     apply fmap_proper.
 
-    (* Goal: R g o R f ≅ R (g o F(R f)) *)
-    (* Composition R g o R f goes from G(Z) -> G(Y) -> G(X) *)
 
     transitivity (@right_adj_mor C D F LA (@right_adj_obj C D F LA Z) X
        (@compose C (@fobj D C F (@right_adj_obj C D F LA Z)) (@fobj D C F (@right_adj_obj C D F LA X)) X
-          (* Part A: epsilon X *)
           (@epsilon C D F LA X)
-          (* Part B: F(R g o R f) *)
           (@fmap D C F (@right_adj_obj C D F LA Z) (@right_adj_obj C D F LA X)
              (@compose D (@right_adj_obj C D F LA Z) (@right_adj_obj C D F LA Y) (@right_adj_obj C D F LA X)
-                (* FIX 1: Pass G(Y) as domain for g *)
                 (@right_adj_mor C D F LA (@right_adj_obj C D F LA Y) X g)
-                (* FIX 2: Pass G(Z) as domain for f *)
                 (@right_adj_mor C D F LA (@right_adj_obj C D F LA Z) Y f)
              )))).
     {
-       (* lambek_2 applied to (R g o R f) *)
        rewrite <- (@lambek_2 C D F LA (@right_adj_obj C D F LA Z) X) at 1.
        reflexivity.
     }
 
-    (* Peel off the outer R *)
     apply (@right_adj_mor_proper C D F LA).
 
-    (* Simplify internal composition: epsilon o F(R g o R f) *)
     rewrite fmap_comp.
     rewrite comp_assoc.
     
     apply comp_proper.
-    + (* epsilon o F(R g) = g *)
+    +
       apply (@lambek_1 C D F LA).
     + reflexivity.
 Defined.

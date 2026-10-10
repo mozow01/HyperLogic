@@ -1,4 +1,3 @@
-(* theories/Semantics/EpsilonFull/EpsilonFull_Fibration.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import List.
@@ -15,9 +14,7 @@ Require Import HyperLogic.Cat.Fibration.
 Require Import HyperLogic.Logic.Base.EpsilonFull.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.EpsilonFull.Hyper_Syntax.
 
-(* ================================================================= *)
-(* 1. BÁZIS SZEMANTIKA ÉS INTERPRETÁCIÓ                              *)
-(* ================================================================= *)
+(** Semantic interface for the intuitionistic epsilon-exists calculus. *)
 
 Fixpoint interp_ty {C : SetoidCategory} {CC : CartesianCategory C} {TSC : TwoSortCategory C}
   (A : b_ty) : @obj C :=
@@ -62,9 +59,6 @@ Class CoherentBaseModel
     interp_tm d1 ≅ interp_tm d2
 }.
 
-(* ================================================================= *)
-(* 2. HYPER SZEMANTIKA (Atomok és Kvantorok)                         *)
-(* ================================================================= *)
 
 Class EpsilonHyperModel
   {Sign Func Pred : Type}
@@ -114,9 +108,6 @@ Fixpoint interp_h_ctx
   | Phi :: G' => prod (interp_h_ctx I G') (interp_h_ty I Phi)
   end.
 
-(* ================================================================= *)
-(* 3. ADJUNGÁLT FIBRÁCIÓ OSZTÁLY                                     *)
-(* ================================================================= *)
 
 Class AdjointEpsilonFullFibration
   {Sign Func Pred : Type}
@@ -171,9 +162,7 @@ Proof.
       exact WFPsi.
 Defined.
 
-(* Epsilon can alternatively be presented as a second left adjoint to the same
-   projection pullback.  By uniqueness of left adjoints, this implies the
-   isomorphism-based [AdjointEpsilonFullFibration] structure above. *)
+(** A second left adjoint to projection pullback induces [AdjointEpsilonFullFibration] by uniqueness of left adjoints. *)
 Class EpsilonAsSigmaFibration
   {Sign Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred}

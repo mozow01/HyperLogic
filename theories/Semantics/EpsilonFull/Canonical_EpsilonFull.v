@@ -1,4 +1,4 @@
-(* Semantic entry points for the canonical epsilon-exists signature. *)
+(** Semantic entry points for the canonical epsilon-exists signature. *)
 
 Require Import HyperLogic.Logic.Hyper.EpsilonFull.Canonical_Skolem.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_Soundness.

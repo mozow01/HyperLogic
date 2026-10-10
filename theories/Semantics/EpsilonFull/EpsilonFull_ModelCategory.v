@@ -1,4 +1,3 @@
-(* theories/Semantics/EpsilonFull/EpsilonFull_ModelCategory.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Classes.RelationClasses.
@@ -819,7 +818,7 @@ Proof.
       apply (fiber_is_thin (efm_interp_ty M I)).
 Defined.
 
-Definition TermModel_strict_initial_unique :
+Definition TermModel_initial_unique :
   forall (M : EpsilonFullModel)
     (F G : EpsilonFullModelHom TermModel_EpsilonFullModel M),
     EpsilonFullModelHom_equiv F G.
@@ -830,10 +829,23 @@ Proof.
   - apply TermModel_hom_base_preserving.
 Defined.
 
-Definition TermModel_initial_unique :
+(* Compatibility name: uniqueness is in the hom setoid, not record equality. *)
+Definition TermModel_strict_initial_unique :
   forall (M : EpsilonFullModel)
     (F G : EpsilonFullModelHom TermModel_EpsilonFullModel M),
     EpsilonFullModelHom_equiv F G :=
-  TermModel_strict_initial_unique.
+  TermModel_initial_unique.
+
+Definition TermModel_interpretation_natural
+  (M N : EpsilonFullModel) (F : EpsilonFullModelHom M N) :
+  EpsilonFullModelHom_equiv
+    (EpsilonFullModel_comp F (TermModel_to M)) (TermModel_to N) :=
+  TermModel_initial_unique N _ _.
+
+Definition TermModel_interpretation_identity :
+  EpsilonFullModelHom_equiv
+    (TermModel_to TermModel_EpsilonFullModel)
+    (EpsilonFullModel_id TermModel_EpsilonFullModel) :=
+  TermModel_initial_unique TermModel_EpsilonFullModel _ _.
 
 End EpsilonFullModelCategory.

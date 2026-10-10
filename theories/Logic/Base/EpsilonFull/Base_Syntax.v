@@ -1,11 +1,10 @@
-(* Logic/Base/EpsilonFull/Base_Syntax *)
+(** Cartesian base syntax with Skolem constants and algebraic function symbols. *)
 
 Require Import Setoid.
 Require Import Relation_Definitions.
 Require Import Morphisms.
 Require Import Coq.Classes.RelationClasses.
 
-(* 1. OBJEKTUMOK *)
 Inductive b_ty : Type :=
   | b_Unit : b_ty
   | b_S    : b_ty
@@ -13,13 +12,11 @@ Inductive b_ty : Type :=
 
 Scheme Equality for b_ty.
 
-(* 1.5 FUNKCIÓJELEK SZIGNATÚRÁJA *)
 Class FunctionSignature (Func : Type) : Type := {
   func_dom : Func -> b_ty;
   func_cod : Func -> b_ty
 }.
 
-(* 2. NYERS MORFIZMUSOK *)
 Inductive b_tm {Sign Func : Type} : Type :=
   | b_id   : b_tm
   | b_comp : b_tm -> b_tm -> b_tm
@@ -27,12 +24,11 @@ Inductive b_tm {Sign Func : Type} : Type :=
   | b_pair : b_tm -> b_tm -> b_tm
   | b_fst  : b_tm
   | b_snd  : b_tm
-  (* Epszilon-helyőrző. *)
+  (* Signature-indexed placeholder for an epsilon constant. *)
   | b_const : b_ty -> Sign -> b_tm
-  (* Valódi algebrai függvényjel. *)
+  (* Ordinary algebraic function symbol. *)
   | b_func : Func -> b_tm.
 
-(* 3. TIPUSOLÁSI SZABÁLYOK *)
 Inductive base_typing {Sign Func : Type} `{HFunc : FunctionSignature Func}
   : b_ty -> b_tm (Sign:=Sign) (Func:=Func) -> b_ty -> Type :=
   | BT_Id : forall A, base_typing A b_id A
@@ -59,7 +55,6 @@ Arguments BT_Snd {Sign Func HFunc A B}.
 Arguments BT_Const {Sign Func HFunc I A s}.
 Arguments BT_Func {Sign Func HFunc f}.
 
-(* 4. BÁZIS-EKVIVALENCIA *)
 Inductive base_equiv {Sign Func : Type} `{HFunc : FunctionSignature Func}
   : forall (A B : b_ty) (f g : @b_tm Sign Func),
       @base_typing Sign Func HFunc A f B ->

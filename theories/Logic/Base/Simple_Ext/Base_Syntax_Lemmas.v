@@ -1,4 +1,3 @@
-(* Logic/Base/Simple_Ext/Base_Syntax_Lemmas.v *)
 
 Require Import Setoid.
 Require Import Relation_Definitions.
@@ -19,7 +18,7 @@ Proof.
   induction d1; intros A2 d2; dependent destruction d2.
   - reflexivity.
 
-  - (* BT_Comp *)
+  -
     match goal with
     | Hf1 : base_typing A f B,
       Hf2 : base_typing A f ?B0,
@@ -34,7 +33,7 @@ Proof.
 
   - reflexivity.
 
-  - (* BT_Pair *)
+  -
     match goal with
     | Hf1 : base_typing A f B,
       Hf2 : base_typing A f ?B0,
@@ -61,22 +60,22 @@ Proof.
   revert I.
 
   induction t as
-    [ (* b_id *)
+    [
     | g IHg f IHf
-    | (* b_unit *)
+    |
     | f IHf g IHg
-    | (* b_fst *)
-    | (* b_snd *)
+    |
+    |
     | A s
     ];
     intro I.
 
-  - (* b_id *)
+  -
     left.
     exists I.
     apply BT_Id.
 
-    - (* b_comp g f *)
+    -
     destruct (IHf I) as [[B df] | Hbad_f].
     + destruct (IHg B) as [[C dg] | Hbad_g].
       * left.
@@ -95,7 +94,6 @@ Proof.
           - exact df.
         }
         subst B0.
-        (* exact (Hbad_g C H) *)
         apply Hbad_g with (A:=C). exact Hcomp1.
 
     + right.
@@ -103,12 +101,12 @@ Proof.
       dependent destruction Hcomp.
       apply Hbad_f with (A:=B). exact Hcomp2.
       
-  - (* b_unit *)
+  -
     left.
     exists b_Unit.
     apply BT_Unit.
 
-    - (* b_pair f g *)
+    -
     destruct (IHf I) as [[B df] | Hbad_f].
     + destruct (IHg I) as [[C dg] | Hbad_g].
       * left.
@@ -128,7 +126,7 @@ Proof.
       dependent destruction Hpair.
       apply Hbad_f with (A:=B). exact Hpair1.
      
-  - (* b_fst *)
+  -
     destruct I as [| | A B].
     + right.
       intros C H.
@@ -140,7 +138,7 @@ Proof.
       exists A.
       apply BT_Fst.
 
-  - (* b_snd *)
+  -
     destruct I as [| | A B].
     + right.
       intros C H.
@@ -152,7 +150,7 @@ Proof.
       exists B.
       apply BT_Snd.
 
-  - (* b_const A s *)
+  -
     left.
     exists A.
     apply BT_Const.

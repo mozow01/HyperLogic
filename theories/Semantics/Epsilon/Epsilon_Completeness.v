@@ -1,4 +1,3 @@
-(* theories/Semantics/Epsilon/Epsilon_Completeness.v  *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Classes.RelationClasses.
@@ -6,7 +5,6 @@ Require Import Coq.Logic.Eqdep_dec.
 Require Import List.
 Import ListNotations.
 
-(* Kategóriaelméleti alapok *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
 Require Import HyperLogic.Cat.CCC.
@@ -15,7 +13,6 @@ Require Import HyperLogic.Cat.Fibration.
 Require Import HyperLogic.Cat.Functor.
 Require Import HyperLogic.Cat.Adjoint.
 
-(* Szintaxis és Fibráció (Epsilon Adjoint) *)
 Require Import HyperLogic.Logic.Base.Epsilon.Base_Syntax.
 Require Import HyperLogic.Logic.Base.Epsilon.Base_Syntax_Lemmas.
 Require Import HyperLogic.Logic.Hyper.Epsilon.Hyper_Syntax.
@@ -25,9 +22,6 @@ Require Import HyperLogic.Logic.Hyper.Epsilon.Epsilon_Syntax_Lemmas.
 Require Import HyperLogic.Semantics.Epsilon.Base_Epsilon_Completeness.
 Require Import HyperLogic.Semantics.Epsilon.Epsilon_Fibration.
 
-(* ================================================================= *)
-(* 1. THE SYNTACTIC FIBER CATEGORY                                  *)
-(* ================================================================= *)
 
 (* Fiber objects pair formulas with well-formedness derivations. *)
 Definition wf_ty {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} (I : b_ty) :=
@@ -54,60 +48,49 @@ Global Instance fiber_equiv_equivalence
   : Equivalence (@fiber_equiv Sign Func Pred _ _ SM I A B).
 Proof. constructor; red; intros; unfold fiber_equiv; constructor. Defined.
 
-(* ================================================================= *)
-(* KATEGÓRIA KROMBINÁTOROK                                           *)
-(* ================================================================= *)
 
-(* IDENTITÁS: Pont mint az STLC id_term *)
 Definition id_fiber {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} (I : b_ty) (A : wf_ty I) : hom_fiber A A.
 Proof.
   refine (@mk_hom_fiber Sign Func Pred _ _ SM I A A (tm_lam (projT1 A) (tm_var 0)) _).
   apply HD_Lam.
   apply HD_Var0.
 
-  (* Bizonyítjuk a kontextus jólformáltságát a Szigma-típus 2. eleméből *)
   apply AWF_Cons.
   - exact (projT2 A).
   - apply AWF_Nil.
 Defined.
 
-(* KOMPOZÍCIÓ Zárt Kombinátorral: \f. \g. \x. f (g x) *)
 Definition comp_fiber {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} (I : b_ty) {A B C : wf_ty I}
   (f : hom_fiber B C) (g : hom_fiber A B) : hom_fiber A C.
 Proof.
   refine (@mk_hom_fiber Sign Func Pred _ _ SM I A C
     (tm_app (tm_app
-       (* A COMP kombinátor: *)
        (tm_lam (Ty_Arrow (projT1 B) (projT1 C))
          (tm_lam (Ty_Arrow (projT1 A) (projT1 B))
            (tm_lam (projT1 A)
              (tm_app (tm_var 2) (tm_app (tm_var 1) (tm_var 0))))))
-       (* Alkalmazva f-re: *)
        (h_tm_of f))
-       (* Alkalmazva g-re: *)
     (h_tm_of g)) _).
 
-  (* Bizonyítás: *)
   apply HD_App with (Phi := Ty_Arrow (projT1 A) (projT1 B)).
   - apply HD_App with (Phi := Ty_Arrow (projT1 B) (projT1 C)).
-    + (* A kombinátor típusolása *)
+    +
       apply HD_Lam. apply HD_Lam. apply HD_Lam.
       apply HD_App with (Phi := projT1 B).
 
-      * (* tm_var 2 (f) lekérése a kontextus aljáról *)
+      *
         apply HD_VarS.
-        -- exact (projT2 A). (* 1. átugrás: a 0. indexű projT1 A jólformált *)
+        -- exact (projT2 A).
         -- apply HD_VarS.
-           ++ apply WF_Arrow; [exact (projT2 A) | exact (projT2 B)]. (* 2. átugrás: az 1. indexű A->B jólformált *)
+           ++ apply WF_Arrow; [exact (projT2 A) | exact (projT2 B)].
            ++ apply HD_Var0.
-              (* Megérkeztünk a 2. indexhez! Bizonyítjuk a maradék kontextust *)
               apply AWF_Cons.
               ** apply WF_Arrow; [exact (projT2 B) | exact (projT2 C)].
               ** apply AWF_Nil.
 
-      * (* tm_app 1 0 kiértékelése *)
+      *
         apply HD_App with (Phi := projT1 A).
-        -- (* tm_var 1 (g) lekérése *)
+        --
            apply HD_VarS.
            ++ exact (projT2 A).
            ++ apply HD_Var0.
@@ -117,7 +100,7 @@ Proof.
                  --- apply WF_Arrow; [exact (projT2 B) | exact (projT2 C)].
                  --- apply AWF_Nil.
 
-        -- (* tm_var 0 (x) lekérése *)
+        --
            apply HD_Var0.
            apply AWF_Cons.
            ++ exact (projT2 A).
@@ -127,17 +110,13 @@ Proof.
                  --- apply WF_Arrow; [exact (projT2 B) | exact (projT2 C)].
                  --- apply AWF_Nil.
 
-    + (* f típusolása (üres kontextusból!) *)
+    +
       exact (h_deriv_of f).
-  - (* g típusolása (üres kontextusból!) *)
+  -
     exact (h_deriv_of g).
 Defined.
 
-(* ================================================================= *)
-(* SETOIDCATEGORY PÉLDÁNYOSÍTÁS                                      *)
-(* ================================================================= *)
 
-(* Maga a Fiber SetoidCategory példányosítása *)
 Instance Fiber_SetoidCategory {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} (I : b_ty) : SetoidCategory.
 Proof.
   refine (mk_SetoidCategory
@@ -152,39 +131,28 @@ Proof.
   all: intros; unfold fiber_equiv; constructor.
 Defined.
 
-(* Be is bizonyítjuk, hogy Vékony (Thin) *)
 Instance Fiber_Thin {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} (I : b_ty) : Thin (Fiber_SetoidCategory I).
 Proof.
   intros x y f g. unfold fiber_equiv; constructor.
 Defined.
 
-(* ================================================================= *)
-(* 2. FIBER CARTESIAN CATEGORY (Unit, Prod)                          *)
-(* ================================================================= *)
 
-(* --- OBJEKTUMOK CSOMAGOLÁSA --- *)
-(* A Unit típus jólformáltságának csomagolása Szigma-típusba *)
 Definition fiber_unit {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} (I : b_ty) : wf_ty I :=
   existT _ Ty_Unit (WF_Unit I).
 
-(* A Szorzat típus (And) jólformáltságának csomagolása Szigma-típusba *)
 Definition fiber_prod {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} {I : b_ty} (Y Z : wf_ty I) : wf_ty I :=
   existT _ (Ty_Prod (projT1 Y) (projT1 Z)) (WF_Prod I (projT1 Y) (projT1 Z) (projT2 Y) (projT2 Z)).
 
-(* --- TERMINAL (Unit) --- *)
 Definition term_fiber {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} (I : b_ty) (X : wf_ty I) : @hom_fiber Sign Func Pred _ _ SM I X (fiber_unit I).
 Proof.
   refine (@mk_hom_fiber Sign Func Pred _ _ SM I X (fiber_unit I) (tm_lam (projT1 X) tm_unit) _).
   apply HD_Lam.
   apply HD_Unit.
-  (* A HD_Unit immár jólformált kontextust vár! *)
   apply AWF_Cons.
   - exact (projT2 X).
   - apply AWF_Nil.
 Defined.
 
-(* --- PRODUCT (And) --- *)
-(* Kombinátor: \f. \g. \x. (f x, g x) *)
 Definition prod_map_fiber {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} (I : b_ty) {X Y Z : wf_ty I}
   (f : @hom_fiber Sign Func Pred _ _ SM I X Y) (g : @hom_fiber Sign Func Pred _ _ SM I X Z) : @hom_fiber Sign Func Pred _ _ SM I X (fiber_prod Y Z).
 Proof.
@@ -196,12 +164,11 @@ Proof.
             (tm_pair (tm_app (tm_var 2) (tm_var 0)) (tm_app (tm_var 1) (tm_var 0))))))
       (h_tm_of f)) (h_tm_of g)) _).
 
-  (* Apply the pairing combinator to both component maps. *)
   apply HD_App with (Phi := Ty_Arrow (projT1 X) (projT1 Z)).
   - apply HD_App with (Phi := Ty_Arrow (projT1 X) (projT1 Y)).
     + apply HD_Lam. apply HD_Lam. apply HD_Lam. apply HD_Pair.
       * apply HD_App with (Phi := projT1 X).
-        -- (* tm_var 2 (f) lekérése eltolt veremből *)
+        --
            apply HD_VarS.
            ++ exact (projT2 X).
            ++ apply HD_VarS.
@@ -210,7 +177,7 @@ Proof.
                  apply AWF_Cons.
                  --- apply WF_Arrow; [exact (projT2 X) | exact (projT2 Y)].
                  --- apply AWF_Nil.
-        -- (* tm_var 0 (x) lekérése *)
+        --
            apply HD_Var0.
            apply AWF_Cons. exact (projT2 X).
            apply AWF_Cons. apply WF_Arrow; [exact (projT2 X) | exact (projT2 Z)].
@@ -218,7 +185,7 @@ Proof.
            apply AWF_Nil.
 
       * apply HD_App with (Phi := projT1 X).
-        -- (* tm_var 1 (g) lekérése eltolt veremből *)
+        --
            apply HD_VarS.
            ++ exact (projT2 X).
            ++ apply HD_Var0.
@@ -227,7 +194,7 @@ Proof.
               ** apply AWF_Cons.
                  --- apply WF_Arrow; [exact (projT2 X) | exact (projT2 Y)].
                  --- apply AWF_Nil.
-        -- (* tm_var 0 (x) lekérése megint *)
+        --
            apply HD_Var0.
            apply AWF_Cons. exact (projT2 X).
            apply AWF_Cons. apply WF_Arrow; [exact (projT2 X) | exact (projT2 Z)].
@@ -244,7 +211,6 @@ Proof.
   apply HD_Lam.
   eapply HD_Fst.
   apply HD_Var0.
-  (* Bizonyítjuk a Prod jólformáltságát a kontextusban *)
   apply AWF_Cons.
   - apply WF_Prod; [exact (projT2 X) | exact (projT2 Y)].
   - apply AWF_Nil.
@@ -256,7 +222,6 @@ Proof.
   apply HD_Lam.
   eapply HD_Snd.
   apply HD_Var0.
-  (* Bizonyítjuk a Prod jólformáltságát a kontextusban *)
   apply AWF_Cons.
   - apply WF_Prod; [exact (projT2 X) | exact (projT2 Y)].
   - apply AWF_Nil.
@@ -272,17 +237,10 @@ Proof.
   ).
 Defined.
 
-(* ================================================================= *)
-(* 3. FIBER CARTESIAN CLOSED CATEGORY (Arrow)                        *)
-(* ================================================================= *)
 
-(* --- OBJEKTUM CSOMAGOLÁSA --- *)
-(* Az Exponenciális típus (Arrow) jólformáltságának csomagolása Szigma-típusba *)
 Definition fiber_arrow {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} {I : b_ty} (Y Z : wf_ty I) : wf_ty I :=
   existT _ (Ty_Arrow (projT1 Y) (projT1 Z)) (WF_Arrow I (projT1 Y) (projT1 Z) (projT2 Y) (projT2 Z)).
 
-(* --- EXPONENTIAL (Implies) --- *)
-(* Eval/Apply: \p. (fst p) (snd p) *)
 Definition eval_fiber {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} (I : b_ty) {Y Z : wf_ty I} : @hom_fiber Sign Func Pred _ _ SM I (fiber_prod (fiber_arrow Y Z) Y) Z.
 Proof.
   refine (@mk_hom_fiber Sign Func Pred _ _ SM I _ _
@@ -290,14 +248,12 @@ Proof.
   apply HD_Lam.
   apply HD_App with (Phi := projT1 Y).
   - eapply HD_Fst. apply HD_Var0.
-    (* Bizonyítjuk a (Y->Z)*Y szorzat jólformáltságát *)
     apply AWF_Cons.
     + apply (WF_Prod I).
       * apply (WF_Arrow I); [exact (projT2 Y) | exact (projT2 Z)].
       * exact (projT2 Y).
     + apply AWF_Nil.
   - eapply HD_Snd. apply HD_Var0.
-    (* Bizonyítjuk a (Y->Z)*Y szorzat jólformáltságát ugyanitt *)
     apply AWF_Cons.
     + apply (WF_Prod I).
       * apply (WF_Arrow I); [exact (projT2 Y) | exact (projT2 Z)].
@@ -305,7 +261,6 @@ Proof.
     + apply AWF_Nil.
 Defined.
 
-(* Curry kombinátor: \f. \x. \y. f (x, y) *)
 Definition curry_fiber {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} (I : b_ty) {X Y Z : wf_ty I} (g : @hom_fiber Sign Func Pred _ _ SM I (fiber_prod X Y) Z) : @hom_fiber Sign Func Pred _ _ SM I X (fiber_arrow Y Z).
 Proof.
   refine (@mk_hom_fiber Sign Func Pred _ _ SM I X (fiber_arrow Y Z)
@@ -319,7 +274,7 @@ Proof.
   apply HD_App with (Phi := Ty_Arrow (projT1 (fiber_prod X Y)) (projT1 Z)).
   - apply HD_Lam. apply HD_Lam. apply HD_Lam.
     apply HD_App with (Phi := projT1 (fiber_prod X Y)).
-    + (* tm_var 2 lekérése (el kell tolni Y-on és X-en keresztül) *)
+    +
       apply HD_VarS. exact (projT2 Y).
       apply HD_VarS. exact (projT2 X).
       apply HD_Var0.
@@ -330,7 +285,7 @@ Proof.
       * apply AWF_Nil.
 
     + eapply HD_Pair.
-      * (* tm_var 1 (X) lekérése (el kell tolni Y-on keresztül) *)
+      *
         apply HD_VarS. exact (projT2 Y).
         apply HD_Var0.
         apply AWF_Cons. exact (projT2 X).
@@ -340,7 +295,7 @@ Proof.
            ++ exact (projT2 Z).
         -- apply AWF_Nil.
 
-      * (* tm_var 0 (Y) lekérése *)
+      *
         apply HD_Var0.
         apply AWF_Cons. exact (projT2 Y).
         apply AWF_Cons. exact (projT2 X).
@@ -356,23 +311,16 @@ Defined.
 Instance Fiber_CartesianClosedCategory {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} (I : b_ty) : CartesianClosedCategory (Fiber_SetoidCategory I).
 Proof.
   refine (Build_Thin_CCC _ (Fiber_Thin I)
-    (* Az exponenciális objektumképző fv-nél immár az új fiber_arrow-t használjuk! *)
     (fun Z Y => fiber_arrow Y Z)
     (fun Y Z => @eval_fiber Sign Func Pred _ _ SM I Y Z)
     (fun X Y Z g => @curry_fiber Sign Func Pred _ _ SM I X Y Z g)
   ).
 Defined.
 
-(* ================================================================= *)
-(* 4. FIBER BiCARTESIAN CLOSED CATEGORY (Void, Sum)                  *)
-(* ================================================================= *)
 
-(* --- OBJEKTUMOK CSOMAGOLÁSA --- *)
-(* A Void típus jólformáltságának csomagolása Szigma-típusba *)
 Definition fiber_void {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} (I : b_ty) : wf_ty I :=
   existT _ Ty_Void (WF_Void I).
 
-(* A Sum típus (Or) jólformáltságának csomagolása Szigma-típusba *)
 Definition fiber_sum {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} {I : b_ty} (X Y : wf_ty I) : wf_ty I :=
   existT _ (Ty_Sum (projT1 X) (projT1 Y)) (WF_Sum I (projT1 X) (projT1 Y) (projT2 X) (projT2 Y)).
 
@@ -381,25 +329,23 @@ Proof.
   refine (@mk_hom_fiber Sign Func Pred _ _ SM I (fiber_void I) X (tm_lam Ty_Void (tm_absurd (projT1 X) (tm_var 0))) _).
   apply HD_Lam.
   apply HD_Absurd.
-  - (* The elimination motive is well formed. *)
+  -
     exact (projT2 X).
-  - (* Derive the empty type from the argument. *)
+  -
     apply HD_Var0.
-    (* Bizonyítjuk a Void kontextus jólformáltságát *)
     apply AWF_Cons.
     + apply WF_Void.
     + apply AWF_Nil.
 Defined.
 
-(* --- COPRODUCT (Or) --- *)
 Definition inl_fiber {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} (I : b_ty) {X Y : wf_ty I} : @hom_fiber Sign Func Pred _ _ SM I X (fiber_sum X Y).
 Proof.
   refine (@mk_hom_fiber Sign Func Pred _ _ SM I X (fiber_sum X Y) (tm_lam (projT1 X) (tm_inl (projT1 Y) (tm_var 0))) _).
   apply HD_Lam.
   apply HD_Inl.
-  - (* The right summand is well formed. *)
+  -
     exact (projT2 Y).
-  - (* Derive the left summand. *)
+  -
     apply HD_Var0.
     apply AWF_Cons. exact (projT2 X). apply AWF_Nil.
 Defined.
@@ -409,14 +355,13 @@ Proof.
   refine (@mk_hom_fiber Sign Func Pred _ _ SM I Y (fiber_sum X Y) (tm_lam (projT1 Y) (tm_inr (projT1 X) (tm_var 0))) _).
   apply HD_Lam.
   apply HD_Inr.
-  - (* The left summand is well formed. *)
+  -
     exact (projT2 X).
-  - (* Derive the right summand. *)
+  -
     apply HD_Var0.
     apply AWF_Cons. exact (projT2 Y). apply AWF_Nil.
 Defined.
 
-(* Coprod kombinátor: \f. \g. \c. case c of inl x => f x | inr y => g y *)
 Definition coprod_map_fiber {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} (I : b_ty) {X Y Z : wf_ty I}
   (f : @hom_fiber Sign Func Pred _ _ SM I X Z) (g : @hom_fiber Sign Func Pred _ _ SM I Y Z) : @hom_fiber Sign Func Pred _ _ SM I (fiber_sum X Y) Z.
 Proof.
@@ -430,28 +375,27 @@ Proof.
               (tm_app (tm_var 2) (tm_var 0))))))
       (h_tm_of f)) (h_tm_of g)) _).
 
-  (* Apply the case combinator first to the two branch maps. *)
   apply HD_App with (Phi := Ty_Arrow (projT1 Y) (projT1 Z)).
   - apply HD_App with (Phi := Ty_Arrow (projT1 X) (projT1 Z)).
     + apply HD_Lam. apply HD_Lam. apply HD_Lam.
       apply HD_Case with (Phi := projT1 X) (Psi := projT1 Y).
-      * (* A case vizsgált kifejezése: c lekérése (var 0) *)
+      *
         apply HD_Var0.
         apply AWF_Cons. apply (WF_Sum I); [exact (projT2 X) | exact (projT2 Y)].
         apply AWF_Cons. apply (WF_Arrow I); [exact (projT2 Y) | exact (projT2 Z)].
         apply AWF_Cons. apply (WF_Arrow I); [exact (projT2 X) | exact (projT2 Z)].
         apply AWF_Nil.
 
-      * (* inl x => f x *)
+      *
         apply HD_App with (Phi := projT1 X).
-        -- (* tm_var 3 (f) lekérése eltolva az X-en keresztül *)
+        --
            apply HD_VarS. exact (projT2 X).
            apply HD_VarS. apply (WF_Sum I); [exact (projT2 X) | exact (projT2 Y)].
            apply HD_VarS. apply (WF_Arrow I); [exact (projT2 Y) | exact (projT2 Z)].
            apply HD_Var0.
            apply AWF_Cons. apply (WF_Arrow I); [exact (projT2 X) | exact (projT2 Z)].
            apply AWF_Nil.
-        -- (* tm_var 0 (x) lekérése *)
+        --
            apply HD_Var0.
            apply AWF_Cons. exact (projT2 X).
            apply AWF_Cons. apply (WF_Sum I); [exact (projT2 X) | exact (projT2 Y)].
@@ -459,16 +403,16 @@ Proof.
            apply AWF_Cons. apply (WF_Arrow I); [exact (projT2 X) | exact (projT2 Z)].
            apply AWF_Nil.
 
-      * (* inr y => g y *)
+      *
         apply HD_App with (Phi := projT1 Y).
-        -- (* tm_var 2 (g) lekérése eltolva az Y-on keresztül *)
+        --
            apply HD_VarS. exact (projT2 Y).
            apply HD_VarS. apply (WF_Sum I); [exact (projT2 X) | exact (projT2 Y)].
            apply HD_Var0.
            apply AWF_Cons. apply (WF_Arrow I); [exact (projT2 Y) | exact (projT2 Z)].
            apply AWF_Cons. apply (WF_Arrow I); [exact (projT2 X) | exact (projT2 Z)].
            apply AWF_Nil.
-        -- (* tm_var 0 (y) lekérése *)
+        --
            apply HD_Var0.
            apply AWF_Cons. exact (projT2 Y).
            apply AWF_Cons. apply (WF_Sum I); [exact (projT2 X) | exact (projT2 Y)].
@@ -489,7 +433,6 @@ Proof.
   ).
 Defined.
 
-(* Szükségünk lesz a List map függvényére a kontextus helyettesítéséhez *)
 Require Import Coq.Lists.List.
 
 (* Substitution conversion used by universal elimination and epsilon introduction. *)
@@ -503,63 +446,61 @@ Lemma form_equiv_subst_comm_elim : forall {Sign Func Pred : Type} `{FunctionSign
 Proof.
 intros Sign Func Pred HFunc HPred SM I J A t f Phi dt df Hwf.
   eapply FE_Trans.
-  - (* 1. Lépés: (Phi.[b_subst_ext t]).[<id, f o t>] ≡ Phi.[b_subst_ext t o <id, f o t>] *)
+  -
     eapply FE_Pullback_Comp.
-    + (* Inner substitution. *)
+    +
       eapply typing_subst_ext. exact dt.
-    + (* Aztán a KÜLSŐ helyettesítést: <id, f o t> *)
+    +
       eapply BT_Pair.
       * apply BT_Id.
       * eapply BT_Comp; eassumption.
     + exact Hwf.
   - eapply FE_Trans.
-    + (* 2. Lépés: A Bázis Kommutálás (ext t o <id, f o t> ≡ <id, f> o t) *)
+    +
       eapply FE_Pullback_Cong.
       * unfold b_subst_ext.
-        (* Közös nevező bevezetése automatikusan: < t, f o t > *)
         eapply BE_Trans.
 
-        -- (* BAL OLDAL: <t o fst, snd> o <id, f o t> ≡ <t, f o t> *)
+        --
            eapply BE_Trans.
-           ++ (* 1. Bevisszük a kompozíciót a párba *)
+           ++
               apply BE_CompPair.
-           ++ (* 2. Tagonként redukálunk *)
+           ++
               eapply BE_CongPair.
-              ** (* Első tag: (t o fst) o <id, f o t> ≡ t *)
+              **
                  eapply BE_Trans.
                  --- eapply BE_Sym. apply BE_Assoc.
                  --- eapply BE_Trans.
                      +++ eapply BE_CongComp.
-                         *** apply BE_BetaFst. (* A belső tag: fst o <id, ..> ≡ id *)
-                         *** apply BE_Refl.    (* A külső tag: t ≡ t *)
+                         *** apply BE_BetaFst.
+                         *** apply BE_Refl.
                      +++ apply BE_IdR.
-              ** (* Második tag: snd o <id, f o t> ≡ f o t *)
+              **
                  apply BE_BetaSnd.
 
-        -- (* JOBB OLDAL: <id, f> o t ≡ <t, f o t> inverze *)
+        --
            eapply BE_Sym.
            eapply BE_Trans.
-           ++ (* 1. Bevisszük a kompozíciót a párba *)
+           ++
               apply BE_CompPair.
-           ++ (* 2. Tagonként redukálunk *)
+           ++
               eapply BE_CongPair.
-              ** (* Első tag: id o t ≡ t *)
+              **
                  apply BE_IdL.
-              ** (* Második tag: (f o t) ≡ (f o t) *)
+              **
                  apply BE_Refl.
 
       * exact Hwf.
-  + (* 3. Lépés: Phi.[<id, f> o t] ≡ (Phi.[<id, f>]).[t] inverze *)
+  +
       eapply FE_Sym. eapply FE_Pullback_Comp.
-      * (* A BELSŐ helyettesítés: <id, f> *)
+      *
         eapply BT_Pair.
         -- apply BT_Id.
         -- exact df.
-      * (* A KÜLSŐ helyettesítés: t *)
+      *
         exact dt.
       * exact Hwf.
 
-  (* Discharge the generated base-typing side conditions. *)
   Unshelve.
   all: repeat match goal with
   | |- base_typing _ _ _ => eapply BT_Comp || eapply BT_Pair || apply BT_Id || eapply BT_Fst || eapply BT_Snd || apply typing_subst_ext || eassumption
@@ -578,17 +519,17 @@ Lemma form_equiv_subst_comm_fst : forall {Sign Func Pred : Type} `{FunctionSigna
 Proof.
   intros Sign Func Pred HFunc HPred SM I J A t Chi dt Hwf.
   eapply FE_Trans.
-  - (* 1. (Chi.[fst]).[b_subst_ext t] ≡ Chi.[fst o b_subst_ext t] *)
+  -
     eapply FE_Pullback_Comp.
     + eapply BT_Fst.
     + apply typing_subst_ext. exact dt.
     + exact Hwf.
   - eapply FE_Trans.
-    + (* 2. fst o b_subst_ext t ≡ t o fst *)
+    +
       eapply FE_Pullback_Cong.
       * unfold b_subst_ext. apply BE_BetaFst.
       * exact Hwf.
-    + (* 3. Chi.[t o fst] ≡ (Chi.[t]).[fst] inverze *)
+    +
       eapply FE_Sym. eapply FE_Pullback_Comp.
       * exact dt.
       * apply BT_Fst.
@@ -609,22 +550,22 @@ Lemma ctx_subst_ext_comm : forall {Sign Func Pred : Type} `{FunctionSignature Fu
 Proof.
   intros Sign Func Pred HFunc HPred SM I J A t dt G Hwf.
   induction Hwf.
-  - (* AWF_Nil *)
+  -
     simpl. apply CEq_Nil.
-  - (* AWF_Cons *)
+  -
     simpl. apply CEq_Cons.
     + eapply FE_Trans.
-      * (* 1. (Phi.[fst]).[b_subst_ext t] ≡ Phi.[fst o (b_subst_ext t)] *)
+      *
         eapply FE_Pullback_Comp.
         -- eapply BT_Fst.
         -- apply typing_subst_ext. exact dt.
-        -- assumption. (* A belső WellFormed bizonyítás! *)
+        -- assumption.
       * eapply FE_Trans.
-        -- (* The base composites are equivalent by beta reduction. *)
+        --
            eapply FE_Pullback_Cong.
            ++ unfold b_subst_ext. apply BE_BetaFst.
            ++ eapply w.
-        -- (* 3. Phi.[t o fst] ≡ (Phi.[t]).[fst] inverze *)
+        --
            eapply FE_Sym. eapply FE_Pullback_Comp.
            ++ exact dt.
            ++ apply BT_Fst.
@@ -637,9 +578,6 @@ Proof.
 Defined.
 
 
-(* ================================================================= *)
-(* ÁLTALÁNOS HELYETTESÍTÉSI LEMMA                    *)
-(* ================================================================= *)
 
 (* Inverse well-formedness for substitution along a typed base term. *)
 Lemma form_wf_subst_inv : forall {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} {I J : b_ty}
@@ -647,31 +585,27 @@ Lemma form_wf_subst_inv : forall {Sign Func Pred : Type} `{FunctionSignature Fun
   WellFormed I (form_subst f Phi) -> WellFormed J Phi.
 Proof.
   intros Sign Func Pred HFunc HPred SM I J f df Phi.
-  (* Generalize the bases so the induction applies below b_subst_ext. *)
   generalize dependent J. generalize dependent I. generalize dependent f.
 
-  (* Structural induction on the formula. *)
   induction Phi; intros f I J df Hwf; simpl in Hwf; inversion Hwf; subst.
 
-  - (* Ty_Unit *) apply WF_Unit.
-  - (* Ty_Void *) apply WF_Void.
-  - (* Ty_Prod *) apply WF_Prod; [eapply IHPhi1 | eapply IHPhi2]; eassumption.
-  - (* Ty_Sum  *) apply WF_Sum;  [eapply IHPhi1 | eapply IHPhi2]; eassumption.
-  - (* Ty_Arrow*) apply WF_Arrow;[eapply IHPhi1 | eapply IHPhi2]; eassumption.
+  -   apply WF_Unit.
+  -   apply WF_Void.
+  -   apply WF_Prod; [eapply IHPhi1 | eapply IHPhi2]; eassumption.
+  -   apply WF_Sum;  [eapply IHPhi1 | eapply IHPhi2]; eassumption.
+  -   apply WF_Arrow;[eapply IHPhi1 | eapply IHPhi2]; eassumption.
 
-  - (* Ty_Atom *)
+  -
     match goal with
     | [ H_typ : base_typing _ (b_comp _ _) _ |- _ ] => inversion H_typ; subst
     end.
-    (* Typing uniqueness identifies the intermediate base type with J. *)
     assert (H_eq : J = B). { eapply base_typing_unique. exact df. eassumption. }
     subst B.
     eapply WF_Atom. eassumption.
 
-  - (* Ty_All *)
+  -
     apply WF_All.
     eapply IHPhi. 2: eassumption.
-    (* A b_subst_ext tipizálása kézzel felépítve *)
     unfold b_subst_ext.
     eapply BT_Pair.
     + eapply BT_Comp. exact df. apply BT_Fst.
@@ -681,30 +615,30 @@ Defined.
 
 
 
-(* Step 2: Structural Inversion Lemma for Formulas pulled back along the first projection. *)
+(** Well-formedness reflects along the first projection. *)
 Lemma form_wf_fst_inv : forall {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} {I A : b_ty} {Phi : @h_ty Sign Func Pred},
   WellFormed (b_Prod I A) (form_subst b_fst Phi) -> WellFormed I Phi.
 Proof.
   intros Sign Func Pred HFunc HPred SM I A Phi Hwf.
   eapply form_wf_subst_inv.
-  - eapply BT_Fst. (* A 'f' morfizmusunk itt a b_fst *)
+  - eapply BT_Fst.
   - exact Hwf.
 Defined.
-(* Step 3: Structural Inversion Lemma for Contexts pulled back along the first projection. *)
+(** Context well-formedness reflects along the first projection. *)
 Lemma ctx_wf_fst_inv : forall {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} {I A : b_ty} {G : @h_context Sign Func Pred},
   All_WellFormed (b_Prod I A) (ctx_subst b_fst G) -> All_WellFormed I G.
 Proof.
   intros Sign Func Pred HFunc HPred SM I A G H.
   induction G.
-  - (* Case: G is nil *)
+  -
     simpl in H. inversion H. apply AWF_Nil.
-  - (* Case: G is a :: G' *)
+  -
     simpl in H.
     inversion H as [| ? ? H_head H_tail]; subst.
     apply AWF_Cons.
-    + (* Prove WellFormed for the head of the list *)
+    +
       eapply form_wf_fst_inv. exact H_head.
-    + (* Prove All_WellFormed for the tail of the list *)
+    +
       apply IHG. exact H_tail.
 Defined.
 
@@ -714,46 +648,45 @@ Lemma meta_ctx_wf : forall {Sign Func Pred : Type} `{FunctionSignature Func} `{P
 Proof.
 intros Sign Func Pred HFunc HPred SM I G p Phi Hderiv.
   induction Hderiv.
-  - (* HD_Var0 *)
+  -
     exact a.
-  - (* HD_VarS *)
+  -
     apply AWF_Cons; assumption.
-  - (* HD_Unit *)
+  -
     exact a.
-  - (* HD_Conv *)
+  -
     exact IHHderiv.
-  - (* HD_Ctx_Conv *)
+  -
     eapply ctx_equiv_wf_right.
     + exact c.
     + exact IHHderiv.
 
-  - (* HD_Lam *)
-    (* Invert the well-formed extended context. *)
+  -
     inversion IHHderiv; subst; assumption.
-  - (* HD_App *)
+  -
     exact IHHderiv1.
-  - (* HD_Pair *)
+  -
     exact IHHderiv1.
-  - (* HD_Fst *)
+  -
     exact IHHderiv.
-  - (* HD_Snd *)
+  -
     exact IHHderiv.
-  - (* HD_Inl *)
+  -
     exact IHHderiv.
-  - (* HD_Inr *)
+  -
     exact IHHderiv.
-  - (* HD_Case *)
+  -
     exact IHHderiv1.
-  - (* HD_Absurd *)
+  -
     exact IHHderiv.
-  - (* HD_All_Intro *)
+  -
     apply ctx_wf_fst_inv in IHHderiv.
     exact IHHderiv.
-  - (* HD_All_Elim *)
+  -
     exact IHHderiv.
-  - (* HD_Eps_Intro *)
+  -
     exact IHHderiv.
-  - (* HD_Eps_Elim *)
+  -
     exact IHHderiv1.
 Defined.
 
@@ -776,48 +709,46 @@ Lemma meta_type_wf : forall {Sign Func Pred : Type} `{FunctionSignature Func} `{
 Proof.
   intros Sign Func Pred HFunc HPred SM I G p Phi Hderiv.
   induction Hderiv; simpl.
-  - (* HD_Var0 *) inversion a; subst; assumption.
-  - (* HD_VarS *) assumption.
-  - (* HD_Unit *) apply WF_Unit.
-  - (* HD_Conv *)
-    (* A form_equiv_wf lemma visszaadja a Phi és Psi jólformáltságát egy párban.
-       Nekünk csak a második (Psi) kell. *)
+  -   inversion a; subst; assumption.
+  -   assumption.
+  -   apply WF_Unit.
+  -
     destruct (form_equiv_wf I Phi Psi f) as [_ Hwf_Psi].
     exact Hwf_Psi.
-  - (* HD_Ctx_Conv *) assumption.
-  - (* HD_Lam *)
+  -   assumption.
+  -
     apply WF_Arrow.
-    + (* Recover well-formedness of the lambda domain. *)
+    +
       apply meta_ctx_wf in Hderiv. inversion Hderiv; subst. assumption.
     + assumption.
-  - (* HD_App *) inversion IHHderiv1; subst; assumption.
-  - (* HD_Pair *) apply WF_Prod; assumption.
-  - (* HD_Fst *) inversion IHHderiv; subst; assumption.
-  - (* HD_Snd *) inversion IHHderiv; subst; assumption.
-  - (* HD_Inl *) apply WF_Sum; assumption.
-  - (* HD_Inr *) apply WF_Sum; assumption.
-  - (* HD_Case *) assumption.
-  - (* HD_Absurd *)
+  -   inversion IHHderiv1; subst; assumption.
+  -   apply WF_Prod; assumption.
+  -   inversion IHHderiv; subst; assumption.
+  -   inversion IHHderiv; subst; assumption.
+  -   apply WF_Sum; assumption.
+  -   apply WF_Sum; assumption.
+  -   assumption.
+  -
     exact w.
-  - (* HD_All_Intro *) apply WF_All. apply IHHderiv.
-  - (* HD_All_Elim *)
+  -   apply WF_All. apply IHHderiv.
+  -
     eapply wf_subst.
-    + (* Konstruáljuk meg a <id, f> tipizálását! *)
+    +
       eapply BT_Pair.
-      * apply BT_Id.   (* Az id tipizálása: I -> I *)
-      * exact b.       (* Az f tipizálása: I -> A *)
-    + (* A maradék ugyanaz *)
+      * apply BT_Id.
+      * exact b.
+    +
       inversion IHHderiv; subst; assumption.
-  - (* HD_Eps_Intro *)
+  -
     eapply wf_subst.
     + eapply BT_Pair. apply BT_Id. apply BT_Const.
-    + (* Visszanyerjük a mag (Phi) jólformáltságát a Phi.[f] helyettesített verzióból *)
+    +
       eapply form_wf_subst_inv.
       * eapply BT_Pair.
         -- apply BT_Id.
         -- exact b.
       * exact IHHderiv.
-  - (* HD_Eps_Elim *)
+  -
     apply form_wf_fst_inv in IHHderiv2.
     exact IHHderiv2.
 Defined.
@@ -832,7 +763,6 @@ intros Sign Func Pred HFunc HPred SM I A G p Phi Hderiv.
   assumption.
 Defined.
 
-(* Strukturális Metatétel: A helyettesítés megtartja a jólformáltságot *)
 Lemma meta_subst_wf : forall {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} {I J : b_ty}
   (t : @b_tm Sign Func) (dt : base_typing I t J) (Phi : @h_ty Sign Func Pred),
   @WellFormed Sign Func Pred _ _ J Phi -> @WellFormed Sign Func Pred _ _ I (form_subst t Phi).
@@ -843,16 +773,13 @@ intros Sign Func Pred HFunc HPred SM I J t dt Phi Hwf.
   - exact Hwf.
 Defined.
 
-(* Strukturális Metatétel: Az Epszilon magja jólformált *)
 Lemma meta_eps_body_wf : forall {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} {I A : b_ty}
   {G : @h_context Sign Func Pred} {p : @h_tm Sign Func Pred} {Phi : @h_ty Sign Func Pred} {f : @b_tm Sign Func},
   base_typing I f A -> h_derivation I G p (Phi .[ f ]) -> @WellFormed Sign Func Pred _ _ (b_Prod I A) Phi.
 Proof.
 intros Sign Func Pred HFunc HPred SM I A G p Phi f dt Hderiv.
-  (* 1. A levezetésből kinyerjük a helyettesített formula jólformáltságát *)
   apply meta_type_wf in Hderiv.
 
-  (* 2. A form_wf_subst_inv lemmával visszafejtjük az eredeti formulát *)
   eapply form_wf_subst_inv.
   - eapply BT_Pair.
     + apply BT_Id.
@@ -879,16 +806,14 @@ Lemma meta_eps_elim_body_wf : forall {Sign Func Pred : Type} `{FunctionSignature
   h_derivation I G p (Phi .[ ε A, Phi ]) -> @WellFormed Sign Func Pred _ _ (b_Prod I A) Phi.
 Proof.
 intros Sign Func Pred HFunc HPred SM I A G p Phi Hderiv.
-  (* 1. A levezetésből kinyerjük a helyettesített formula jólformáltságát *)
   apply meta_type_wf in Hderiv.
 
-  (* 2. A form_wf_subst_inv lemmával visszafejtjük az eredeti formulát *)
   eapply form_wf_subst_inv.
-  - (* A helyettesítés (<id, ε A, Phi>) típushelyességének bizonyítása *)
+  -
     eapply BT_Pair.
     + apply BT_Id.
-    + eapply BT_Const. (* Az epszilon-term tipizálása *)
-  - (* A helyettesített formula jólformáltsága *)
+    + eapply BT_Const.
+  -
     exact Hderiv.
 Defined.
 
@@ -899,24 +824,21 @@ Lemma meta_eps_elim_chi_wf : forall {Sign Func Pred : Type} `{FunctionSignature 
   @WellFormed Sign Func Pred _ _ I Chi.
 Proof.
 intros Sign Func Pred HFunc HPred SM I A G p1 p2 Phi Chi H1 H2.
-  (* 1. A második levezetésből kinyerjük az eltolt Chi jólformáltságát *)
   apply meta_type_wf in H2.
 
-  (* 2. A form_wf_fst_inv lemmával visszanyerjük az alap Chi-t *)
   eapply form_wf_fst_inv.
   exact H2.
 Defined.
 
-(* Lemma: A helyettesítés megőrzi a kontextus jólformáltságát *)
 Lemma ctx_wf_subst : forall {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} {I J : b_ty}
   (t : @b_tm Sign Func) (dt : base_typing I t J) (G : @h_context Sign Func Pred),
   All_WellFormed J G -> All_WellFormed I (ctx_subst t G).
 Proof.
   intros Sign Func Pred HFunc HPred SM I J t dt G Hwf.
   induction Hwf.
-  - (* Nil eset *)
+  -
     simpl. apply AWF_Nil.
-  - (* Cons eset *)
+  -
     simpl. apply AWF_Cons.
     + eapply wf_subst; eassumption.
     + exact IHHwf.
@@ -930,131 +852,128 @@ Proof.
   intros Sign Func Pred HFunc HPred SM I J t dt G Phi p Hderiv.
   revert I t dt.
   induction Hderiv; intros I0 t0 dt0.
-  - (* HD_Var0 *)
+  -
     simpl. apply HD_Var0.
-    (* Szétszedjük a meglévő kontextus jólformáltságát *)
     inversion a; subst.
     apply AWF_Cons.
-    + (* A formula megőrzi a jólformáltságát a helyettesítés után *)
+    +
       eapply wf_subst. eassumption. exact X.
-    + (* A maradék kontextus is megőrzi a jólformáltságát *)
+    +
       eapply ctx_wf_subst. eassumption. exact X0.
-  - (* HD_VarS *)
+  -
     simpl. apply HD_VarS.
     + eapply wf_subst. exact dt0. exact w.
-    + (* 2. Cél: A maradék levezetésre alkalmazzuk az indukciós hipotézist *)
+    +
       apply IHHderiv. exact dt0.
-  - (* HD_Unit *)
-    simpl. (* tm_subst t0 tm_unit-ból tm_unit lesz *)
+  -
+    simpl.
     apply HD_Unit.
     eapply ctx_wf_subst.
     + exact dt0.
     + exact a.
-  - (* HD_Conv *)
+  -
     eapply HD_Conv.
-    + (* 1. Levezetés: itt van az IHHderiv! *)
+    +
       apply IHHderiv. exact dt0.
-    + (* 2. Ekvivalencia: form_equiv (Phi.[t]) (Psi.[t]) *)
-      (* Ide NEM wf_subst kell, hanem form_equiv_subst! *)
+    +
       eapply form_equiv_subst.
       * exact dt0.
       * exact f.
-  - (* HD_Ctx_Conv *)
+  -
     eapply HD_Ctx_Conv.
     + eapply ctx_equiv_subst. exact dt0. exact c.
     + apply IHHderiv. exact dt0.
-  - (* HD_Lam *)
+  -
     simpl. apply HD_Lam. apply IHHderiv. exact dt0.
-  - (* HD_App *)
+  -
     simpl. eapply HD_App.
     + apply IHHderiv1. exact dt0.
     + apply IHHderiv2. exact dt0.
-  - (* HD_Pair *)
+  -
     simpl. apply HD_Pair.
     + apply IHHderiv1. exact dt0.
     + apply IHHderiv2. exact dt0.
-  - (* HD_Fst *)
+  -
     simpl. eapply HD_Fst. apply IHHderiv. exact dt0.
-  - (* HD_Snd *)
+  -
     simpl. eapply HD_Snd. apply IHHderiv. exact dt0.
-  - (* HD_Inl *)
+  -
     simpl. apply HD_Inl.
-    + (* 1. gól: A Psi jólformáltsága a helyettesítés után *)
+    +
       eapply wf_subst.
       * exact dt0.
       * exact w.
-    + (* 2. gól: A Phi levezetése (Indukciós Hipotézis) *)
+    +
       apply IHHderiv.
       exact dt0.
-  - (* HD_Inr *)
+  -
     simpl. apply HD_Inr.
-    + (* 1. cél: A bal oldal (Phi) jólformáltsága a helyettesítés után *)
+    +
       eapply wf_subst.
       * exact dt0.
       * exact w.
-    + (* 2. cél: A jobb oldal (Psi) levezetése az IH segítségével *)
+    +
       apply IHHderiv.
       exact dt0.
-  - (* HD_Case *)
+  -
     simpl. eapply HD_Case.
     + apply IHHderiv1. exact dt0.
     + apply IHHderiv2. exact dt0.
     + apply IHHderiv3. exact dt0.
-  - (* HD_Absurd *)
+  -
     simpl. apply HD_Absurd.
-    + (* 1. cél: A motive (Phi) jólformáltsága a helyettesítés után *)
+    +
       eapply wf_subst.
       * exact dt0.
       * exact w.
-    + (* 2. cél: A Void levezetése (Indukciós Hipotézis) *)
-      (* Megjegyzés: (form_subst t0 Ty_Void) az egyszerűen Ty_Void *)
+    +
       apply IHHderiv.
       exact dt0.
 
-  - (* HD_All_Intro *)
+  -
     simpl. apply HD_All_Intro.
     eapply HD_Ctx_Conv.
-    + (* 1. Premissza: A kontextusok ekvivalenciája *)
+    +
       eapply ctx_subst_ext_comm.
       * exact dt0.
       * eapply meta_ctx_wf_base. exact Hderiv.
-    + (* 2. Premissza: Az Indukciós Hipotézis *)
+    +
       apply IHHderiv.
       apply typing_subst_ext. exact dt0.
 
-  - (* HD_All_Elim *)
+  -
     simpl. eapply HD_Conv.
     + eapply HD_All_Elim.
       * apply IHHderiv. exact dt0.
       * eapply BT_Comp. eassumption. exact dt0.
-    + (* Universal elimination commutes with base substitution. *)
+    +
       eapply form_equiv_subst_comm_elim.
       * exact dt0.
       * exact b.
       * eapply meta_all_body_wf. exact Hderiv.
 
-  - (* HD_Eps_Intro *)
+  -
     simpl. eapply HD_Conv.
     + eapply HD_Eps_Intro.
       * eapply BT_Comp. eassumption. exact dt0.
       * eapply HD_Conv.
         -- apply IHHderiv. exact dt0.
-        -- (* Witness substitution commutes with base substitution. *)
+        --
            eapply FE_Sym.
            eapply form_equiv_subst_comm_elim.
            ++ exact dt0.
            ++ exact b.
            ++ eapply meta_eps_body_wf. exact b. exact Hderiv.
-    + (* Epsilon Beck-Chevalley conversion. *)
+    +
       eapply meta_eps_bc.
       * exact dt0.
       * eapply meta_eps_body_wf. exact b. exact Hderiv.
 
-  - (* HD_Eps_Elim *)
+  -
     simpl. eapply HD_Eps_Elim.
     + eapply HD_Conv.
       * apply IHHderiv1. exact dt0.
-      * (* Epsilon Beck-Chevalley conversion in the reverse direction. *)
+      *
         eapply FE_Sym.
         eapply meta_eps_bc.
         -- exact dt0.
@@ -1071,25 +990,21 @@ Proof.
               ** exact dt0.
               ** eapply meta_ctx_wf. exact Hderiv1.
         -- apply IHHderiv2. apply typing_subst_ext. exact dt0.
-      * (* The conclusion commutes with projection substitution. *)
+      *
         eapply form_equiv_subst_comm_fst.
         -- exact dt0.
         -- eapply meta_eps_elim_chi_wf. exact Hderiv1. exact Hderiv2.
 Defined.
 
-(* 2. A HELYETTESÍTÉSI FUNKTOR OBJEKTUM-RÉSZE A TERM MODELLBEN *)
 
 Definition subst_functor_obj {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
   {I J : b_ty} (t : @b_tm Sign Func) (dt : base_typing I t J)
   (Phi : wf_ty J) : wf_ty I.
 Proof.
-  (* 1. Felbontjuk a Szigma-típust formulára és a jólformáltsági bizonyításra *)
   destruct Phi as [phi Hwf].
 
-  (* 2. A kimenet a helyettesített formula lesz *)
   exists (form_subst t phi).
 
-  (* 3. Bizonyítjuk, hogy ez jólformált *)
   eapply meta_subst_wf.
   - exact dt.
   - exact Hwf.
@@ -1100,17 +1015,14 @@ Definition subst_functor_hom {Sign Func Pred : Type} `{FunctionSignature Func} `
   (Phi Psi : wf_ty J)
   (f : hom_fiber Phi Psi) : hom_fiber (subst_functor_obj t dt Phi) (subst_functor_obj t dt Psi).
 Proof.
-  (* 1. Fel kell bontanunk a Szigma-típusokat, különben a 'subst_functor_obj' beragad! *)
+  (* Destruct sigma objects so [subst_functor_obj] can reduce. *)
   destruct Phi as [phi Hwf_phi].
   destruct Psi as [psi Hwf_psi].
 
-  (* 2. Bontsuk ki a morfizmust *)
   destruct f as [p Hderiv].
 
-  (* 3. Az új morfizmus a helyettesített term lesz *)
   exists (tm_subst t p).
 
-  (* 4. Most már a Coq tud egyszerűsíteni, mert látja a belső formulákat (phi, psi) *)
   change (h_derivation I (ctx_subst t []) (tm_subst t p)
          (form_subst t (Ty_Arrow phi psi))).
 
@@ -1119,7 +1031,6 @@ Proof.
   - exact Hderiv.
 Defined.
 
-(* 3. A HELYETTESÍTÉSI FUNKTOR PÉLDÁNYOSÍTÁSA *)
 
 Instance subst_functor {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
   {I J : b_ty} (t : @b_tm Sign Func) (dt : base_typing I t J) :
@@ -1132,13 +1043,9 @@ Proof.
     (fun Phi Psi f => subst_functor_hom t dt Phi Psi f)
     _ _ _).
 Unshelve.
-  (* Properness, identity, and composition follow from thinness. *)
   all: intros; unfold fiber_equiv; constructor.
 Defined.
 
-(* ================================================================= *)
-(* 3. AZ EPSILON-INSTANCIA MINT BAL ADJUNKT                         *)
-(* ================================================================= *)
 
 Lemma epsilon_instance_wf {Sign Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred}
@@ -1267,11 +1174,7 @@ Unshelve.
   all: intros; unfold fiber_equiv; constructor.
 Defined.
 
-(* ================================================================= *)
-(* 4. AZ UNIVERZÁLIS ADJUNKCIÓ (RIGHT ADJOINT)                       *)
-(* ================================================================= *)
 
-(* 1. A Forall (Jobb Adjunkt) Objektum Képzése *)
 Definition all_functor_obj {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} (I A : b_ty)
   (Phi : wf_ty (b_Prod I A)) : wf_ty I.
 Proof.
@@ -1280,14 +1183,11 @@ Proof.
   apply WF_All. exact Hwf.
 Defined.
 
-(* 2. A Counit (Epsilon) természetes transzformáció: (All A. X)[fst] -> X *)
-(* 2. A Counit (Epsilon) természetes transzformáció: (All A. X)[fst] -> X *)
 Definition all_subst_counit {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} (I A : b_ty)
   (X : wf_ty (b_Prod I A)) :
   hom_fiber (subst_functor_obj b_fst BT_Fst (all_functor_obj I A X)) X.
 Proof.
   destruct X as [x Hx].
-  (* A morfizmus: \x. all_elim x snd *)
   exists (tm_lam (form_subst b_fst (Ty_All A x)) (tm_all_elim (tm_var 0) b_snd)).
 
   apply HD_Lam.
@@ -1300,7 +1200,7 @@ Proof.
       * apply WF_All. exact Hx.
       * apply AWF_Nil.
     + apply BT_Snd.
-  - (* Convert the instantiated universal formula to the body. *)
+  -
     eapply FE_Sym.
     eapply FE_Trans.
     { eapply FE_Sym. eapply FE_Pullback_Id. exact Hx. }
@@ -1325,7 +1225,6 @@ Unshelve.
   end.
 Defined.
 
-(* 3. A Jobb Adjunkt Morfizmusképző: Y[fst] -> X  =>  Y -> All A. X *)
 Definition all_subst_right_adj_mor {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} (I A : b_ty)
   (Y : wf_ty I) (X : wf_ty (b_Prod I A))
   (f : hom_fiber (subst_functor_obj b_fst BT_Fst Y) X) :
@@ -1334,7 +1233,6 @@ Proof.
   destruct Y as [y Hy]. destruct X as [x Hx].
   destruct f as [p Hderiv].
 
-  (* A morfizmus: \y. all_intro (p y) *)
   exists (tm_lam y (tm_all_intro (tm_app p (tm_var 0)))).
 
   apply HD_Lam.
@@ -1342,15 +1240,14 @@ Proof.
 
   simpl.
 
-  (* Fix the application domain explicitly. *)
   eapply (HD_App _ _ _ _ (form_subst b_fst y) x).
-  - (* Első cél: h_derivation ... p (Ty_Arrow (form_subst b_fst y) x) *)
+  -
     change (h_derivation (b_Prod I A) ([] ++ [form_subst b_fst y]) p (Ty_Arrow (form_subst b_fst y) x)).
 
     eapply h_derivation_append.
     + exact Hderiv.
     + apply AWF_Cons. eapply wf_subst. apply BT_Fst. exact Hy. apply AWF_Nil.
-  - (* Második cél: a változó levezetése *)
+  -
     apply HD_Var0.
     apply AWF_Cons. eapply wf_subst. apply BT_Fst. exact Hy. apply AWF_Nil.
 Defined.
@@ -1372,9 +1269,6 @@ Unshelve.
 Defined.
 
 
-(* ================================================================= *)
-(* 5. THE SYNTACTIC GOOD FIBRATION                                  *)
-(* ================================================================= *)
 
 (* Formula conversion gives an isomorphism in the thin syntactic fiber. *)
 Lemma form_equiv_to_iso {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} `{SkolemMapping Sign Func Pred} (I : b_ty)
@@ -1389,13 +1283,13 @@ Proof.
   - unfold fiber_equiv; constructor.
 
   Unshelve.
-  * (* 1. cél: Oda irányú morfizmus (x -> y) *)
+  *
     exists (tm_lam x (tm_var 0)).
     apply HD_Lam. eapply HD_Conv.
     + apply HD_Var0. apply AWF_Cons; auto. apply AWF_Nil.
     + exact Heq.
 
-  * (* 2. cél: Vissza irányú morfizmus (y -> x) *)
+  *
     exists (tm_lam y (tm_var 0)).
     apply HD_Lam. eapply HD_Conv.
     + apply HD_Var0. apply AWF_Cons; auto. apply AWF_Nil.
@@ -1403,9 +1297,6 @@ Proof.
 Defined.
 
 
-(* ================================================================= *)
-(* KANONIKUS MODELL: GOOD FIBRATION                                  *)
-(* ================================================================= *)
 
 Instance TermModel_GoodFibration {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} :
   GoodFibration (Base_SetoidCategory Sign Func).
@@ -1419,25 +1310,21 @@ Proof.
     (fun I => Fiber_CartesianClosedCategory I)
     (fun I => Fiber_BiCartesianClosedCategory I)
 
-    (* Reindexing is syntactic substitution along the underlying base term. *)
     (fun I J f => subst_functor (tm_of f) (deriv_of f))
 
-    (* Substitution preserves the propositional structure. *)
     _ _ _ _ _ _ _
 
-    (* Epsilon and universal quantification supply the two adjoints. *)
     (fun I A => TermModel_Pullback_IsRightAdjoint I A)
     (fun I A => TermModel_Pullback_IsLeftAdjoint I A)
 
-    (* Beck-Chevalley and reindexing congruence. *)
     _ _ _
   ).
 
-  - (* 1. pullback_id_iso *)
+  -
     intros I A. destruct A as [phi Hwf]. apply form_equiv_to_iso. simpl.
     eapply FE_Pullback_Id. exact Hwf.
 
-  - (* 2. pullback_comp_iso *)
+  -
     intros I J K g f A. destruct A as [phi Hwf]. apply form_equiv_to_iso. simpl.
     eapply FE_Sym.
     eapply FE_Pullback_Comp.
@@ -1445,38 +1332,35 @@ Proof.
     + exact (deriv_of f).
     + exact Hwf.
 
-  - (* 3. pb_term_iso *)
+  -
     intros I J f. apply form_equiv_to_iso. simpl. apply FE_Refl. apply WF_Unit.
 
-  - (* 4. pb_prod_iso *)
+  -
     intros I J f A B. destruct A as [phiA HwfA]. destruct B as [phiB HwfB].
     apply form_equiv_to_iso. simpl. apply FE_Refl.
-    (* Jólformáltság bizonyítása szorzatra: *)
     apply WF_Prod.
     + eapply meta_subst_wf. exact (deriv_of f). exact HwfA.
     + eapply meta_subst_wf. exact (deriv_of f). exact HwfB.
 
-  - (* 5. pb_init_iso *)
+  -
     intros I J f. apply form_equiv_to_iso. simpl. apply FE_Refl.
     apply WF_Void.
 
-  - (* 6. pb_coprod_iso *)
+  -
     intros I J f A B. destruct A as [phiA HwfA]. destruct B as [phiB HwfB].
     apply form_equiv_to_iso. simpl. apply FE_Refl.
-    (* Jólformáltság bizonyítása összegre: *)
     apply WF_Sum.
     + eapply meta_subst_wf. exact (deriv_of f). exact HwfA.
     + eapply meta_subst_wf. exact (deriv_of f). exact HwfB.
 
-  - (* 7. pb_exp_iso *)
+  -
     intros I J f A B. destruct A as [phiA HwfA]. destruct B as [phiB HwfB].
     apply form_equiv_to_iso. simpl. apply FE_Refl.
-    (* Jólformáltság bizonyítása nyílra: *)
     apply WF_Arrow.
     + eapply meta_subst_wf. exact (deriv_of f). exact HwfB.
     + eapply meta_subst_wf. exact (deriv_of f). exact HwfA.
 
-  - (* 8. beck_chevalley_sigma *)
+  -
     intros I J K f A. destruct A as [phi Hwf].
     apply form_equiv_to_iso. simpl.
     eapply FE_Sym.
@@ -1484,21 +1368,17 @@ Proof.
     + exact (deriv_of f).
     + exact Hwf.
 
-  - (* 9. beck_chevalley_pi *)
+  -
     intros I J K f A. destruct A as [phi Hwf]. apply form_equiv_to_iso. simpl. apply FE_Refl.
-    (* Jólformáltság bizonyítása univerzális kvantorra: *)
     apply WF_All.
     eapply meta_subst_wf. exact (deriv_of ((f ∘ prod_fst) ∏ prod_snd)). exact Hwf.
-  - (* 10. pb_iso (A morfizmusok kongruenciája) *)
+  -
     intros I J f g Heq A. destruct A as [phi Hwf]. apply form_equiv_to_iso. simpl.
     eapply FE_Pullback_Cong.
     + exact Heq.
     + exact Hwf.
 Defined.
 
-(* ================================================================= *)
-(* KANONIKUS MODELL: EPSILON HYPER MODEL                             *)
-(* ================================================================= *)
 
 
 Definition term_model_i_atom {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred}
@@ -1509,9 +1389,8 @@ Definition term_model_i_atom {Sign Func Pred : Type} `{FunctionSignature Func} `
 Proof.
   rewrite (interp_ty_id Sign Func I).
 
-  (* Decide whether the raw atom has the required base type. *)
   destruct (decide_base_typing I t) as [[A dt] | Hbad].
-  - (* Well-typed atom. *)
+  -
     destruct (b_ty_eq_dec A (pred_dom p)) as [HA | Hneq].
     + subst A.
       exists (Ty_Atom p t).
@@ -1519,14 +1398,11 @@ Proof.
       exact dt.
     + exists Ty_Unit.
       apply WF_Unit.
-  - (* Ill-typed raw atoms are interpreted by truth. *)
+  -
     exists Ty_Unit.
     apply WF_Unit.
 Defined.
 
-(* ================================================================= *)
-(* HELPERS FOR DEPENDENT TRANSPORTS                                 *)
-(* ================================================================= *)
 
 (* Projection of a reindexed syntactic formula. *)
 Lemma projT1_pullback : forall {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} {I J : @obj (Base_SetoidCategory Sign Func)}
@@ -1544,9 +1420,6 @@ Proof.
   intros. destruct e. reflexivity.
 Defined.
 
-(* ================================================================= *)
-(* KANONIKUS MODELL: EPSILON HYPER MODEL                             *)
-(* ================================================================= *)
 
 Instance TermModel_EpsilonHyperModel {Sign Func Pred : Type} `{FunctionSignature Func} `{PredicateSignature Pred} {SM : SkolemMapping Sign Func Pred} :
   @EpsilonHyperModel Sign Func Pred H H0
@@ -1566,7 +1439,7 @@ Proof.
     _
     _).
 
-  - (* 1. cél (i_atom_pb): *)
+  -
     intros p t I A f df.
     apply form_equiv_to_iso.
     unfold term_model_i_atom.
@@ -1576,13 +1449,10 @@ Proof.
     rewrite projT1_eq_rect_r_wf.
     rewrite projT1_eq_rect_r_wf.
 
-    (* Interpret the underlying base map as its original syntax. *)
     rewrite (interp_tm_term I A f df).
 
-    (* 3. Kiszámoljuk a belső match-ek projT1-ét is *)
     cbn [projT1].
 
-    (* 4. Innentől a tiszta eldönthetőségi logika *)
     destruct (decide_base_typing A t) as [[B dt_t] | Hbad_t].
     + destruct (b_ty_eq_dec B (pred_dom p)) as [HB | HB].
       * subst B.
@@ -1636,7 +1506,7 @@ Proof.
         apply FE_Refl.
         apply WF_Unit.
 
-  - (* 2. cél (i_atom_cong_global): *)
+  -
     intros p I A t1 t2 d1 d2 Heq.
     apply form_equiv_to_iso.
     unfold term_model_i_atom.
@@ -1671,9 +1541,6 @@ Proof.
     + destruct (Hbad1 A d1).
 Defined.
 
-(* ================================================================= *)
-(* INTERPRETATION IDENTITY                                           *)
-(* ================================================================= *)
 
 (* Well-formed formulas interpret to their own syntactic representatives. *)
 
@@ -1693,26 +1560,25 @@ Proof.
 
   induction X; intros ctx Hwf; simpl.
 
-  - (* 1/8 gól: Ty_Unit *)
+  -
     reflexivity.
 
-  - (* 2/8 gól: Ty_Void *)
+  -
     reflexivity.
 
-  - (* 3/8 gól: Ty_Prod *)
+  -
     inversion Hwf; subst.
     simpl. rewrite IHX1, IHX2; auto.
 
-  - (* 4/8 gól: Ty_Sum *)
+  -
     inversion Hwf; subst.
     simpl. rewrite IHX1, IHX2; auto.
 
-  - (* 5/8 gól: Ty_Arrow *)
+  -
     inversion Hwf; subst.
     simpl. rewrite IHX1, IHX2; auto.
 
-  - (* 6/8 gól: Ty_Atom *)
-    (* 1. Invertáljuk a jólformáltságot, megkapjuk a base_typing fát *)
+  -
     inversion Hwf; subst.
 
     (* Expose and remove the dependent transport. *)
@@ -1720,9 +1586,8 @@ Proof.
 
     rewrite projT1_eq_rect_r_wf.
 
-    (* 4. Szétbontjuk az eldöntést inl/inr ágakra *)
     destruct (decide_base_typing ctx b) as [[A0 b0] | Hbad].
-    + (* inl ág: Jól-tipizált, reflexivitás kész! *)
+    +
       assert (HA0 : A0 = pred_dom p).
       { eapply base_typing_unique; [exact b0 | exact X]. }
       subst A0.
@@ -1734,12 +1599,12 @@ Proof.
       repeat rewrite projT1_eq_rect_r_wf.
       simpl.
       reflexivity.
-    + (* inr ág: Ellentmondás! Az inversion (Hwf) adott egy X : base_typing-ot *)
+    +
       match goal with
       | [ H_bt : base_typing ctx b ?A_mid |- _ ] => destruct (Hbad A_mid H_bt)
       end.
 
- - (* 7/8: Ty_All *)
+ -
     inversion Hwf; subst.
     match goal with
     | [ H : WellFormed (b_Prod ctx b) X |- _ ] => specialize (IHX (b_Prod ctx b) H)
@@ -1915,9 +1780,7 @@ Defined.
 
 
 
-(* ================================================================= *)
-(*                      COMPLETENESS THEOREMS                        *)
-(* ================================================================= *)
+(** Completeness theorems. *)
 
 Require Import Coq.Arith.PeanoNat.
 
@@ -1990,22 +1853,22 @@ Proof.
   intros Sign Func Pred HFunc HPred SM I G Psi n HwfPsi HwfG.
   revert n.
   induction HwfG; intros n; destruct n; simpl.
-  - (* G = nil, n = 0 *)
+  -
     apply AWF_Cons.
     + exact HwfPsi.
     + apply AWF_Nil.
 
-  - (* G = nil, n = S n *)
+  -
     apply AWF_Cons.
     + exact HwfPsi.
     + apply AWF_Nil.
 
-  - (* G = A :: G, n = 0 *)
+  -
     apply AWF_Cons.
     + exact HwfPsi.
     + apply AWF_Cons; assumption.
 
-  - (* G = A :: G, n = S n *)
+  -
     apply AWF_Cons.
     + assumption.
     + apply IHHwfG.
@@ -2057,7 +1920,7 @@ Proof.
   revert n Psi HwfPsi.
   induction d; intros n0 Psi0 Hwf0; simpl.
 
-    - (* HD_Var0 *)
+    -
     destruct n0; simpl.
     + apply HD_VarS.
       * exact Hwf0.
@@ -2069,7 +1932,7 @@ Proof.
       * assumption.
       * apply All_WellFormed_insert; assumption.
 
-    - (* HD_VarS *)
+    -
     destruct n0; simpl.
     + apply HD_VarS.
       * exact Hwf0.
@@ -2090,55 +1953,55 @@ Proof.
            ++ apply IHd. exact Hwf0.
            ++ simpl. rewrite Heq. reflexivity.
 
-  - (* HD_Unit *)
+  -
     apply HD_Unit.
     apply All_WellFormed_insert; assumption.
 
-  - (* HD_Conv *)
+  -
     eapply HD_Conv.
     + apply IHd. exact Hwf0.
     + exact f.
 
-  - (* HD_Ctx_Conv *)
+  -
     eapply HD_Ctx_Conv.
     + eapply ctx_equiv_insert. exact Hwf0. exact c.
     + apply IHd. exact Hwf0.
 
-    - (* HD_Lam *)
+    -
     apply HD_Lam.
     exact (IHd (Datatypes.S n0) Psi0 Hwf0).
 
-  - (* HD_App *)
+  -
     eapply HD_App.
     + apply IHd1. exact Hwf0.
     + apply IHd2. exact Hwf0.
 
-  - (* HD_Pair *)
+  -
     apply HD_Pair.
     + apply IHd1. exact Hwf0.
     + apply IHd2. exact Hwf0.
 
-  - (* HD_Fst *)
+  -
     eapply HD_Fst.
     apply IHd.
     exact Hwf0.
 
-  - (* HD_Snd *)
+  -
     eapply HD_Snd.
     apply IHd.
     exact Hwf0.
 
-  - (* HD_Inl *)
+  -
     apply HD_Inl.
     + exact w.
     + apply IHd. exact Hwf0.
 
-  - (* HD_Inr *)
+  -
     apply HD_Inr.
     + exact w.
     + apply IHd. exact Hwf0.
 
-    - (* HD_Case *)
+    -
     eapply HD_Case.
     + apply IHd1.
       exact Hwf0.
@@ -2157,12 +2020,12 @@ Proof.
       apply IHd3.
       exact Hwf0.
 
-  - (* HD_Absurd *)
+  -
     apply HD_Absurd.
     + exact w.
     + apply IHd. exact Hwf0.
 
-  - (* HD_All_Intro *)
+  -
     apply HD_All_Intro.
     rewrite ctx_subst_insert.
     apply IHd.
@@ -2170,17 +2033,17 @@ Proof.
     + apply BT_Fst.
     + exact Hwf0.
 
-  - (* HD_All_Elim *)
+  -
     eapply HD_All_Elim.
     + apply IHd. exact Hwf0.
     + exact b.
 
-  - (* HD_Eps_Intro *)
+  -
     eapply HD_Eps_Intro.
     + exact b.
     + apply IHd. exact Hwf0.
 
-   - (* HD_Eps_Elim *)
+   -
     eapply HD_Eps_Elim.
     + apply IHd1.
       exact Hwf0.
@@ -2463,8 +2326,6 @@ Proof.
               ** apply AWF_Nil.
 
   - intros I A Phi Psi HwfPhi HwfPsi Hiso.
-    (* Fiber isomorphism is mutual derivability, so map both arrows through
-       the epsilon left-adjoint functor. *)
     destruct Hiso as [f g Hfg Hgf].
     destruct (term_model_derivation_of_hom
       (b_Prod I A) Phi Psi HwfPhi HwfPsi f) as [pf dpf].
@@ -2538,7 +2399,6 @@ Theorem epsilon_completeness_inhabitational_gen :
 Proof.
   intros Sign Func Pred HFunc HPred SM I G Phi wfc wf_Phi H_univ.
 
-  (* 1. Példányosítjuk az univerzális hipotézist a szintaktikus termmodellel. *)
   pose proof
     (H_univ
        (Base_SetoidCategory Sign Func)
@@ -2550,11 +2410,9 @@ Proof.
        TermModel_EpsilonHyperModel
        TermModel_EpsilonGoodFibration) as H_term.
 
-  (* 2. Kinyerjük a termmodellbeli morfizmust. *)
   destruct H_term as [m_syn].
   destruct m_syn as [p_syn dp_syn].
 
-  (* 3. A forráskontextus interpretációját lehúzzuk tiszta szintaxisra. *)
   assert (H_ctx :
     projT1
       (@interp_h_ctx Sign Func Pred HFunc HPred
@@ -2571,7 +2429,6 @@ Proof.
     exact wfc.
   }
 
-  (* 4. A célformula interpretációját is lehúzzuk tiszta szintaxisra. *)
   assert (H_phi :
     projT1
       (@interp_h_ty Sign Func Pred HFunc HPred
@@ -2591,11 +2448,9 @@ Proof.
   rewrite H_ctx in dp_syn.
   rewrite H_phi in dp_syn.
 
-  (* 5. A termmodellben interp_ty I = I.
-        Ezt csak most írjuk át, miután a projT1/interp_h_ty részek már eltűntek. *)
+  (* Rewrite [interp_ty] only after eliminating the dependent projections. *)
   rewrite (interp_ty_id Sign Func I) in dp_syn.
 
-  (* 6. A zárt nyíltermet átvisszük a G kontextusba. *)
   assert (H_fun :
     h_derivation I G p_syn (Ty_Arrow (h_make_ctx_ty G) Phi)).
   {
@@ -2610,7 +2465,6 @@ Proof.
     - exact wfc.
   }
 
-  (* 7. A G kontextust reifikáljuk egy terméktípusú termmé. *)
   exists (tm_app p_syn (h_reify_ctx G)).
   constructor.
 

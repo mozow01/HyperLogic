@@ -1,10 +1,8 @@
-(* Semantics/Simple/Simple_Completeness.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import List Arith PeanoNat Lia.
 Import ListNotations.
 
-(* Kategóriaelméleti alapok *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
 Require Import HyperLogic.Cat.CCC.
@@ -13,7 +11,6 @@ Require Import HyperLogic.Cat.Functor.
 Require Import HyperLogic.Cat.Adjoint.
 Require Import HyperLogic.Cat.Fibration.
 
-(* Szintaxis és Bázis Szemantika *)
 Require Import HyperLogic.Logic.Base.Simple.Base_Syntax.
 Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum.
 
@@ -23,41 +20,34 @@ Require Import HyperLogic.Logic.Hyper.Simple.Hyper_Lemmas.
 
 
 
-(* Import the semantic definitions (HyperModel, interp_h_ty, etc.) from Soundness *)
 Require Import HyperLogic.Semantics.Simple.Base_Simple_Soundness.
 Require Import HyperLogic.Semantics.Simple.Simple_Soundness.
 
 
 
-(* ================================================================= *)
-(* 1. MORPHISMS OF THE SYNTACTIC FIBER                               *)
-(* ================================================================= *)
+(** Legacy syntactic completeness model. *)
 
 
-(* In the fiber over base context 'I', a morphism from Phi to Psi 
-    is a valid derivation from the singleton context [Phi] to Psi. *)
+(** A fiber arrow is a derivation from the singleton source formula. *)
     
 Record hom_hyper (I : b_ty) (Phi Psi : h_ty) : Type := mk_hom_hyper {
   h_tm_of : h_tm;
   h_deriv_of : h_derivation I (Phi :: nil) h_tm_of Psi
 }.
 
-(* The new rigorous objects of the Syntactic Fiber *)
+(** Fiber objects package formulas with well-formedness data. *)
 Record obj_hyper (I : b_ty) : Type := mk_obj_hyper {
   ty_val : h_ty;
   ty_wf  : WellFormed I ty_val
 }.
 
-(* Coercion allows you to seamlessly use obj_hyper where h_ty is expected *)
+(* The coercion exposes the underlying formula where [h_ty] is expected. *)
 Coercion ty_val : obj_hyper >-> h_ty.
 
 
 Arguments h_tm_of {I Phi Psi} _.
 Arguments h_deriv_of {I Phi Psi} _.
 
-(* ================================================================= *)
-(* 1.5 SYNTACTIC FIBER INFRASTRUCTURE                                *)
-(* ================================================================= *)
 
 
 Lemma ctx_pullback_app : forall f (G Delta : h_context),
@@ -100,14 +90,10 @@ Proof.
   - apply derivation_to_typing; exact dq.
 Qed.
 
-(* ================================================================= *)
-(* 2. IDENTITY AND COMPOSITION OF THE SYNTACTIC FIBER                *)
-(* ================================================================= *)
 
 Definition hyper_id_term (Phi : h_ty) : h_tm :=
   tm_var 0.
 
-(* We now pass the WFC_nil and the native ty_wf proofs directly to HD_Var0 *)
 Definition hyper_id_deriv (I : b_ty) (Phi : obj_hyper I) 
   : h_derivation I ((Phi : h_ty) :: nil) (hyper_id_term Phi) Phi :=
   HD_Var0 I nil Phi (WFC_nil I) (ty_wf I Phi).
@@ -118,14 +104,13 @@ Definition hyper_id (I : b_ty) (Phi : obj_hyper I) : hom_hyper I Phi Phi :=
 Definition hyper_comp_term (Psi : h_ty) (tf tg : h_tm) : h_tm :=
   tm_app (tm_lam Psi tg) tf.
 
-(* Extracts context well-formedness natively from the obj_hyper record! *)
+(* The object record supplies context well-formedness without axioms. *)
 Lemma obj_ctx_wf : forall (I : b_ty) (Phi : obj_hyper I), wf_ctx I ((Phi : h_ty) :: nil).
 Proof.
   intros I Phi. apply WFC_cons. exact (ty_wf I Phi). apply WFC_nil.
 Qed.
 
-(* We need the derivation-level weakening append to construct morphisms! 
-   This is the exact same proof as the typing version, but purely in the Type layer. *)
+(* Derivation-level append weakening constructs fiber morphisms. *)
 Lemma hd_weakening_append : forall I G Delta p Phi,
   wf_ctx I Delta ->
   h_derivation I G p Phi -> h_derivation I (G ++ Delta) p Phi.
@@ -196,9 +181,6 @@ Proof.
   - exact (h_deriv_of g).
 Qed.
 
-(* ================================================================= *)
-(* 3. THE SYNTACTIC FIBER CATEGORY                                   *)
-(* ================================================================= *)
 
 Instance Syntactic_Fiber (I : b_ty) : SetoidCategory.
 Proof.
@@ -209,20 +191,17 @@ Proof.
     (hyper_comp I)
     (hyper_hom_equiv I)
     _ _ _ _ _).
-  - (* Equivalence *)
+  -
     intros A B. split.
     + intros f. apply hyper_hom_equiv_pi.
     + intros f g H. apply hyper_hom_equiv_pi.
     + intros f g h H1 H2. apply hyper_hom_equiv_pi.
-  - (* Assoc *) intros A B C D f g h. apply hyper_hom_equiv_pi.
-  - (* IdR *) intros A B f. apply hyper_hom_equiv_pi.
-  - (* IdL *) intros A B f. apply hyper_hom_equiv_pi.
-  - (* Proper *) unfold Proper, respectful. intros A B C f f' Hf g g' Hg. apply hyper_hom_equiv_pi.
+  -   intros A B C D f g h. apply hyper_hom_equiv_pi.
+  -   intros A B f. apply hyper_hom_equiv_pi.
+  -   intros A B f. apply hyper_hom_equiv_pi.
+  -   unfold Proper, respectful. intros A B C f f' Hf g g' Hg. apply hyper_hom_equiv_pi.
 Defined.
 
-(* ================================================================= *)
-(* 3.5 OBJECT BUILDERS (Axiom-Free Well-Formedness!)                 *)
-(* ================================================================= *)
 
 Definition syn_terminal_obj (I : b_ty) : obj_hyper I :=
   mk_obj_hyper I Ty_Unit (WF_Unit I).
@@ -239,15 +218,11 @@ Definition syn_initial_obj (I : b_ty) : obj_hyper I :=
 Definition syn_coprod_obj (I : b_ty) (Phi Psi : obj_hyper I) : obj_hyper I :=
   mk_obj_hyper I (Ty_Sum Phi Psi) (WF_Sum I Phi Psi (ty_wf I Phi) (ty_wf I Psi)).
 
-(* A rigorous, axiom-free proof that appending [A, C] is structurally valid *)
 Lemma double_ctx_wf : forall I (A C : obj_hyper I), wf_ctx I ((A:h_ty) :: (C:h_ty) :: nil).
 Proof.
   intros I A C. apply WFC_cons. exact (ty_wf I A). apply WFC_cons. exact (ty_wf I C). apply WFC_nil.
 Qed.
 
-(* ================================================================= *)
-(* 4. THE SYNTACTIC HYPERDOCTRINE                                    *)
-(* ================================================================= *)
 
 Instance Syntactic_Cartesian (I : b_ty) : CartesianCategory (Syntactic_Fiber I).
 Proof.
@@ -258,7 +233,7 @@ Proof.
     (fun (Phi : obj_hyper I) => @mk_hom_hyper I Phi (syn_terminal_obj I) tm_unit 
        (HD_Unit I ((Phi : h_ty) :: nil) (obj_ctx_wf I Phi)))
     
-    _ (* terminal_map_unique law *)
+    _
     
     (syn_prod_obj I)
     
@@ -271,7 +246,7 @@ Proof.
     (fun (Phi Psi : obj_hyper I) => @mk_hom_hyper I (syn_prod_obj I Phi Psi) Psi (tm_snd (tm_var 0)) 
        ltac:(eapply HD_Snd; exact (hyper_id_deriv I (syn_prod_obj I Phi Psi))))
     
-    _ _ _ _ (* Category laws *)
+    _ _ _ _
   ).
   - intros x f. apply hyper_hom_equiv_pi.
   - intros A B C f g. apply hyper_hom_equiv_pi.
@@ -285,10 +260,9 @@ Instance Syntactic_Closed(I : b_ty) : CartesianClosedCategory (Syntactic_Fiber I
 Proof.
   refine (mk_CartesianClosedCategory (Syntactic_Fiber I) (Syntactic_Cartesian I)
     
-    (* 1. exp mapping: Coq passes Target (B) then Source (A) for B^A. *)
+    (* Exponentials receive target then source, following [B^A]. *)
     (fun Tgt Src => syn_exp_obj I Src Tgt)
 
-    (* 2. Curry: hom (C × A) B -> hom C (exp B A) *)
     (fun (C A B : obj_hyper I) f => @mk_hom_hyper I C (syn_exp_obj I A B) 
        (tm_lam A (tm_app (tm_lam (Ty_Prod C A) (h_tm_of f)) (tm_pair (tm_var 1) (tm_var 0)))) 
        
@@ -298,7 +272,6 @@ Proof.
                [ exact (HD_VarS I ((C:h_ty)::nil) C A _ (ty_wf I A) (hyper_id_deriv I C)) 
                | exact (HD_Var0 I ((C:h_ty)::nil) A (obj_ctx_wf I C) (ty_wf I A)) ] ]))
 
-    (* 3. Eval: prod (exp B A) A -> B *)
     (fun (A B : obj_hyper I) => @mk_hom_hyper I (syn_prod_obj I (syn_exp_obj I A B) A) B 
        (tm_app (tm_fst (tm_var 0)) (tm_snd (tm_var 0))) 
        
@@ -306,7 +279,7 @@ Proof.
              [ eapply HD_Fst; exact (hyper_id_deriv I (syn_prod_obj I (syn_exp_obj I A B) A)) 
              | eapply HD_Snd; exact (hyper_id_deriv I (syn_prod_obj I (syn_exp_obj I A B) A)) ]))
            
-    _ _ _ (* Category laws *)
+    _ _ _
   ).
   - intros A B C f. apply hyper_hom_equiv_pi.
   - intros A B C h. apply hyper_hom_equiv_pi.
@@ -322,7 +295,7 @@ Proof.
     (fun (Phi : obj_hyper I) => @mk_hom_hyper I (syn_initial_obj I) Phi (tm_absurd Phi (tm_var 0)) 
        ltac:(apply HD_Absurd; [exact (ty_wf I Phi) | exact (hyper_id_deriv I (syn_initial_obj I))]))
        
-    _ (* initial_map_unique law *)
+    _
     
     (syn_coprod_obj I)
    
@@ -339,7 +312,7 @@ Proof.
              | apply (hd_weakening_append I ((Phi:h_ty) :: nil) ((Ty_Sum Phi Psi : h_ty) :: nil)); [ apply (obj_ctx_wf I (syn_coprod_obj I Phi Psi)) | exact (h_deriv_of f) ]
              | apply (hd_weakening_append I ((Psi:h_ty) :: nil) ((Ty_Sum Phi Psi : h_ty) :: nil)); [ apply (obj_ctx_wf I (syn_coprod_obj I Phi Psi)) | exact (h_deriv_of g) ] ]))
              
-    _ _ _ _ (* Category laws *)
+    _ _ _ _
   ).
   - intros x f. apply hyper_hom_equiv_pi.
   - intros A B C f g. apply hyper_hom_equiv_pi.
@@ -349,9 +322,6 @@ Proof.
 Defined.
 
 
-(* ================================================================= *)
-(* 5. THE SYNTACTIC SUBSTITUTION FUNCTOR (PULLBACK)                  *)
-(* ================================================================= *)
 
 Fixpoint h_tm_pullback (f : b_tm) (p : h_tm) : h_tm :=
   match p with
@@ -367,20 +337,15 @@ Fixpoint h_tm_pullback (f : b_tm) (p : h_tm) : h_tm :=
   | tm_case p1 p2 p3 => tm_case (h_tm_pullback f p1) (h_tm_pullback f p2) (h_tm_pullback f p3)
   | tm_absurd A p' => tm_absurd (form_pullback f A) (h_tm_pullback f p')
   
-  (* Quantifiers *)
   | tm_all_intro p' => tm_all_intro (h_tm_pullback (b_pullback_ext f) p')
   | tm_all_elim p' t => tm_all_elim (h_tm_pullback f p') (b_comp t f)
   | tm_ex_intro t p' => tm_ex_intro (b_comp t f) (h_tm_pullback f p')
   | tm_ex_elim p1 p2 => tm_ex_elim (h_tm_pullback f p1) (h_tm_pullback (b_pullback_ext f) p2)
   end.
 
-(* Axiom-free object builder: packages the pullback syntax with its wf_pullback proof! *)
 Definition syn_pullback_obj (I J : b_ty) (f : b_tm) (df : base_typing I f J) (Phi : obj_hyper J) : obj_hyper I :=
   mk_obj_hyper I (form_pullback f Phi) (wf_pullback I J f Phi df (ty_wf J Phi)).
 
-(* ================================================================= *)
-(* 5.5 STRUCTURAL EQUIVALENCE LEMMAS                                 *)
-(* ================================================================= *)
 
 Lemma form_equiv_pullback_comp : forall I J K (f g : b_tm) (df : base_typing J f K) (dg : base_typing I g J) (Phi : obj_hyper K),
   form_equiv I (form_pullback g (form_pullback f Phi)) (form_pullback (b_comp f g) Phi).
@@ -404,7 +369,7 @@ Proof.
     + eapply FEQ_Pullback_Cong.
       * eapply BT_Comp; [exact dg | apply BT_Fst].
       * eapply BT_Comp; [eapply BT_Fst | eapply BT_Pair; [eapply BT_Comp; [exact dg | apply BT_Fst] | apply BT_Snd]].
-      * (* 2. Apply the categorical axiom and explicitly provide the derivations! *)
+      *
         apply BE_Sym.
         eapply BE_BetaFst.
         { eapply BT_Comp; [exact dg | apply BT_Fst]. }
@@ -441,8 +406,8 @@ Proof.
     + eapply BT_Comp; [exact d1 | exact df].
     + eapply BT_Comp; [exact d2 | exact df].
     + eapply BE_CongComp.
-      * exact b.  (* Left side: t1 == t2 *)
-      * eapply BE_Refl. exact df. (* Right side: f == f *)
+      * exact b.
+      * eapply BE_Refl. exact df.
       
   - apply FEQ_Refl. eapply wf_pullback; eauto.
   - apply FEQ_Sym; eauto.
@@ -453,7 +418,6 @@ Proof.
   - apply FEQ_All. apply IHf_eq. eapply BT_Pair; [eapply BT_Comp; [exact df | apply BT_Fst] | apply BT_Snd].
   - apply FEQ_Ex. apply IHf_eq. eapply BT_Pair; [eapply BT_Comp; [exact df | apply BT_Fst] | apply BT_Snd].
   
-  (* 10. FEQ_Pullback_Id *)
   - eapply FEQ_Trans.
     + eapply FEQ_Pullback_Comp; [apply BT_Id | exact df | exact w].
     + eapply FEQ_Pullback_Cong.
@@ -462,7 +426,6 @@ Proof.
       * apply BE_IdL. exact df.
       * exact w.
       
-  (* 11. FEQ_Pullback_Comp *)
   - eapply FEQ_Trans.
     + eapply FEQ_Pullback_Comp; [exact dg | exact df0 | eapply wf_pullback; [exact df | exact w]].
     + eapply FEQ_Trans.
@@ -478,7 +441,6 @@ Proof.
           - exact w. }
         { eapply FEQ_Sym. eapply FEQ_Pullback_Comp; [eapply BT_Comp; [exact df | exact dg] | exact df0 | exact w]. }
         
-  (* 12. FEQ_Pullback_Cong *)
   - eapply FEQ_Trans.
     + eapply FEQ_Pullback_Comp; [exact df | exact df0 | exact w].
     + eapply FEQ_Trans.
@@ -486,8 +448,8 @@ Proof.
         { eapply BT_Comp; [exact df | exact df0]. }
         { eapply BT_Comp; [exact dg | exact df0]. }
         { eapply BE_CongComp.
-          - exact b. (* Left side: df == dg *)
-          - eapply BE_Refl. exact df0. (* Right side: df0 == df0 *)
+          - exact b.
+          - eapply BE_Refl. exact df0.
         }
         { exact w. }
       * eapply FEQ_Sym. eapply FEQ_Pullback_Comp; [exact dg | exact df0 | exact w].
@@ -532,7 +494,7 @@ Proof.
         { eapply BT_Pair; [eapply BT_Comp; [exact dg | apply BT_Fst] | apply BT_Snd]. }
         { pose proof (well_formed_target _ _ _ _ d) as Hwf; exact Hwf. }
       * apply IHd. eapply BT_Pair; [eapply BT_Comp; [exact dg | apply BT_Fst] | apply BT_Snd].
- - (* HD_All_Elim *)
+ -
     eapply HD_Conv.
     + apply ctx_equiv_refl. eapply wf_ctx_pullback; [exact dg | pose proof (well_formed_ctx _ _ _ _ d) as Hctx; exact Hctx].
     + eapply FEQ_Trans.
@@ -548,13 +510,13 @@ Proof.
           - eapply BT_Comp.
             + eapply BT_Pair; [apply BT_Id | exact b].
             + exact dg.
-          - (* 100% Pure Gallina proof: Substitution distributes over pairing *)
+          -
             eapply BE_Trans.
             { eapply BE_Sym. eapply BE_EtaPair; eauto 10 using base_typing. }
             eapply BE_Trans.
             2: { eapply BE_EtaPair; eauto 10 using base_typing. }
             eapply BE_CongPair.
-            + (* Prove: fst o L == fst o R *)
+            +
               eapply BE_Trans. { eapply BE_Assoc; eauto 10 using base_typing. }
               eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_BetaFst; eauto 10 using base_typing | eapply BE_Refl; eauto 10 using base_typing ]. }
               eapply BE_Trans. { eapply BE_Sym. eapply BE_Assoc; eauto 10 using base_typing. }
@@ -564,7 +526,7 @@ Proof.
               eapply BE_Trans. { eapply BE_Assoc; eauto 10 using base_typing. }
               eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_BetaFst; eauto 10 using base_typing | eapply BE_Refl; eauto 10 using base_typing ]. }
               eapply BE_IdL; eauto 10 using base_typing.
-            + (* Prove: snd o L == snd o R *)
+            +
               eapply BE_Trans. { eapply BE_Assoc; eauto 10 using base_typing. }
               eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_BetaSnd; eauto 10 using base_typing | eapply BE_Refl; eauto 10 using base_typing ]. }
               eapply BE_Trans. { eapply BE_BetaSnd; eauto 10 using base_typing. }
@@ -577,7 +539,7 @@ Proof.
           - exact dg.
           - pose proof (well_formed_all_body _ _ _ _ _ d) as Hwf; exact Hwf. }
     + eapply HD_All_Elim; [apply IHd; exact dg | eapply BT_Comp; [exact b | exact dg]].
- - (* HD_Ex_Intro *)
+ -
     eapply HD_Ex_Intro.
     + eapply wf_pullback; [eapply BT_Pair; [eapply BT_Comp; [exact dg | apply BT_Fst] | apply BT_Snd] | exact w].
     + eapply BT_Comp; [exact b | exact dg].
@@ -596,12 +558,12 @@ Proof.
             + eapply BT_Comp.
               * eapply BT_Pair; [eapply BT_Comp; [exact dg | eapply BT_Fst] | apply BT_Snd].
               * eapply BT_Pair; [apply BT_Id | eapply BT_Comp; [exact b | exact dg]].
-            + (* Flip the goal so it matches the HD_All_Elim proof perfectly! *)
+            +
               eapply BE_Sym.
               eapply BE_Trans. { eapply BE_Sym. eapply BE_EtaPair; eauto 10 using base_typing. }
               eapply BE_Trans. 2: { eapply BE_EtaPair; eauto 10 using base_typing. }
               eapply BE_CongPair.
-              * (* Prove: fst o L == fst o R *)
+              *
                 eapply BE_Trans. { eapply BE_Assoc; eauto 10 using base_typing. }
                 eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_BetaFst; eauto 10 using base_typing | eapply BE_Refl; eauto 10 using base_typing ]. }
                 eapply BE_Trans. { eapply BE_Sym. eapply BE_Assoc; eauto 10 using base_typing. }
@@ -611,7 +573,7 @@ Proof.
                 eapply BE_Trans. { eapply BE_Assoc; eauto 10 using base_typing. }
                 eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_BetaFst; eauto 10 using base_typing | eapply BE_Refl; eauto 10 using base_typing ]. }
                 eapply BE_IdL; eauto 10 using base_typing.
-              * (* Prove: snd o L == snd o R *)
+              *
                 eapply BE_Trans. { eapply BE_Assoc; eauto 10 using base_typing. }
                 eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_BetaSnd; eauto 10 using base_typing | eapply BE_Refl; eauto 10 using base_typing ]. }
                 eapply BE_Trans. { eapply BE_BetaSnd; eauto 10 using base_typing. }
@@ -624,7 +586,7 @@ Proof.
             + eapply BT_Pair; [apply BT_Id | eapply BT_Comp; [exact b | exact dg]].
             + exact w. }
       * apply IHd; exact dg.
-  - (* HD_Ex_Elim *)
+  -
     eapply HD_Ex_Elim.
     + eapply wf_pullback; [exact dg | exact w].
     + apply IHd1; exact dg.
@@ -637,7 +599,7 @@ Proof.
       * apply FEQ_Sym. exact (form_equiv_pullback_ext_comm I_src I A g dg (mk_obj_hyper I Chi w)).
       * apply IHd2. eapply BT_Pair; [eapply BT_Comp; [exact dg | apply BT_Fst] | apply BT_Snd].
 
-  - (* HD_Conv *)
+  -
     eapply HD_Conv.
     + eapply ctx_pullback_equiv_lemma; [exact dg | exact c].
     + eapply form_pullback_equiv; [exact dg | exact f].
@@ -659,61 +621,54 @@ Proof.
   exact (derivation_pullback f df dp).
 Defined.
 
-(* ================================================================= *)
-(* 5.6 THE CATEGORICAL ISOMORPHISM BUILDER                           *)
-(* ================================================================= *)
 
-(** HELPER 1: For Strict Equalities (Identities) *)
 Lemma syn_iso_from_eq : forall (I : b_ty) (Phi Psi : obj_hyper I),
   (Phi : h_ty) = (Psi : h_ty) -> (Phi : @obj (Syntactic_Fiber I)) ≅O (Psi : @obj (Syntactic_Fiber I)).
 Proof.
   intros I Phi Psi Heq.
   
-  (* 'unshelve' forces Coq to ask for the morphisms BEFORE the proofs! *)
+  (* [unshelve] exposes morphism obligations before isomorphism laws. *)
   unshelve econstructor. 
   
-  - (* 1. iso_to *)
+  -
     refine (mk_hom_hyper I Phi Psi (tm_var 0) _).
     rewrite <- Heq. exact (hyper_id_deriv I Phi).
     
-  - (* 2. iso_from *)
+  -
     refine (mk_hom_hyper I Psi Phi (tm_var 0) _).
     rewrite Heq. exact (hyper_id_deriv I Psi).
     
-  - (* 3. Iso Law 1 *) apply hyper_hom_equiv_pi.
-  - (* 4. Iso Law 2 *) apply hyper_hom_equiv_pi.
+  -   apply hyper_hom_equiv_pi.
+  -   apply hyper_hom_equiv_pi.
 Defined.
 
-(** HELPER 2: For Logical Equivalences (The Bypass Killer!)
-    This mathematically converts a form_equiv proof into a categorical Isomorphism
-    using the HD_Conv rule, completely bypassing Coq's strict equality demands! *)
+(** [HD_Conv] turns formula equivalence into a fiber isomorphism. *)
 Lemma syn_iso_from_equiv : forall (I : b_ty) (Phi Psi : obj_hyper I),
   form_equiv I Phi Psi -> (Phi : @obj (Syntactic_Fiber I)) ≅O (Psi : @obj (Syntactic_Fiber I)).
 Proof.
   intros I Phi Psi Heq.
   
-  (* 'unshelve' forces Coq to ask for the morphisms BEFORE the proofs! *)
+  (* [unshelve] exposes morphism obligations before isomorphism laws. *)
   unshelve econstructor.
   
-  - (* 1. iso_to *)
+  -
     refine (mk_hom_hyper I Phi Psi (tm_var 0) _).
     eapply HD_Conv.
     + apply ctx_equiv_refl. apply obj_ctx_wf.
     + exact Heq.
     + exact (hyper_id_deriv I Phi).
     
-  - (* 2. iso_from *)
+  -
     refine (mk_hom_hyper I Psi Phi (tm_var 0) _).
     eapply HD_Conv.
     + apply ctx_equiv_refl. apply obj_ctx_wf.
     + apply FEQ_Sym. exact Heq.
     + exact (hyper_id_deriv I Psi).
     
-  - (* 3. Iso Law 1 *) apply hyper_hom_equiv_pi.
-  - (* 4. Iso Law 2 *) apply hyper_hom_equiv_pi.
+  -   apply hyper_hom_equiv_pi.
+  -   apply hyper_hom_equiv_pi.
 Defined.
 
-(** The Syntactic Substitution Functor *)
 Instance Syntactic_Pullback {I J : b_ty} (f : b_tm) (df : base_typing I f J)
   : Functor (Syntactic_Fiber J) (Syntactic_Fiber I).
 Proof.
@@ -726,11 +681,7 @@ Proof.
   - intros A B C g1 g2. apply hyper_hom_equiv_pi.
 Defined.
 
-(* ================================================================= *)
-(* 6. THE SYNTACTIC QUANTIFIERS (ADJOINTS)                           *)
-(* ================================================================= *)
 
-(** 6.1 THE RIGHT ADJOINT (FORALL) *)
 
 Definition syn_all_obj (I A : b_ty) (Phi : obj_hyper (b_Prod I A)) : obj_hyper I := 
   mk_obj_hyper I (Ty_All A Phi) (WF_All I A Phi (ty_wf (b_Prod I A) Phi)).
@@ -746,7 +697,6 @@ Proof.
     - exact BT_Snd. }
   eapply HD_Conv. 3: exact H_der. 1: apply ctx_equiv_refl; apply obj_ctx_wf. 
   
-  (* Rigorous structural equivalence replacing the bypass! *)
   eapply FEQ_Trans.
   { eapply FEQ_Pullback_Comp. 
     - eapply typing_pullback_ext; exact dfst.
@@ -756,18 +706,18 @@ Proof.
   { eapply FEQ_Pullback_Cong.
     - eapply BT_Comp; [ eapply typing_pullback_ext; exact dfst | eapply BT_Pair; [apply BT_Id | apply BT_Snd] ].
     - apply BT_Id.
-    - (* The categorical equality proof: <fst o fst, snd> o <id, snd> == id *)
+    -
       eapply BE_Trans. { eapply BE_Sym. eapply BE_EtaPair; eauto 10 using base_typing. }
       eapply BE_Trans. 2: { eapply BE_EtaPair; eauto 10 using base_typing. }
       eapply BE_CongPair.
-      + (* Prove: fst o L == fst o R *)
+      +
         eapply BE_Trans. { eapply BE_Assoc; eauto 10 using base_typing. }
         eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_BetaFst; eauto 10 using base_typing | eapply BE_Refl; eauto 10 using base_typing ]. }
         eapply BE_Trans. { eapply BE_Sym. eapply BE_Assoc; eauto 10 using base_typing. }
         eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_Refl; eauto 10 using base_typing | eapply BE_BetaFst; eauto 10 using base_typing ]. }
         eapply BE_Trans. { eapply BE_IdR; eauto 10 using base_typing. }
         eapply BE_Sym. eapply BE_IdR; eauto 10 using base_typing.
-      + (* Prove: snd o L == snd o R *)
+      +
         eapply BE_Trans. { eapply BE_Assoc; eauto 10 using base_typing. }
         eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_BetaSnd; eauto 10 using base_typing | eapply BE_Refl; eauto 10 using base_typing ]. }
         eapply BE_Trans. { eapply BE_BetaSnd; eauto 10 using base_typing. }
@@ -796,7 +746,6 @@ Proof.
   - intros. apply hyper_hom_equiv_pi.
 Defined.
 
-(** 6.2 THE LEFT ADJOINT (EXISTS) *)
 
 Definition syn_ex_obj (I A : b_ty) (Phi : obj_hyper (b_Prod I A)) : obj_hyper I := 
   mk_obj_hyper I (Ty_Ex A Phi) (WF_Ex I A Phi (ty_wf (b_Prod I A) Phi)).
@@ -808,7 +757,6 @@ Proof.
   assert (H_inner : h_derivation (b_Prod I A) ((Y:h_ty) :: nil) (tm_var 0) (form_pullback (b_pair b_id b_snd) (form_pullback (b_pullback_ext b_fst) Y))).
   { eapply HD_Conv. 3: exact (HD_Var0 (b_Prod I A) nil Y (WFC_nil _) (ty_wf _ Y)). 1: apply ctx_equiv_refl; apply obj_ctx_wf. 
     
-    (* Bypass 1: Structurally prove Y == <id, snd> * (<fst o fst, snd> * Y) *)
     eapply FEQ_Sym.
     eapply FEQ_Trans.
     { eapply FEQ_Pullback_Comp. 
@@ -819,18 +767,18 @@ Proof.
     { eapply FEQ_Pullback_Cong.
       - eapply BT_Comp; [ eapply typing_pullback_ext; exact dfst | eapply BT_Pair; [apply BT_Id | apply BT_Snd] ].
       - apply BT_Id.
-      - (* The categorical equality proof: <fst o fst, snd> o <id, snd> == id *)
+      -
         eapply BE_Trans. { eapply BE_Sym. eapply BE_EtaPair; eauto 10 using base_typing. }
         eapply BE_Trans. 2: { eapply BE_EtaPair; eauto 10 using base_typing. }
         eapply BE_CongPair.
-        + (* Prove: fst o L == fst o R *)
+        +
           eapply BE_Trans. { eapply BE_Assoc; eauto 10 using base_typing. }
           eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_BetaFst; eauto 10 using base_typing | eapply BE_Refl; eauto 10 using base_typing ]. }
           eapply BE_Trans. { eapply BE_Sym. eapply BE_Assoc; eauto 10 using base_typing. }
           eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_Refl; eauto 10 using base_typing | eapply BE_BetaFst; eauto 10 using base_typing ]. }
           eapply BE_Trans. { eapply BE_IdR; eauto 10 using base_typing. }
           eapply BE_Sym. eapply BE_IdR; eauto 10 using base_typing.
-        + (* Prove: snd o L == snd o R *)
+        +
           eapply BE_Trans. { eapply BE_Assoc; eauto 10 using base_typing. }
           eapply BE_Trans. { eapply BE_CongComp; [ eapply BE_BetaSnd; eauto 10 using base_typing | eapply BE_Refl; eauto 10 using base_typing ]. }
           eapply BE_Trans. { eapply BE_BetaSnd; eauto 10 using base_typing. }
@@ -847,7 +795,6 @@ Proof.
     
   eapply HD_Conv. 3: exact H_outer. 1: apply ctx_equiv_refl; apply obj_ctx_wf. 
   
-  (* Bypass 2: Ty_Ex A (P Y) == form_pullback b_fst (Ty_Ex A Y) by trivial reduction! *)
   apply FEQ_Refl. eapply wf_pullback; [exact dfst | apply WF_Ex; exact (ty_wf _ Y)].
 Defined.
 
@@ -878,9 +825,6 @@ Proof.
   - intros. apply hyper_hom_equiv_pi.
 Defined.
 
-(* ================================================================= *)
-(* 6.5 THE SYNTACTIC BASE CATEGORY (STLC)                            *)
-(* ================================================================= *)
 
 Record hom_base {Sign : Type} (I J : b_ty) : Type := mk_hom_base {
   b_tm_of : b_tm;
@@ -902,37 +846,33 @@ Proof.
     (@base_hom_equiv Sign)
     _ _ _ _ _
   ).
-  - (* Equivalence Relation *)
+  -
     intros A B. split.
     + intros [tf df]. eapply BE_Refl. exact df.
     + intros [tf df] [tg dg] H. apply BE_Sym. exact H.
     + intros [tf df] [tg dg] [th dh] H1 H2. eapply BE_Trans; eassumption.
-  - (* Associativity *)
+  -
     intros A B C D [tf df] [tg dg] [th dh]. 
     simpl. eapply BE_Assoc; eassumption.
-  - (* Identity Right *)
+  -
     intros A B [tf df]. 
     simpl. eapply BE_IdR; eassumption.
-  - (* Identity Left *)
+  -
     intros A B [tf df]. 
     simpl. eapply BE_IdL; eassumption.
-  - (* Properness / Congruence *)
+  -
     unfold Proper, respectful. 
-    (* Properness / Congruence *)
     intros A B C [tf df] [tf' df'] [tg dg] [tg' dg'] Hf Hg. 
     simpl. eapply BE_CongComp; eassumption.
 Defined.
 
-(* ================================================================= *)
-(* 6.6 THE SYNTACTIC BASE CARTESIAN CATEGORY                         *)
-(* ================================================================= *)
 
 Instance Base_CartesianCategory {Sign : Type} : CartesianCategory (@Base_SetoidCategory Sign).
 Proof.
   refine (mk_CartesianCategory (@Base_SetoidCategory Sign)
     b_Unit
     (fun I => mk_hom_base Sign I b_Unit b_unit BT_Unit)
-    _ (* terminal_map_unique law *)
+    _
     b_Prod
     (fun I J K f g => mk_hom_base Sign I (b_Prod J K) (b_pair (b_tm_of I J f) (b_tm_of I K g)) 
                         (BT_Pair (b_deriv_of I J f) (b_deriv_of I K g)))
@@ -949,9 +889,6 @@ Proof.
     simpl. eapply BE_CongPair; eassumption.
 Defined.
 
-(* ================================================================= *)
-(* 6.7 THE SYNTACTIC TWO-SORT CATEGORY                               *)
-(* ================================================================= *)
 
 Instance Base_TwoSortCategory {Sign : Type} : TwoSortCategory (@Base_SetoidCategory Sign).
 Proof.
@@ -960,9 +897,6 @@ Proof.
   exact H.
 Defined.
 
-(* ================================================================= *)
-(* 7. THE SYNTACTIC GOOD FIBRATION & HYPERMODEL                      *)
-(* ================================================================= *)
 
 Definition syn_obj {Sign : Type} (I : @obj (@Base_SetoidCategory Sign)) : b_ty := I.
 Definition syn_hom {Sign : Type} {I J : @obj (@Base_SetoidCategory Sign)} (f : hom I J) : 
@@ -1007,9 +941,6 @@ Proof.
     + exact (ty_wf _ A).
 Defined.
 
-(* ================================================================= *)
-(* 7.5 THE SYNTACTIC STRICT GOOD FIBRATION                           *)
-(* ================================================================= *)
 
 Instance Syntactic_StrictGoodFibration {Sign : Type} : 
   StrictGoodFibration (@Base_SetoidCategory Sign) (@Syntactic_GoodFibration Sign).
@@ -1034,9 +965,6 @@ Proof.
   induction df; simpl; try reflexivity; try (f_equal; eauto).
 Qed.
 
-(* ================================================================= *)
-(* 8. THE SYNTACTIC HYPERMODEL & COMPLETENESS                        *)
-(* ================================================================= *)
 
 Instance Syntactic_HyperModel {Sign : Type} : 
   HyperModel (@Syntactic_StrictGoodFibration Sign).
@@ -1044,24 +972,24 @@ Proof.
   econstructor.
   Unshelve.
   
-  4: { (* i_atom goal *)
+  4: {
     intros p t I A dt.
     assert (Heq : I = @interp_ty (@Base_SetoidCategory Sign) _ _ I) by (symmetry; apply interp_ty_id).
     exact (mk_obj_hyper (@interp_ty (@Base_SetoidCategory Sign) _ _ I) (Ty_Atom p t) 
              (eq_rect I (fun X => WellFormed X (Ty_Atom p t)) (WF_Atom I p t A dt) _ Heq)).
   }
   
-  - (* Goal 1: i_atom_pb *)
+  -
     intros p t I J A f df dt.
     apply syn_iso_from_eq.
     simpl. f_equal. f_equal. 
     apply interp_tm_erasure.
     
-  - (* Goal 2: base_model_sound *)
+  -
     intros I J f g df dg Heq.
     apply base_soundness_equational. exact Heq.
     
-  - (* Goal 3: i_atom_cong *)
+  -
     intros p t1 t2 I A d1 d2 Heq.
     apply syn_iso_from_equiv. simpl.
     rewrite interp_ty_id.
@@ -1069,19 +997,13 @@ Proof.
     exact Heq.
 Defined.
 
-(* ================================================================= *)
-(* 9. COMPLETENESS THEOREMS                                          *)
-(* ================================================================= *)
 
-(* Helper Lemma: Semantic interpretation of a type in the Syntactic Model 
-   structurally computes to exactly the same type! *)
 Lemma interp_h_ty_id : forall {Sign : Type} I Phi (wf : WellFormed I Phi),
   (@interp_h_ty (@Base_SetoidCategory Sign) _ _ _ _ (@Syntactic_HyperModel Sign) I Phi wf : h_ty) = Phi.
 Proof.
   intros Sign I Phi. 
   
-  (* We MUST revert I so the induction hypothesis can handle 
-     the extended contexts (b_Prod I b) created by quantifiers! *)
+  (* Generalize [I] so induction applies in the contexts extended by quantifiers. *)
   revert I. 
   
   induction Phi; intros I wf; simpl; try reflexivity.
@@ -1089,18 +1011,18 @@ Proof.
   - f_equal; [apply IHPhi1 | apply IHPhi2].
   - f_equal; [apply IHPhi1 | apply IHPhi2].
   
-  - (* Ty_All *)
+  -
     f_equal.
-    + (* Goal 1: Domain types are equal *)
+    +
       apply interp_ty_id.
-    + (* Goal 2: Bodies are equal. We explicitly pass the extended context! *)
+    +
       exact (IHPhi (b_Prod I b) (ext_all wf)).
       
-  - (* Ty_Ex *)
+  -
     f_equal.
-    + (* Goal 1: Domain types are equal *)
+    +
       apply interp_ty_id.
-    + (* Goal 2: Bodies are equal. We explicitly pass the extended context! *)
+    +
       exact (IHPhi (b_Prod I b) (ext_ex wf)).
 Qed.
 
@@ -1143,7 +1065,6 @@ Theorem hyper_completeness_inhabitational :
 Proof.
   intros I Phi wf_Phi H_univ.
   
-  (* 1. Instantiate the universal hypothesis with the Syntactic Model *)
   pose proof (@H_univ 
                (@Base_SetoidCategory nat) 
                (@Base_CartesianCategory nat)
@@ -1153,24 +1074,18 @@ Proof.
                (@Syntactic_HyperModel nat)
                (WFC_nil I) wf_Phi) as [[p_syn dp_syn]].
                
-  (* 2. Fix the Target Type (Phi) BEFORE touching I 
-        This strips away the ty_val coercion on the right side. *)
   assert (Heq_Phi : (@interp_h_ty (@Base_SetoidCategory nat) _ _ _ _ (@Syntactic_HyperModel nat) I Phi wf_Phi : h_ty) = Phi)
     by apply interp_h_ty_id.
   rewrite Heq_Phi in dp_syn.
     
-  (* 3. Fix the Source Context (nil -> Ty_Unit) BEFORE touching I 
-        This strips away the ty_val coercion on the left side. *)
   change (@interp_h_ctx (@Base_SetoidCategory nat) _ _ _ _ (@Syntactic_HyperModel nat) I nil (WFC_nil I) : h_ty) 
     with Ty_Unit in dp_syn.
   
-  (* 4. Now that all dependent type wrappers are gone, we can safely fix I! *)
+  (* Fix [I] only after eliminating the dependent wrappers. *)
   assert (Heq_I : (@interp_ty (@Base_SetoidCategory nat) _ _ I) = I) by apply interp_ty_id.
   unfold syn_obj in dp_syn.
   rewrite Heq_I in dp_syn.
   
-  (* 5. We construct the final derivation (nil |- Phi) by applying our 
-        morphism (Ty_Unit -> Phi) to the unit term! *)
   exists (tm_app (tm_lam Ty_Unit p_syn) tm_unit).
   constructor.
   eapply HD_App.
@@ -1203,11 +1118,11 @@ Proof.
   intros I G p Phi Psi n Hwf d.
   revert n Psi Hwf.
   induction d; intros n0 Psi0 Hwf0; simpl.
-  - (* 1. HD_Var0 *)
+  -
     destruct n0; simpl.
     + apply HD_VarS; [assumption | apply HD_Var0; assumption].
     + apply HD_Var0; [apply wf_ctx_insert; assumption | assumption].
-  - (* 2. HD_VarS *)
+  -
     destruct n0; simpl.
     + apply HD_VarS; [assumption | apply HD_VarS; assumption].
     + destruct (n0 <=? i) eqn:Heq.
@@ -1217,42 +1132,42 @@ Proof.
       * apply HD_VarS; [assumption | idtac].
         replace (tm_var i) with (h_lift 1 n0 (tm_var i)) by (simpl; rewrite Heq; reflexivity).
         exact (IHd n0 Psi0 Hwf0).
-  - (* 3. HD_Unit *) 
+  -
     apply HD_Unit. apply wf_ctx_insert; assumption.
-  - (* 4. HD_Lam *) 
+  -
     apply HD_Lam. apply (IHd (Datatypes.S n0) Psi0 Hwf0).
-  - (* 5. HD_App *) 
+  -
     eapply HD_App. apply (IHd1 n0 Psi0 Hwf0). apply (IHd2 n0 Psi0 Hwf0).
-  - (* 6. HD_Pair *) 
+  -
     apply HD_Pair. apply (IHd1 n0 Psi0 Hwf0). apply (IHd2 n0 Psi0 Hwf0).
-  - (* 7. HD_Fst *) 
+  -
     eapply HD_Fst. apply (IHd n0 Psi0 Hwf0).
-  - (* 8. HD_Snd *) 
+  -
     eapply HD_Snd. apply (IHd n0 Psi0 Hwf0).
-  - (* 9. HD_Inl *) 
+  -
     apply HD_Inl; [assumption | apply (IHd n0 Psi0 Hwf0)].
-  - (* 10. HD_Inr *) 
+  -
     apply HD_Inr; [assumption | apply (IHd n0 Psi0 Hwf0)].
-  - (* 11. HD_Case *) 
+  -
     eapply HD_Case.
     + apply (IHd1 n0 Psi0 Hwf0).
     + apply (IHd2 (Datatypes.S n0) Psi0 Hwf0).
     + apply (IHd3 (Datatypes.S n0) Psi0 Hwf0).
-  - (* 12. HD_Absurd *) 
+  -
     apply HD_Absurd; [assumption | apply (IHd n0 Psi0 Hwf0)].
-  - (* 13. HD_All_Intro *)
+  -
     apply HD_All_Intro; [apply wf_ctx_insert; assumption | idtac].
     rewrite ctx_pullback_insert. apply (IHd n0 (form_pullback b_fst Psi0)).
     eapply wf_pullback; [apply BT_Fst | assumption].
-  - (* 14. HD_All_Elim *) 
+  -
     eapply HD_All_Elim; [apply (IHd n0 Psi0 Hwf0) | assumption].
-  - (* 15. HD_Ex_Intro *) 
+  -
     eapply HD_Ex_Intro; [assumption | assumption | apply (IHd n0 Psi0 Hwf0)].
-  - (* 16. HD_Ex_Elim *) 
+  -
     eapply HD_Ex_Elim; [assumption | apply (IHd1 n0 Psi0 Hwf0) | idtac].
     rewrite ctx_pullback_insert. apply (IHd2 (Datatypes.S n0) (form_pullback b_fst Psi0)).
     eapply wf_pullback; [apply BT_Fst | assumption].
-  - (* 17. HD_Conv *)
+  -
     eapply HD_Conv.
     + apply ctx_equiv_insert; [assumption | eassumption].
     + eassumption.
@@ -1262,72 +1177,62 @@ Defined.
 
 
 
-(* 1-Step Weakening at the head of the context (n=0) *)
 Lemma hd_weakening : forall I G A p Phi,
   wf_ctx I (A :: G) ->
   h_derivation I G p Phi ->
   h_derivation I (A :: G) (h_lift 1 0 p) Phi.
 Proof.
   intros I G A p Phi wfc d.
-  (* Extract WellFormed I A natively from the context well-formedness *)
   assert (Hwf : WellFormed I A) by (inversion wfc; subst; assumption).
   exact (hd_weakening_general I G p Phi A 0 Hwf d).
 Qed.
 
-(* Shifting any term by 0 places does absolutely nothing. *)
 Lemma h_lift_0 : forall p n, h_lift 0 n p = p.
 Proof.
   induction p; intros n0; simpl; f_equal; eauto.
-  - (* Variable case: n0 <=? v *)
+  -
     destruct (n0 <=? n).
-    + (* v + 0 = v *) 
+    +
       f_equal.
     + reflexivity.
 Qed.
 
-(* Generalized shifting lemma for ANY cutoff depth *)
 Lemma h_lift_S_gen : forall p shift cutoff, 
   h_lift (Datatypes.S shift) cutoff p = h_lift 1 cutoff (h_lift shift cutoff p).
 Proof.
   induction p; intros shift cutoff; simpl; f_equal; eauto.
-- (* Variable case *)
+-
     destruct (cutoff <=? n) eqn:Heq1.
-    + (* Case 1: cutoff <= n *)
-      (* Evaluate the h_lift on the right side to expose the 'if' condition *)
+    +
       simpl. 
       
-      (* Assert EXACTLY what Coq generates: shift + n *)
       assert (Heq2 : (cutoff <=? shift + n) = true).
       { apply Nat.leb_le. apply Nat.leb_le in Heq1. lia. }
       
       rewrite Heq2. f_equal.
       
-    + (* Case 2: cutoff > n *)
+    +
       simpl. rewrite Heq1. reflexivity.
 Qed.
 
-(* The specific corollary for depth 0 that our completeness theorem needs *)
 Lemma h_lift_S : forall p shift, h_lift (Datatypes.S shift) 0 p = h_lift 1 0 (h_lift shift 0 p).
 Proof.
   intros p shift. apply h_lift_S_gen.
 Qed.
 
-(* Full Weakening from an empty context to G *)
 Lemma h_weakening_from_nil : forall I G p Phi,
   wf_ctx I G ->
   h_derivation I nil p Phi ->
   h_derivation I G (h_lift (length G) 0 p) Phi.
 Proof.
   intros I G. induction G; intros p Phi wfc d; simpl.
-  - (* Base Case: G = nil *)
+  -
     rewrite h_lift_0. 
     exact d.
     
-  - (* Step Case: G = a :: G' *)
-    (* 1. Split the lift so it perfectly matches hd_weakening *)
+  -
     rewrite h_lift_S. 
     
-    (* 2. Now hd_weakening will perfectly match h_lift 1 0 (...) *)
     apply hd_weakening.
     + exact wfc.
     + apply IHG. 
@@ -1341,40 +1246,37 @@ Proof.
   intros I G. induction G; intros wfc; simpl.
   - apply HD_Unit. exact wfc.
   - apply HD_Pair.
-    + (* Left side: properly weaken the IH derivation by 1 step *)
+    +
       eapply hd_weakening. 
       * exact wfc.
       * apply IHG. inversion wfc; subst; assumption.
-    + (* Right side: Variable 0 *)
+    +
       apply HD_Var0.
-      * (* 1. The tail context (G) is well-formed *)
+      *
         inversion wfc; subst; assumption.
-      * (* 2. The head type (a) is well-formed *)
+      *
         inversion wfc; subst; assumption.
 Qed.
 
 
-(* Semantic evaluation of a context structurally computes to our packed product type! *)
+(** Context interpretation computes to the packed product formula. *)
 Lemma h_ctx_identity : forall {Sign : Type} I G (wfc : wf_ctx I G),
   (@interp_h_ctx (@Base_SetoidCategory Sign) _ _ _ _ (@Syntactic_HyperModel Sign) I G wfc : h_ty) = h_make_ctx_ty G.
 Proof.
   intros Sign I G. 
   
-  (* We revert I to keep the induction hypothesis fully generalized *)
   revert I. 
   
   induction G; intros I wfc; simpl.
-  - (* Base Case: nil maps to the terminal object (Ty_Unit) *)
+  -
     reflexivity.
     
-  - (* Step Case: a :: G maps to a product *)
+  -
     f_equal.
-    + (* Goal 1: The tail context (G) matches *)
-      (* Because IHG is quantified over ANY valid well-formedness proof, 
-         it effortlessly handles whatever proof interp_h_ctx extracted! *)
+    +
       apply IHG.
       
-    + (* Goal 2: The head type (a) matches *)
+    +
       apply interp_h_ty_id.
 Qed.
 
@@ -1393,7 +1295,6 @@ Theorem hyper_completeness_inhabitational_gen :
 Proof.
   intros I G Phi wfc wf_Phi H_univ.
   
-  (* 1. Instantiate the universal hypothesis with the Syntactic Model *)
   pose proof (@H_univ 
                (@Base_SetoidCategory nat) 
                (@Base_CartesianCategory nat)
@@ -1403,32 +1304,25 @@ Proof.
                (@Syntactic_HyperModel nat)
                wfc wf_Phi) as [[p_syn dp_syn]].
                
-  (* 2. Clean the Target Type (Phi) *)
   assert (Heq_Phi : (@interp_h_ty (@Base_SetoidCategory nat) _ _ _ _ (@Syntactic_HyperModel nat) I Phi wf_Phi : h_ty) = Phi)
     by apply interp_h_ty_id.
   rewrite Heq_Phi in dp_syn.
     
-  (* 3. Clean the Source Context (G) using our new identity lemma *)
   assert (Heq_Ctx : (@interp_h_ctx (@Base_SetoidCategory nat) _ _ _ _ (@Syntactic_HyperModel nat) I G wfc : h_ty) = h_make_ctx_ty G)
     by apply h_ctx_identity.
   rewrite Heq_Ctx in dp_syn.
   
-  (* 4. Clean the Base Type Index (I) *)
   assert (Heq_I : (@interp_ty (@Base_SetoidCategory nat) _ _ I) = I) by apply interp_ty_id.
   unfold syn_obj in dp_syn.
   rewrite Heq_I in dp_syn.
   
-  (* 5. Construct the final derivation (G |- Phi) by applying our 
-        morphism (Folded(G) -> Phi) to the reified context tuple! *)
   
-  (* Convert the morphism ([A] |- p : B) into an implication (nil |- \lambda A. p : A -> B),
-     and THEN weaken it from 'nil' to our target context 'G' *)
+  (* Close the fiber arrow as an implication before weakening it into [G]. *)
   assert (H_weak : h_derivation I G (h_lift (length G) 0 (tm_lam (h_make_ctx_ty G) p_syn)) (Ty_Arrow (h_make_ctx_ty G) Phi)).
   { apply h_weakening_from_nil. 
     - exact wfc. 
     - apply HD_Lam. exact dp_syn. }
 
-  (* Apply the weakened function to the packed context *)
   exists (tm_app (h_lift (length G) 0 (tm_lam (h_make_ctx_ty G) p_syn)) (h_reify_ctx G)).
   constructor.
   eapply HD_App.

@@ -3,7 +3,7 @@ Import ListNotations.
 Require Import Coq.Classes.Morphisms.
 
 Require Import HyperLogic.Cat.Core.
-Require Import HyperLogic.Cat.CC.   (* ÚJ: Alap kategória *)
+Require Import HyperLogic.Cat.CC.
 Require Import HyperLogic.Cat.CCC.
 Require Import HyperLogic.Cat.BCCC.
 
@@ -12,29 +12,23 @@ Require Import HyperLogic.Logic.STLC_PI_Sum.STLC_PI_Sum_Lemmas.
 
 Open Scope stlc_scope_sum. 
 
-(* ================================================================= *)
-(* 1. MODEL & TYPE INTERPRETATION                                    *)
-(* ================================================================= *)
+(** Categorical semantics for STLC with sums and void. *)
 
 Class Model (C : SetoidCategory) := {
   interp_base : nat -> @obj C
 }.
 
-(* Interpretation of Types: [[ A ]] *)
-(* VÁLTOZÁS: Ct, CC, BCC implicitek lettek {} *)
 Fixpoint interp_ty (C : SetoidCategory) {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
                    (M : Model C) (A : ty) : @obj C :=
   match A with
   | Ty_Atomic n  => interp_base n
   | Ty_Unit      => terminal
   | Ty_Void      => initial
-  (* Itt már nem kell átadni a kategória instance-okat explicit módon *)
   | Ty_Prod A B  => prod (interp_ty C M A) (interp_ty C M B)
   | Ty_Arrow A B => exp (interp_ty C M B) (interp_ty C M A)
   | Ty_Sum A B   => coprod (interp_ty C M A) (interp_ty C M B)
   end.
 
-(* Interpretation of Contexts: [[ Gamma ]] *)
 Fixpoint interp_ctx (C : SetoidCategory) {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
                     (M : Model C) (Gamma : context) : @obj C :=
   match Gamma with
@@ -42,14 +36,9 @@ Fixpoint interp_ctx (C : SetoidCategory) {Ct : CartesianCategory C} {CC : Cartes
   | A :: Gamma' => prod (interp_ctx C M Gamma') (interp_ty C M A)
   end.
 
-(* ================================================================= *)
-(* 2. EXPLICIT SEMANTICS                                             *)
-(* ================================================================= *)
+(** Explicit interpretation of Set-valued derivation trees. *)
 
-(* Helper: Swap context for Currying 
-   <snd, fst> : Gamma x A -> A x Gamma 
-   Ez most a Ct-ből jön (prod_map)
-*)
+(* Currying swaps [Gamma x A] to [A x Gamma] using [prod_map]. *)
 Definition swap_map {C : SetoidCategory} {Ct : CartesianCategory C} 
   {x y : @obj C} : hom (prod x y) (prod y x) :=
   prod_map prod_snd prod_fst.
@@ -61,7 +50,6 @@ Fixpoint interp_derivation {C : SetoidCategory} {Ct : CartesianCategory C} {CC :
                            : hom (interp_ctx C M Gamma) (interp_ty C M A) :=
   match D in (derivation G t0 A0) return (hom (interp_ctx C M G) (interp_ty C M A0)) with
   
-  (* --- Standard STLC (Uses Ct & CC) --- *)
   | D_Unit _               => terminal_map
   | D_Var0 _ _             => prod_snd
   | D_VarS _ _ _ _ D_prev  => compose (interp_derivation D_prev) prod_fst
@@ -71,17 +59,13 @@ Fixpoint interp_derivation {C : SetoidCategory} {Ct : CartesianCategory C} {CC :
   | D_Fst _ _ _ _ D_pair   => compose prod_fst (interp_derivation D_pair)
   | D_Snd _ _ _ _ D_pair   => compose prod_snd (interp_derivation D_pair)
 
-  (* --- BiSTLC Extensions (Uses BCC) --- *)
   
-  (* [[ inl t ]] = inl o [[ t ]] *)
   | D_Inl _ _ _ _ D_t => 
       compose coprod_inl (interp_derivation D_t)
       
-  (* [[ inr t ]] = inr o [[ t ]] *)
   | D_Inr _ _ _ _ D_t => 
       compose coprod_inr (interp_derivation D_t)
 
-  (* [[ case t of x.t1 | y.t2 ]] *)
   | D_Case Gamma0 _ _ _ A0 B t3 D_t D_l D_r => 
       compose eval 
         (prod_map 
@@ -92,7 +76,6 @@ Fixpoint interp_derivation {C : SetoidCategory} {Ct : CartesianCategory C} {CC :
               (interp_derivation D_t)) 
            (id _))
 
-  (* [[ absurd t ]] = initial_map o [[ t ]] *)
   | D_Absurd _ _ _ D_t =>
       compose initial_map (interp_derivation D_t)
 
@@ -103,9 +86,6 @@ Definition interp_term_ver {C : SetoidCategory} {Ct : CartesianCategory C} {CC :
                            : hom (interp_ctx C M Gamma) (interp_ty C M A) :=
   interp_derivation d.
 
-(* ================================================================= *)
-(* 3. THEOREMS                                                       *)
-(* ================================================================= *)
 
 Theorem Soundness_explicit : forall (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC)
                                     (M : Model C) (Gamma : context) (A : ty) (t : tm)
@@ -125,9 +105,7 @@ Proof.
   apply (interp_derivation d).
 Defined.
 
-(* ================================================================= *)
-(* KIEGÉSZÍTÉS: Soundness Equivalence & Interpretation Relations     *)
-(* ================================================================= *)
+(** Equational soundness and interpretation relations. *)
 
 Theorem soundness_equiv {C : SetoidCategory} {Ct : CartesianCategory C} {CC : CartesianClosedCategory C} {BCC : BiCartesianClosedCategory CC}
                         {M : Model C} {HThin : Thin C}
@@ -163,9 +141,7 @@ Proof.
   exact Heq.
 Defined.
 
-(* ================================================================= *)
-(* 4. IMPLICIT SEMANTICS                                             *)
-(* ================================================================= *)
+(** Inhabitational interpretation of Prop-valued typeability. *)
 
 Lemma Soundness_implicit_aux (C : SetoidCategory) (Ct : CartesianCategory C) (CC : CartesianClosedCategory C) (BCC : BiCartesianClosedCategory CC) (M : Model C) :
   forall (Gamma : context) (t : tm) (A : ty),
@@ -174,7 +150,6 @@ Proof.
   intros Gamma t A H.
   induction H.
   
-  (* Standard STLC Cases *)
   - apply inhabits; simpl. exact terminal_map.
   - apply inhabits; simpl. exact prod_snd.
   - destruct IHtypeability as [IH]. apply inhabits; simpl. exact (compose IH prod_fst).
@@ -186,32 +161,23 @@ Proof.
   - destruct IHtypeability as [Hpair]. apply inhabits; simpl. exact (compose prod_fst Hpair).
   - destruct IHtypeability as [Hpair]. apply inhabits; simpl. exact (compose prod_snd Hpair).
 
-  (* --- BiSTLC Cases --- *)
-  (* T_Inl *)
   - destruct IHtypeability as [IH]. apply inhabits; simpl. exact (compose coprod_inl IH).
-  (* T_Inr *)
   - destruct IHtypeability as [IH]. apply inhabits; simpl. exact (compose coprod_inr IH).
   
-  (* T_Case *)
   - destruct IHtypeability1 as [Hsum].
     destruct IHtypeability2 as [Hleft].
     destruct IHtypeability3 as [Hright].
     apply inhabits; simpl.
-    (* Construct the Curried Left Branch *)
     assert (CurriedLeft : hom (interp_ty C M A) (exp (interp_ty C M C0) (interp_ctx C M Gamma))).
     { apply exp_map. apply (compose Hleft). apply swap_map. }
-    (* Construct the Curried Right Branch *)
     assert (CurriedRight : hom (interp_ty C M B) (exp (interp_ty C M C0) (interp_ctx C M Gamma))).
     { apply exp_map. apply (compose Hright). apply swap_map. }
 
-    (* Combine using Coproduct Map *)
     assert (CaseMap : hom (interp_ty C M (Ty_Sum A B)) (exp (interp_ty C M C0) (interp_ctx C M Gamma))).
     { apply coprod_map; assumption. }
 
-    (* Final composition *)
     exact (compose eval (prod_map (compose CaseMap Hsum) (id _))).
 
-  (* T_Absurd *)
   - destruct IHtypeability as [Hvoid]. apply inhabits; simpl. exact (compose initial_map Hvoid).
 Defined.
 

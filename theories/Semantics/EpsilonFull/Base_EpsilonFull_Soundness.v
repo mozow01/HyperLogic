@@ -1,4 +1,3 @@
-(* theories/Semantics/EpsilonFull/Base_EpsilonFull_Soundness.v *)
 
 Require Import Coq.Classes.Morphisms.
 
@@ -9,9 +8,7 @@ Require Import HyperLogic.Cat.Fibration.
 Require Import HyperLogic.Logic.Base.EpsilonFull.Base_Syntax.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_Fibration.
 
-(* ================================================================= *)
-(* SOUNDNESS TÉTELEK A BÁZISHOZ (Epsilon Full)                       *)
-(* ================================================================= *)
+(** Soundness for the epsilon-exists base syntax. *)
 
 Theorem base_soundness_inhabitational :
   forall {Sign Func : Type} `{HFunc : FunctionSignature Func}

@@ -1,4 +1,3 @@
-(* theories/Semantics/EpsilonFull/Base_EpsilonFull_Completeness.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Program.Equality.
@@ -10,9 +9,7 @@ Require Import HyperLogic.Cat.Fibration.
 Require Import HyperLogic.Logic.Base.EpsilonFull.Base_Syntax.
 Require Import HyperLogic.Semantics.EpsilonFull.EpsilonFull_Fibration.
 
-(* ================================================================= *)
-(* 1. A SZINTAKTIKUS KATEGÓRIA (TERM MODELL) MORFIZMUSAI             *)
-(* ================================================================= *)
+(** Syntactic base model for completeness. *)
 
 Class hom_base {Sign Func : Type} `{HFunc : FunctionSignature Func} (A B : b_ty) : Type := mk_hom_base {
   tm_of : @b_tm Sign Func;
@@ -22,9 +19,6 @@ Class hom_base {Sign Func : Type} `{HFunc : FunctionSignature Func} (A B : b_ty)
 Arguments tm_of {Sign Func HFunc A B} _.
 Arguments deriv_of {Sign Func HFunc A B} _.
 
-(* ================================================================= *)
-(* 2. A BÁZIS KATEGÓRIA PÉLDÁNYOSÍTÁSA                               *)
-(* ================================================================= *)
 
 Instance Base_SetoidCategory (Sign Func : Type) `{HFunc : FunctionSignature Func} : SetoidCategory.
 Proof.
@@ -78,9 +72,6 @@ Proof.
   intro H. discriminate H.
 Defined.
 
-(* ================================================================= *)
-(* 2.5 SZINTAKTIKUS EPSILON FULL MODELL ÉS SEGÉDLEMMÁK               *)
-(* ================================================================= *)
 
 Lemma interp_ty_id : forall (Sign Func : Type) `{HFunc : FunctionSignature Func} (A : b_ty),
   @interp_ty (Base_SetoidCategory Sign Func) (Base_CartesianCategory Sign Func) (Base_TwoSortCategory Sign Func) A = A.
@@ -103,9 +94,6 @@ Proof.
     exact (@mk_hom_base Sign Func HFunc (func_dom f) (func_cod f) (b_func f) BT_Func).
 Defined.
 
-(* ================================================================= *)
-(* 3. COMPLETENESS HELPER LEMMÁK                                     *)
-(* ================================================================= *)
 
 Lemma tm_of_eq_rect : forall {Sign Func : Type} `{HFunc : FunctionSignature Func}
   (I A I_sem A_sem : b_ty)
@@ -205,9 +193,7 @@ Proof.
   subst. exact d.
 Defined.
 
-(* ================================================================= *)
-(* 4. COMPLETENESS (TELJESSÉG) TÉTELEK                               *)
-(* ================================================================= *)
+(** Base completeness theorems. *)
 
 Instance Base_SyntacticCoherentModel (Sign Func : Type) `{HFunc : FunctionSignature Func} :
   @CoherentBaseModel Sign Func HFunc
@@ -251,4 +237,26 @@ Proof.
   - apply interp_tm_term.
   - apply interp_tm_term.
   - exact Heq.
+Defined.
+
+Theorem base_completeness_inhabitational :
+  forall {Sign Func : Type} `{HFunc : FunctionSignature Func}
+    (A B : b_ty),
+  (forall (C : SetoidCategory) (CC : CartesianCategory C)
+      (TSC : TwoSortCategory C)
+      (BEM : @BaseEpsilonFullModel Sign Func HFunc C CC TSC),
+    inhabited (@hom C (@interp_ty C CC TSC A) (@interp_ty C CC TSC B))) ->
+  exists t : @b_tm Sign Func,
+    inhabited (@base_typing Sign Func HFunc A t B).
+Proof.
+  intros Sign Func HFunc A B Hvalid.
+  destruct (Hvalid
+    (Base_SetoidCategory Sign Func)
+    (Base_CartesianCategory Sign Func)
+    (Base_TwoSortCategory Sign Func)
+    (Base_SyntacticEpsilonFullModel Sign Func)) as [h].
+  rewrite (interp_ty_id Sign Func A) in h.
+  rewrite (interp_ty_id Sign Func B) in h.
+  destruct h as [t dt].
+  exists t. constructor. exact dt.
 Defined.

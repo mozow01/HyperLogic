@@ -1,4 +1,3 @@
-(* HyperLogic/theories/Semantics/Simple_Ext/Simple_Ext_Completeness.v *)
 
 Require Import Coq.Classes.Morphisms.
 Require Import Coq.Program.Equality.
@@ -6,7 +5,6 @@ Require Import List Arith PeanoNat Lia.
 
 Import ListNotations.
 
-(* Kategóriaelméleti alapok *)
 Require Import HyperLogic.Cat.Core.
 Require Import HyperLogic.Cat.CC.
 Require Import HyperLogic.Cat.CCC. 
@@ -15,7 +13,6 @@ Require Import HyperLogic.Cat.Functor.
 Require Import HyperLogic.Cat.Adjoint.
 Require Import HyperLogic.Cat.Fibration.
 
-(* Szintaxis és Bázis Szemantika *)
 Require Import HyperLogic.Logic.Base.Simple_Ext.Base_Syntax.
 Require Import HyperLogic.Semantics.Simple_Ext.Base_Epsilon_Completeness.
 Require Import HyperLogic.Semantics.Simple_Ext.Base_Epsilon_Soundness.
@@ -27,31 +24,25 @@ Require Import HyperLogic.Logic.Hyper.Simple_Ext.Hyper_Syntax.
 Require Import HyperLogic.Logic.Hyper.Simple_Ext.Hyper_Lemmas.
 Require Import HyperLogic.Logic.Hyper.Simple_Ext.Hyper_Lifting.
 
-(* ================================================================= *)
-(* 1. MORPHISMS OF THE SYNTACTIC FIBER                               *)
-(* ================================================================= *)
-(* In the fiber over base context 'I', a morphism from Phi to Psi 
-    is a valid derivation from the singleton context [Phi] to Psi. *)
+(** Legacy syntactic completeness model. *)
+(** A fiber arrow is a derivation from the singleton source formula. *)
 Record hom_hyper {Sign : Type} (I : b_ty) (Phi Psi : @h_ty Sign) : Type := mk_hom_hyper {
   h_tm_of : @h_tm Sign;
   h_deriv_of : @h_derivation Sign I (Phi :: nil) h_tm_of Psi
 }.
 
-(* The new rigorous objects of the Syntactic Fiber *)
+(** Fiber objects package formulas with well-formedness data. *)
 Record obj_hyper {Sign : Type} (I : b_ty) : Type := mk_obj_hyper {
   ty_val : @h_ty Sign;
   ty_wf  : @WellFormed Sign I ty_val
 }.
 
-(* Coercion allows you to seamlessly use obj_hyper where h_ty is expected *)
+(* The coercion exposes the underlying formula where [h_ty] is expected. *)
 Coercion ty_val : obj_hyper >-> h_ty.
 
 Arguments h_tm_of {Sign I Phi Psi} _.
 Arguments h_deriv_of {Sign I Phi Psi} _.
 
-(* ================================================================= *)
-(* 1.5 SYNTACTIC FIBER INFRASTRUCTURE                                *)
-(* ================================================================= *)
 
 Lemma ctx_pullback_app : forall {Sign : Type} f (G Delta : @h_context Sign),
   ctx_pullback f (G ++ Delta) = ctx_pullback f G ++ ctx_pullback f Delta.
@@ -93,14 +84,11 @@ Proof.
   - apply derivation_to_typing; exact dq.
 Qed.
 
-(* ================================================================= *)
-(* 2. IDENTITY AND COMPOSITION OF THE SYNTACTIC FIBER                *)
-(* ================================================================= *)
 
 Definition hyper_id_term {Sign : Type} (Phi : @h_ty Sign) : @h_tm Sign :=
   tm_var 0.
 
-(* A '@' operátorral kikerüljük az implicit kitalálósdit: *)
+(* Explicit arguments avoid ambiguous implicit inference. *)
 Definition hyper_id_deriv {Sign : Type} (I : b_ty) (Phi : obj_hyper I) 
   : @h_derivation Sign I ((Phi : h_ty) :: nil) (hyper_id_term Phi) Phi :=
   @HD_Var0 Sign I nil Phi (@WFC_nil Sign I) (@ty_wf Sign I Phi).
@@ -140,7 +128,7 @@ Proof.
   intros Sign I Phi. eapply WFC_cons. exact (@ty_wf Sign I Phi). apply WFC_nil.
 Qed.
 
-(* Két jólformált kontextus összefűzése is jólformált *)
+(** Appending well-formed contexts preserves well-formedness. *)
 Lemma wf_ctx_app : forall {Sign : Type} I (G Delta : @h_context Sign),
   @wf_ctx Sign I G ->
   @wf_ctx Sign I Delta ->
@@ -148,9 +136,9 @@ Lemma wf_ctx_app : forall {Sign : Type} I (G Delta : @h_context Sign),
 Proof.
   intros Sign I G Delta wG wDelta.
   induction wG; simpl.
-  - (* Ha G üres, a Delta jólformáltsága az eredmény *)
+  -
     exact wDelta.
-  - (* Ha G = Phi :: G', akkor hozzáadjuk a fejet az összefűzött farokhoz *)
+  -
     apply WFC_cons; [assumption | exact IHwG].
 Defined.
 
@@ -163,32 +151,32 @@ Proof.
   revert Delta Hwf.
   induction d; intros Delta Hwf;
   try (rewrite H_cons_app; try rewrite <- app_assoc; try rewrite <- H_cons_app).
-  - (* 1. HD_Var0 *) apply HD_Var0; [apply wf_ctx_app; assumption | assumption].
-  - (* 2. HD_VarS *) apply HD_VarS; [apply IHd; assumption | assumption].
-  - (* 3. HD_Conv *) eapply HD_Conv; [apply IHd; assumption | eassumption | assumption].
-  - (* 4. HD_Unit *) apply HD_Unit; apply wf_ctx_app; assumption.
-  - (* 5. HD_Lam  *) apply HD_Lam; apply IHd; assumption.
-  - (* 6. HD_App  *) eapply HD_App; [apply IHd1; assumption | apply IHd2; assumption].
-  - (* 7. HD_Pair *) apply HD_Pair; [apply IHd1; assumption | apply IHd2; assumption].
-  - (* 8. HD_Fst  *) eapply HD_Fst; apply IHd; assumption.
-  - (* 9. HD_Snd  *) eapply HD_Snd; apply IHd; assumption.
-  - (* 10. HD_Inl *) apply HD_Inl; [apply IHd; assumption | assumption].
-  - (* 11. HD_Inr *) apply HD_Inr; [apply IHd; assumption | assumption].
-  - (* 12. HD_Case *) eapply HD_Case; [apply IHd1; assumption | apply IHd2; assumption | apply IHd3; assumption].
-  - (* 13. HD_Absurd *) apply HD_Absurd; [apply IHd; assumption | assumption].
-  - (* 14. HD_All_Intro *) 
+  -   apply HD_Var0; [apply wf_ctx_app; assumption | assumption].
+  -   apply HD_VarS; [apply IHd; assumption | assumption].
+  -   eapply HD_Conv; [apply IHd; assumption | eassumption | assumption].
+  -   apply HD_Unit; apply wf_ctx_app; assumption.
+  -   apply HD_Lam; apply IHd; assumption.
+  -   eapply HD_App; [apply IHd1; assumption | apply IHd2; assumption].
+  -   apply HD_Pair; [apply IHd1; assumption | apply IHd2; assumption].
+  -   eapply HD_Fst; apply IHd; assumption.
+  -   eapply HD_Snd; apply IHd; assumption.
+  -   apply HD_Inl; [apply IHd; assumption | assumption].
+  -   apply HD_Inr; [apply IHd; assumption | assumption].
+  -   eapply HD_Case; [apply IHd1; assumption | apply IHd2; assumption | apply IHd3; assumption].
+  -   apply HD_Absurd; [apply IHd; assumption | assumption].
+  -
     apply HD_All_Intro. 
     + apply wf_ctx_app; assumption.
     + rewrite ctx_pullback_app. apply IHd. eapply wf_ctx_pullback; [apply (@BT_Fst Sign I A) | assumption].
-  - (* 15. HD_All_Elim *) eapply HD_All_Elim; [apply IHd; assumption | assumption].
-  - (* 16. HD_Ex_Intro *) eapply HD_Ex_Intro; [assumption | assumption | apply IHd; assumption].
-  - (* HD_Ctx_Conv ág (Kontextus Konverzió) *)
+  -   eapply HD_All_Elim; [apply IHd; assumption | assumption].
+  -   eapply HD_Ex_Intro; [assumption | assumption | apply IHd; assumption].
+  -
     eapply HD_Ctx_Conv.
     + apply IHd. apply Hwf.
     + apply ctx_equiv_app; [eassumption | apply ctx_equiv_refl; assumption].
     + apply wf_ctx_app; [eassumption | assumption].
     
-  - (* HD_Ex_Elim ág (Egzisztenciális Kvantor Kivezetés) *)
+  -
     eapply HD_Ex_Elim. 
     + assumption. 
     + apply IHd1; assumption. 
@@ -230,9 +218,6 @@ Proof.
   - exact (h_deriv_of g).
 Qed.
 
-(* ================================================================= *)
-(* 3. THE SYNTACTIC FIBER CATEGORY                                   *)
-(* ================================================================= *)
 
 Instance Syntactic_Fiber {Sign : Type} (I : b_ty) : SetoidCategory.
 Proof.
@@ -243,20 +228,17 @@ Proof.
     (@hyper_comp Sign I)
     (@hyper_hom_equiv Sign I)
     _ _ _ _ _).
-  - (* Equivalence *)
+  -
     intros A B. split.
     + intros f. apply hyper_hom_equiv_pi.
     + intros f g H. apply hyper_hom_equiv_pi.
     + intros f g h H1 H2. apply hyper_hom_equiv_pi.
-  - (* Assoc *) intros A B C D f g h. apply hyper_hom_equiv_pi.
-  - (* IdR *) intros A B f. apply hyper_hom_equiv_pi.
-  - (* IdL *) intros A B f. apply hyper_hom_equiv_pi.
-  - (* Proper *) unfold Proper, respectful. intros A B C f f' Hf g g' Hg. apply hyper_hom_equiv_pi.
+  -   intros A B C D f g h. apply hyper_hom_equiv_pi.
+  -   intros A B f. apply hyper_hom_equiv_pi.
+  -   intros A B f. apply hyper_hom_equiv_pi.
+  -   unfold Proper, respectful. intros A B C f f' Hf g g' Hg. apply hyper_hom_equiv_pi.
 Defined.
 
-(* ================================================================= *)
-(* 3.5 OBJECT BUILDERS (Axiom-Free Well-Formedness!)                 *)
-(* ================================================================= *)
 
 Definition syn_terminal_obj {Sign : Type} (I : b_ty) : @obj_hyper Sign I :=
   @mk_obj_hyper Sign I Ty_Unit (@WF_Unit Sign I).
@@ -278,9 +260,6 @@ Proof.
   intros Sign I A C. apply WFC_cons. exact (ty_wf I A). apply WFC_cons. exact (ty_wf I C). apply WFC_nil.
 Qed.
 
-(* ================================================================= *)
-(* 4. THE SYNTACTIC HYPERDOCTRINE                                    *)
-(* ================================================================= *)
 
 Instance Syntactic_Cartesian {Sign : Type} (I : b_ty) : CartesianCategory (@Syntactic_Fiber Sign I).
 Proof.
@@ -291,7 +270,7 @@ Proof.
     (fun (Phi : @obj_hyper Sign I) => @mk_hom_hyper Sign I Phi (@syn_terminal_obj Sign I) tm_unit 
        (@HD_Unit Sign I ((Phi : h_ty) :: nil) (obj_ctx_wf I Phi)))
     
-    _ (* terminal_map_unique law *)
+    _
     
     (@syn_prod_obj Sign I)
     
@@ -304,7 +283,7 @@ Proof.
     (fun (Phi Psi : @obj_hyper Sign I) => @mk_hom_hyper Sign I (@syn_prod_obj Sign I Phi Psi) Psi (tm_snd (tm_var 0)) 
        ltac:(eapply HD_Snd; exact (hyper_id_deriv I (@syn_prod_obj Sign I Phi Psi))))
     
-    _ _ _ _ (* Category laws *)
+    _ _ _ _
   ).
   - intros x f. apply hyper_hom_equiv_pi.
   - intros A B C f g. apply hyper_hom_equiv_pi.
@@ -317,10 +296,8 @@ Instance Syntactic_Closed {Sign : Type} (I : b_ty) : CartesianClosedCategory (@S
 Proof.
   refine (mk_CartesianClosedCategory (@Syntactic_Fiber Sign I) (@Syntactic_Cartesian Sign I)
     
-    (* 1. exp mapping *)
     (fun Tgt Src => @syn_exp_obj Sign I Src Tgt)
 
-    (* 2. Curry *)
     (fun (C A B : @obj_hyper Sign I) f => @mk_hom_hyper Sign I C (@syn_exp_obj Sign I A B) 
        (tm_lam A (tm_app (tm_lam (Ty_Prod C A) (h_tm_of f)) (tm_pair (tm_var 1) (tm_var 0)))) 
        
@@ -330,7 +307,6 @@ Proof.
                [ exact (@HD_VarS Sign I ((C:h_ty)::nil) C A 0 (hyper_id_deriv I C) (ty_wf I A)) 
                | exact (@HD_Var0 Sign I ((C:h_ty)::nil) A (obj_ctx_wf I C) (ty_wf I A)) ] ]))
 
-    (* 3. Eval *)
     (fun (A B : @obj_hyper Sign I) => @mk_hom_hyper Sign I (@syn_prod_obj Sign I (@syn_exp_obj Sign I A B) A) B 
        (tm_app (tm_fst (tm_var 0)) (tm_snd (tm_var 0))) 
        
@@ -338,7 +314,7 @@ Proof.
              [ eapply HD_Fst; exact (hyper_id_deriv I (@syn_prod_obj Sign I (@syn_exp_obj Sign I A B) A)) 
              | eapply HD_Snd; exact (hyper_id_deriv I (@syn_prod_obj Sign I (@syn_exp_obj Sign I A B) A)) ]))
            
-    _ _ _ (* Category laws *)
+    _ _ _
   ).
   - intros A B C f. apply hyper_hom_equiv_pi.
   - intros A B C h. apply hyper_hom_equiv_pi.
@@ -354,7 +330,7 @@ Proof.
     (fun (Phi : @obj_hyper Sign I) => @mk_hom_hyper Sign I (@syn_initial_obj Sign I) Phi (tm_absurd Phi (tm_var 0)) 
        ltac:(apply HD_Absurd; [exact (hyper_id_deriv I (@syn_initial_obj Sign I)) | exact (ty_wf I Phi)]))
        
-    _ (* initial_map_unique law *)
+    _
     
     (@syn_coprod_obj Sign I)
    
@@ -374,7 +350,7 @@ Proof.
              | apply (@hd_weakening_append Sign I ((Psi:h_ty) :: nil) ((Ty_Sum Phi Psi : h_ty) :: nil));
                [ apply (obj_ctx_wf I (@syn_coprod_obj Sign I Phi Psi)) | exact (h_deriv_of g) ] ]))
              
-    _ _ _ _ (* Category laws *)
+    _ _ _ _
   ).
   - intros x f. apply hyper_hom_equiv_pi.
   - intros A B C f g. apply hyper_hom_equiv_pi.
@@ -384,9 +360,6 @@ Proof.
 Defined.
 
 
-(* ================================================================= *)
-(* 5. THE SYNTACTIC SUBSTITUTION FUNCTOR (PULLBACK)                  *)
-(* ================================================================= *)
 
 Fixpoint h_tm_pullback {Sign : Type} (f : @b_tm Sign) (p : @h_tm Sign) : @h_tm Sign :=
   match p with
@@ -407,9 +380,6 @@ Fixpoint h_tm_pullback {Sign : Type} (f : @b_tm Sign) (p : @h_tm Sign) : @h_tm S
   | tm_ex_elim p1 p2 => tm_ex_elim (h_tm_pullback f p1) (h_tm_pullback (b_pullback_ext f) p2)
   end.
 
-(* ================================================================= *)
-(* 5.5 STRUCTURAL EQUIVALENCE LEMMAS                                 *)
-(* ================================================================= *)
 
 Lemma form_equiv_pullback_comp : forall {Sign : Type} I J K (f g : @b_tm Sign) (df : @base_typing Sign J f K) (dg : @base_typing Sign I g J) (Phi : @obj_hyper Sign K),
   @form_equiv Sign I (form_pullback g (form_pullback f Phi)) (form_pullback (b_comp f g) Phi).
@@ -436,7 +406,6 @@ Proof.
       * apply (@BT_Fst Sign J A).
       * eapply BT_Pair; [eapply BT_Comp; [exact dg | apply (@BT_Fst Sign I A)] | apply (@BT_Snd Sign I A)].
       * exact (ty_wf J Phi).
-(* Itt jön a varázslat: lehívjuk a polcról a hiányzó levezetéseket! *)
 Unshelve.
   all: try exact A.
   all: try (eapply BT_Comp; [exact dg | apply (@BT_Fst Sign I A)]).
@@ -543,7 +512,7 @@ Proof.
       * apply IHd. eapply BT_Pair; [eapply BT_Comp; [exact dg | apply (@BT_Fst Sign I_src A)] | apply (@BT_Snd Sign I_src A)].
       * apply ctx_equiv_sym. eapply ctx_equiv_pullback_ext_comm; [exact dg | exact w].
       * eapply wf_ctx_pullback. apply (@BT_Fst Sign I_src A). eapply wf_ctx_pullback; [exact dg | exact w].
-  - (* 15. HD_All_Elim *)
+  -
     eapply HD_Conv.
     + eapply HD_All_Elim; [apply IHd; exact dg | eapply BT_Comp; [exact b | exact dg]].
     + eapply FE_Trans.
@@ -581,7 +550,7 @@ Proof.
       * eapply wf_pullback.
         { eapply BT_Pair; [apply (@BT_Id Sign I) | exact b]. }
         { pose proof (well_formed_target _ _ _ _ d) as Hwf; exact (ext_all Hwf). }
-- (* 16. HD_Ex_Intro *)
+-
     eapply HD_Ex_Intro.
     + eapply wf_pullback; [eapply BT_Pair; [eapply BT_Comp; [exact dg | apply (@BT_Fst Sign I_src A)] | apply (@BT_Snd Sign I_src A)] | exact w].
     + eapply BT_Comp; [exact b | exact dg].
@@ -621,13 +590,13 @@ Proof.
       * eapply wf_pullback.
         { eapply BT_Pair; [apply (@BT_Id Sign I_src) | eapply BT_Comp; [exact b | exact dg]]. }
         { eapply wf_pullback; [eapply BT_Pair; [eapply BT_Comp; [exact dg | apply (@BT_Fst Sign I_src A)] | apply (@BT_Snd Sign I_src A)] | exact w]. }
-  - (* 17. HD_Ctx_Conv (Nálad ez került a 17. helyre!) *)
+  -
     eapply HD_Ctx_Conv.
     + apply IHd; exact dg.
     + eapply ctx_pullback_equiv_lemma; [exact dg | exact c].
     + eapply wf_ctx_pullback; [exact dg | exact w].
 
-  - (* 18. HD_Ex_Elim (És ez csúszott a 18. helyre) *)
+  -
    eapply HD_Ex_Elim.
     + eapply wf_pullback; [exact dg | exact w].
     + apply IHd1; exact dg.
@@ -657,59 +626,52 @@ Proof.
 Defined.
 
 
-(* ================================================================= *)
-(* 6.8 THE CATEGORICAL ISOMORPHISM BUILDERS                          *)
-(* ================================================================= *)
 
-(** HELPER 1: For Strict Equalities (Identities) *)
 Lemma syn_iso_from_eq {Sign : Type} (I : b_ty) (Phi Psi : @obj_hyper Sign I) :
   (Phi : h_ty) = (Psi : h_ty) -> (Phi : @obj (Syntactic_Fiber I)) ≅O (Psi : @obj (Syntactic_Fiber I)).
 Proof.
   intros Heq.
   
-  (* 'unshelve' forces Coq to ask for the morphisms BEFORE the proofs! *)
+  (* [unshelve] exposes morphism obligations before isomorphism laws. *)
   unshelve econstructor.
-  - (* 1. iso_to *)
+  -
     refine (@mk_hom_hyper Sign I Phi Psi (tm_var 0) _).
     rewrite <- Heq. exact (@hyper_id_deriv Sign I Phi).
     
-  - (* 2. iso_from *)
+  -
     refine (@mk_hom_hyper Sign I Psi Phi (tm_var 0) _).
     rewrite Heq. exact (@hyper_id_deriv Sign I Psi).
     
-  - (* 3. Iso Law 1 *) apply hyper_hom_equiv_pi.
-  - (* 4. Iso Law 2 *) apply hyper_hom_equiv_pi.
+  -   apply hyper_hom_equiv_pi.
+  -   apply hyper_hom_equiv_pi.
 Defined.
 
 
-(** HELPER 2: For Logical Equivalences (The Bypass Killer!) *)
+(** [HD_Conv] turns formula equivalence into a fiber isomorphism. *)
 Lemma syn_iso_from_equiv {Sign : Type} (I : b_ty) (Phi Psi : @obj_hyper Sign I) :
   @form_equiv Sign I Phi Psi -> (Phi : @obj (Syntactic_Fiber I)) ≅O (Psi : @obj (Syntactic_Fiber I)).
 Proof.
   intros Heq.
   
-  (* 'unshelve' forces Coq to ask for the morphisms BEFORE the proofs! *)
+  (* [unshelve] exposes morphism obligations before isomorphism laws. *)
   unshelve econstructor.
-  - (* 1. iso_to *)
+  -
     refine (@mk_hom_hyper Sign I Phi Psi (tm_var 0) _).
     eapply HD_Conv.
     + exact (@hyper_id_deriv Sign I Phi).
     + exact Heq.
     + exact (ty_wf _ Psi).
     
-  - (* 2. iso_from *)
+  -
     refine (@mk_hom_hyper Sign I Psi Phi (tm_var 0) _).
     eapply HD_Conv.
     + exact (@hyper_id_deriv Sign I Psi).
     + apply FE_Sym. exact Heq.
     + exact (ty_wf _ Phi).
     
-  - (* 3. Iso Law 1 *) apply hyper_hom_equiv_pi.
-  - (* 4. Iso Law 2 *) apply hyper_hom_equiv_pi.
+  -   apply hyper_hom_equiv_pi.
+  -   apply hyper_hom_equiv_pi.
 Defined.
-(* ================================================================= *)
-(* 5. PULLBACK FUNCTOR OF THE SYNTACTIC FIBER                        *)
-(* ================================================================= *)
 
 
 
@@ -722,7 +684,6 @@ Definition syn_pullback_mor {Sign : Type} (I J : b_ty) (f : @b_tm Sign) (df : @b
   @hom_hyper Sign I (@syn_pullback_obj Sign I J f df Phi) (@syn_pullback_obj Sign I J f df Psi).
 Proof.
   refine (@mk_hom_hyper Sign I (@syn_pullback_obj Sign I J f df Phi) (@syn_pullback_obj Sign I J f df Psi) (h_tm_pullback f (h_tm_of m)) _).
-  (* Itt hívjuk meg a nehezen kiharcolt lemmánkat! *)
   exact (@derivation_pullback Sign I J f df ((Phi:h_ty) :: nil) (h_tm_of m) Psi (h_deriv_of m)).
 Defined.
 
@@ -732,19 +693,15 @@ Proof.
   refine (@mk_Functor (@Syntactic_Fiber Sign J) (@Syntactic_Fiber Sign I) 
     (@syn_pullback_obj Sign I J f df) 
     (@syn_pullback_mor Sign I J f df) _ _ _).
-  - (* Proper: A funktor tiszteletben tartja az egyenlőséget *)
+  -
     unfold Proper, respectful. intros. apply hyper_hom_equiv_pi.
-  - (* F_id: Visszahúzott identitás = identitás *)
+  -
     intros. apply hyper_hom_equiv_pi.
-  - (* F_comp: Visszahúzott kompozíció = kompozíciók visszahúzva *)
+  -
     intros. apply hyper_hom_equiv_pi.
 Defined.
 
-(* ================================================================= *)
-(* 6. THE SYNTACTIC QUANTIFIERS (ADJOINTS)                           *)
-(* ================================================================= *)
 
-(** 6.1 THE RIGHT ADJOINT (FORALL) *)
 
 Definition syn_all_obj {Sign : Type} (I A : b_ty) (Phi : @obj_hyper Sign (b_Prod I A)) : @obj_hyper Sign I := 
   @mk_obj_hyper Sign I (Ty_All A Phi) (@WF_All Sign I A Phi (ty_wf (b_Prod I A) Phi)).
@@ -814,7 +771,6 @@ Proof.
   - intros. apply hyper_hom_equiv_pi.
 Defined.
 
-(** 6.2 THE LEFT ADJOINT (EXISTS) *)
 
 Definition syn_ex_obj {Sign : Type} (I A : b_ty) (Phi : @obj_hyper Sign (b_Prod I A)) : @obj_hyper Sign I := 
   @mk_obj_hyper Sign I (Ty_Ex A Phi) (@WF_Ex Sign I A Phi (ty_wf (b_Prod I A) Phi)).
@@ -886,11 +842,11 @@ Proof.
   - change ((Y:h_ty) :: ctx_pullback b_fst ((syn_ex_obj I A Y : h_ty) :: nil)) 
       with (((Y:h_ty) :: nil) ++ ctx_pullback b_fst ((syn_ex_obj I A Y : h_ty) :: nil)).
     eapply hd_weakening_append.
-    + (* 1. Cél: A kontextus jólformáltsága (wf_ctx) *)
+    +
       apply WFC_cons.
       * eapply wf_pullback; [exact dfst | exact (ty_wf I (syn_ex_obj I A Y))].
       * apply WFC_nil.
-    + (* 2. Cél: A levezetés átemelése (h_derivation) *)
+    +
       exact (h_deriv_of f).
 Defined.
 
@@ -904,9 +860,6 @@ Proof.
   - intros. apply hyper_hom_equiv_pi.
 Defined.
 
-(* ================================================================= *)
-(* 6.5 THE SYNTACTIC BASE CATEGORY (STLC)                            *)
-(* ================================================================= *)
 
 Record hom_base {Sign : Type} (I J : b_ty) : Type := mk_hom_base {
   b_tm_of : b_tm;
@@ -927,21 +880,21 @@ Proof.
     (@base_hom_equiv Sign)
     _ _ _ _ _
   ).
-  - (* Equivalence Relation *)
+  -
     intros A B. split.
     + intros [tf df]. eapply BE_Refl.
     + intros [tf df] [tg dg] H. apply BE_Sym. exact H.
     + intros [tf df] [tg dg] [th dh] H1 H2. eapply BE_Trans; eassumption.
-  - (* Associativity *)
+  -
     intros A B C D [tf df] [tg dg] [th dh]. 
     simpl. eapply BE_Assoc; eassumption.
-  - (* Identity Right *)
+  -
     intros A B [tf df]. 
     simpl. eapply BE_IdR; eassumption.
-  - (* Identity Left *)
+  -
     intros A B [tf df]. 
     simpl. eapply BE_IdL; eassumption.
-  - (* Properness / Congruence *)
+  -
     unfold Proper, respectful.
     intros A B C [tf df] [tf' df'] [tg dg] [tg' dg'] Hf Hg.
     unfold base_hom_equiv in *.
@@ -949,16 +902,13 @@ Proof.
     eapply BE_CongComp; eassumption.
 Defined.
 
-(* ================================================================= *)
-(* 6.6 THE SYNTACTIC BASE CARTESIAN CATEGORY                         *)
-(* ================================================================= *)
 
 Instance Base_CartesianCategory {Sign : Type} : CartesianCategory (@Base_SetoidCategory Sign).
 Proof.
   refine (mk_CartesianCategory (@Base_SetoidCategory Sign)
     b_Unit
     (fun I => mk_hom_base Sign I b_Unit b_unit BT_Unit)
-    _ (* terminal_map_unique law *)
+    _
     b_Prod
     (fun I J K f g => mk_hom_base Sign I (b_Prod J K) (b_pair (b_tm_of I J f) (b_tm_of I K g)) 
                         (BT_Pair (b_deriv_of I J f) (b_deriv_of I K g)))
@@ -975,9 +925,6 @@ Proof.
     simpl. eapply BE_CongPair; eassumption.
 Defined.
 
-(* ================================================================= *)
-(* 6.7 THE SYNTACTIC TWO-SORT CATEGORY                               *)
-(* ================================================================= *)
 
 Instance Base_TwoSortCategory {Sign : Type} : TwoSortCategory (@Base_SetoidCategory Sign).
 Proof.
@@ -986,11 +933,8 @@ Proof.
   exact H.
 Defined.
 
-(* ================================================================= *)
-(* 7. THE SYNTACTIC GOOD FIBRATION & HYPERMODEL                      *)
-(* ================================================================= *)
 
-(* Híd a bázis kategória és a szintaxis között *)
+(** Bridge between the base category and its syntax. *)
 Definition syn_obj {Sign : Type} (I : @obj (@Base_SetoidCategory Sign)) : b_ty := I.
 Definition syn_hom {Sign : Type} {I J : @obj (@Base_SetoidCategory Sign)} (f : hom I J) : 
   @hom_base Sign (syn_obj I) (syn_obj J) := f.
@@ -1034,9 +978,6 @@ Proof.
 Defined.
 
 
-(* ================================================================= *)
-(* 7.5 THE SYNTACTIC STRICT GOOD FIBRATION                           *)
-(* ================================================================= *)
 
 Instance Syntactic_StrictGoodFibration {Sign : Type} : 
   StrictGoodFibration (@Base_SetoidCategory Sign) (@Syntactic_GoodFibration Sign).
@@ -1048,13 +989,7 @@ Proof.
   apply hyper_hom_equiv_pi.
 Defined.
 
-(* ================================================================= *)
-(* 7.6 THE SYNTACTIC EPSILON MODEL (CONSTANTS)                       *)
-(* ================================================================= *)
 
-(* ================================================================= *)
-(* ÚJRA DEFINIÁLT LEMMA A SIMPLE_EXT KATEGÓRIÁKHOZ                   *)
-(* ================================================================= *)
 
 Lemma interp_ty_id : forall {Sign : Type} (I : b_ty), 
   @interp_ty (@Base_SetoidCategory Sign) (@Base_CartesianCategory Sign) (@Base_TwoSortCategory Sign) I = I.
@@ -1069,30 +1004,21 @@ Proof.
   econstructor.
   intros I A s.
   
-  (* 1. Átváltjuk az absztrakt objektumokat (obj) konkrét típusokra (b_ty) a 'syn_obj' segítségével! *)
   change (@hom_base Sign 
            (syn_obj (@interp_ty (@Base_SetoidCategory Sign) (@Base_CartesianCategory Sign) (@Base_TwoSortCategory Sign) I)) 
            (syn_obj (@interp_ty (@Base_SetoidCategory Sign) (@Base_CartesianCategory Sign) (@Base_TwoSortCategory Sign) A))).
   
-  (* 2. Létrehozzuk az egyenlőségeket szigorúan a 'b_ty' típusokon. *)
   assert (EqI : syn_obj (@interp_ty (@Base_SetoidCategory Sign) (@Base_CartesianCategory Sign) (@Base_TwoSortCategory Sign) I) = I).
   { unfold syn_obj. apply (@interp_ty_id Sign). }
   assert (EqA : syn_obj (@interp_ty (@Base_SetoidCategory Sign) (@Base_CartesianCategory Sign) (@Base_TwoSortCategory Sign) A) = A).
   { unfold syn_obj. apply (@interp_ty_id Sign). }
   
-  (* 3. Végrehajtjuk a helyettesítést (mindkét oldal b_ty, így a Coq rewrite azonnal elfogadja): *)
   rewrite EqI.
   rewrite EqA.
   
-  (* 4. A cél most már hajszálpontosan: hom_base Sign I A 
-     Beadjuk az új b_const terminust és az explicit @BT_Const levezetést. *)
   exact (mk_hom_base Sign I A (b_const A s) (@BT_Const Sign I A s)).
 Defined.
-(* ================================================================= *)
-(* THE SYNTACTIC HYPERMODEL & COMPLETENESS                           *)
-(* ================================================================= *)
 
-(* Segédlemma: A terminus interpretációja visszadja önmagát a szintaktikus bázisban. *)
 Lemma interp_tm_erasure : forall {Sign : Type} {I J : b_ty} {f : b_tm} (df : base_typing I f J),
   @b_tm_of Sign 
     (syn_obj (@interp_ty (@Base_SetoidCategory Sign) (@Base_CartesianCategory Sign) (@Base_TwoSortCategory Sign) I)) 
@@ -1102,8 +1028,6 @@ Proof.
   intros S I J f df.
   induction df; simpl; try reflexivity; try (f_equal; eauto).
   
-  (* ÚJ RÉSZ: A BT_Const eset kezelése. 
-     Itt lebontjuk az egyenlőség bizonyításokat, amitől az eq_rect-ek eltűnnek. *)
   - destruct (interp_ty_id A).
     destruct (interp_ty_id I).
     reflexivity.
@@ -1117,49 +1041,41 @@ Proof.
   constructor.
   intros A B f d1 d2.
   cbn.
-  (* Megadjuk a d1 és d2 fákat is, így semmi nem marad a polcon! *)
   eapply base_equiv_cast with (A' := A) (B' := B) (f' := f) (g' := f) (df' := d1) (dg' := d2).
   - symmetry. apply interp_ty_id.
   - symmetry. apply interp_ty_id.
-  - symmetry. apply interp_tm_erasure. (* Ha a te fájlodban az interp_tm_term a neve, használd azt! *)
+  - symmetry. apply interp_tm_erasure.
   - symmetry. apply interp_tm_erasure.
   - apply BE_Refl.
 Defined.
 
-(* A VÉGSŐ HIPER-MODELL PÉLDÁNYOSÍTÁSA *)
 Instance Syntactic_HyperModel {Sign : Type} : 
   Simple_Ext_Soundness.HyperModel (@Syntactic_SignatureModel Sign) (@Base_SyntacticCoherentModel Sign).
 Proof.
   unshelve econstructor.
   
-  - (* 1. Cél: i_atom definíciója *)
+  -
     intros p t I A dt.
     exists (Ty_Atom p t).
     rewrite (@interp_ty_id Sign I).
     
-    (* A sima constructor helyett econstructor kell, hogy a Coq 
-       létrehozzon egy lyukat a hiányzó 'A' típusnak! *)
+    (* [econstructor] leaves the implicit result type as an obligation. *)
     econstructor. 
     
-    (* A dt pontosan a base_typing I t A levezetést tartalmazza, 
-       így azonnal be is tömi az imént létrehozott lyukat: *)
     exact dt.
 
-  - (* 2. Cél: i_atom_pb *)
+  -
     intros p t I J A f df dt.
     apply syn_iso_from_eq.
     simpl. f_equal. 
     
-    (* A rewrite "benyúl" a b_comp mögé, és f-re cseréli a b_tm_of kifejezést: *)
     rewrite interp_tm_erasure.
     
-    (* A csere után a két oldal triviálisan megegyezik: *)
     reflexivity.
     
-  - (* 3. Cél: i_atom_cong_global *)
+  -
     intros p t1 t2 I A d1 d2 HeqEq.
     apply syn_iso_from_equiv. simpl.
-    (* A kongruenciánál a bizonyítások illesztése miatt kell a rewrite: *)
     rewrite (@interp_ty_id Sign I).
     eapply FE_Atom.
     exact HeqEq.
@@ -1173,7 +1089,7 @@ Theorem hyper_completeness_equational {Sign : Type} :
           (BSM : BaseSignatureModel) 
           (CBM : CoherentBaseModel) 
           (GF : GoodFibration C) (SGF : StrictGoodFibration C GF) 
-          (HM : Simple_Ext_Soundness.HyperModel BSM CBM) (* JAVÍTVA: Névtérrel együtt hivatkozunk rá! *)
+          (HM : Simple_Ext_Soundness.HyperModel BSM CBM)
           (wfc : wf_ctx I G) (wf_Phi : WellFormed I Phi),
       @hyper_soundness_inhabited Sign C CC TSC GF SGF BSM CBM HM _ _ _ _ dp wfc wf_Phi ≅
       @hyper_soundness_inhabited Sign C CC TSC GF SGF BSM CBM HM _ _ _ _ dq wfc wf_Phi) ->
@@ -1206,19 +1122,17 @@ Lemma interp_h_ty_id {Sign : Type} :
     (@Base_SetoidCategory Sign) 
     (@Base_CartesianCategory Sign)
     (@Base_TwoSortCategory Sign)
-    (@Syntactic_GoodFibration Sign)         (* 1. GF *)
-    (@Syntactic_StrictGoodFibration Sign)   (* 2. SGF *)
-    (@Syntactic_SignatureModel Sign)        (* 3. BSM *)
-    (@Base_SyntacticCoherentModel Sign)     (* 4. CBM *)
-    (@Syntactic_HyperModel Sign)            (* 5. HM *)
+    (@Syntactic_GoodFibration Sign)
+    (@Syntactic_StrictGoodFibration Sign)
+    (@Syntactic_SignatureModel Sign)
+    (@Base_SyntacticCoherentModel Sign)
+    (@Syntactic_HyperModel Sign)
     I Phi wf_Phi : h_ty) = Phi.
 Proof.
   intros I Phi wf_Phi.
   induction wf_Phi.
   all: simpl.
   all: try reflexivity.
-  (* A f_equal szétbontja a konstruktorokat, az eauto elvégzi az 
-     indukciós lépést (IHwf_Phi), az apply pedig átlát a 'fix' blokkon! *)
   all: try (f_equal; eauto; apply interp_ty_id).
 Qed.
 
@@ -1235,31 +1149,28 @@ Lemma h_ctx_identity {Sign : Type} :
     (@Base_SetoidCategory Sign) 
     (@Base_CartesianCategory Sign)
     (@Base_TwoSortCategory Sign)
-    (@Syntactic_GoodFibration Sign)         (* 1. GF *)
-    (@Syntactic_StrictGoodFibration Sign)   (* 2. SGF *)
-    (@Syntactic_SignatureModel Sign)        (* 3. BSM *)
-    (@Base_SyntacticCoherentModel Sign)     (* 4. CBM *)
-    (@Syntactic_HyperModel Sign)            (* 5. HM *)
+    (@Syntactic_GoodFibration Sign)
+    (@Syntactic_StrictGoodFibration Sign)
+    (@Syntactic_SignatureModel Sign)
+    (@Base_SyntacticCoherentModel Sign)
+    (@Syntactic_HyperModel Sign)
     I G wfc : h_ty) = h_make_ctx_ty G.
 Proof.
   intros I G wfc.
   induction wfc.
   
-  - (* 1. eset: Üres kontextus (nil) *)
+  -
     simpl. 
-    (* Ha itt maradna egy interp_ty a bázis típuson, azt a múltkori trükk elintézi: *)
     repeat rewrite interp_ty_id. 
     unfold syn_obj.
     try reflexivity.
     
-  - (* 2. eset: Bővített kontextus (cons) *)
+  -
     simpl.
-    (* Az f_equal szétbontja a Ty_Prod-ot két külön célra: 
-       a kontextus egyenlőségére és az új típus egyenlőségére *)
     f_equal.
-    + (* Az első célt (A = C) megoldja az Indukciós Hipotézis: *)
+    +
       exact IHwfc.
-    + (* A második célt (B = D) megoldja a másik lemmánk: *)
+    +
       apply interp_h_ty_id.
 Qed.
 
@@ -1278,7 +1189,6 @@ Theorem hyper_completeness_inhabitational {Sign : Type} :
 Proof.
   intros I Phi wf_Phi H_univ.
   
-  (* 1. Universal hypothesis példányosítása a Szintaktikus Modellel *)
   pose proof (@H_univ 
                (@Base_SetoidCategory Sign) 
                (@Base_CartesianCategory Sign)
@@ -1290,22 +1200,16 @@ Proof.
                (@Syntactic_HyperModel Sign)
                (@WFC_nil Sign I) wf_Phi) as [[p_syn dp_syn]].
                
-  (* 2. Cél Típus (Phi) tisztítása a már bizonyított lemmával *)
   pose proof (@interp_h_ty_id Sign I Phi wf_Phi) as Heq_Phi.
   rewrite Heq_Phi in dp_syn.
     
-  (* 3. Forrás Kontextus (nil -> Ty_Unit) tisztítása a másik lemmával *)
   pose proof (@h_ctx_identity Sign I nil (@WFC_nil Sign I)) as Heq_Ctx.
   rewrite Heq_Ctx in dp_syn.
   
-  (* 4. Bázis Típus (I) tisztítása *)
   unfold syn_obj in dp_syn.
   pose proof (@interp_ty_id Sign I) as Heq_I.
   rewrite Heq_I in dp_syn.
   
-  (* 5. Végső levezetés (nil |- Phi) felépítése 
-        A dp_syn típusa most: h_derivation I [Ty_Unit] p_syn Phi 
-        Egy egyszerű Lam-App kombóval a tm_unit-ot bedobjuk neki! *)
   exists (tm_app (tm_lam Ty_Unit p_syn) tm_unit).
   constructor.
   eapply HD_App.
@@ -1329,7 +1233,6 @@ Theorem hyper_completeness_inhabitational_gen {Sign : Type} :
 Proof.
   intros I G Phi wfc wf_Phi H_univ.
   
-  (* 1. Universal hypothesis példányosítása *)
   pose proof (@H_univ 
                (@Base_SetoidCategory Sign) 
                (@Base_CartesianCategory Sign)
@@ -1341,22 +1244,16 @@ Proof.
                (@Syntactic_HyperModel Sign)
                wfc wf_Phi) as [[p_syn dp_syn]].
                
-  (* 2. Cél Típus (Phi) tisztítása *)
-  (* Dobjuk az explicit assert-et! A lemma pontosan definiálja az egyenlőséget 
-     a rejtett coercion-nel együtt, így a rewrite azonnal célba talál! *)
   pose proof (@interp_h_ty_id Sign I Phi wf_Phi) as Heq_Phi.
   rewrite Heq_Phi in dp_syn.
     
-  (* 3. Kontextus (G) tisztítása *)
   pose proof (@h_ctx_identity Sign I G wfc) as Heq_Ctx.
   rewrite Heq_Ctx in dp_syn.
   
-  (* 4. Index (I) tisztítása *)
   unfold syn_obj in dp_syn.
   pose proof (@interp_ty_id Sign I) as Heq_I.
   rewrite Heq_I in dp_syn.
   
-  (* 5. Végső levezetés konstruálása (Változatlan marad) *)
   assert (H_weak : h_derivation I G (h_lift (length G) 0 (tm_lam (h_make_ctx_ty G) p_syn)) (Ty_Arrow (h_make_ctx_ty G) Phi)).
   { apply h_weakening_from_nil. 
     - exact wfc. 

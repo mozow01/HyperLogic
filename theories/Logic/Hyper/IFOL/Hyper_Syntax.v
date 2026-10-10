@@ -1,21 +1,15 @@
-(* theories/Logic/Hyper/IFOL/Hyper_Syntax.v *)
+(** Raw epsilon-free intuitionistic first-order hyperdoctrine syntax. *)
 
 Require Import List.
 Import ListNotations.
 
 Require Import HyperLogic.Logic.Base.IFOL.Base_Syntax.
 
-(* ================================================================= *)
-(* 0. PREDIKÁTUMSZIGNATÚRA                                           *)
-(* ================================================================= *)
 
 Class PredicateSignature (Pred : Type) : Type := {
   pred_dom : Pred -> b_ty
 }.
 
-(* ================================================================= *)
-(* 1. FORMULÁK                                                       *)
-(* ================================================================= *)
 
 Inductive h_ty {Func Pred : Type} : Type :=
   | Ty_Unit   : h_ty
@@ -29,9 +23,6 @@ Inductive h_ty {Func Pred : Type} : Type :=
 
 Definition h_context {Func Pred : Type} := list (@h_ty Func Pred).
 
-(* ================================================================= *)
-(* 2. BIZONYÍTÁSTERMEK                                               *)
-(* ================================================================= *)
 
 Inductive h_tm {Func Pred : Type} : Type :=
   | tm_unit   : h_tm
@@ -50,9 +41,6 @@ Inductive h_tm {Func Pred : Type} : Type :=
   | tm_ex_intro  : @b_tm Func -> h_tm -> h_tm
   | tm_ex_elim   : h_tm -> h_tm -> h_tm.
 
-(* ================================================================= *)
-(* BÁZIS HELYETTESÍTÉS ÉS PULLBACK                                   *)
-(* ================================================================= *)
 
 Definition b_subst_ext {Func : Type} (f : @b_tm Func) : @b_tm Func :=
   b_pair (b_comp f b_fst) b_snd.
@@ -78,9 +66,6 @@ Declare Scope surface_scope.
 Notation "Phi .[ t ]" := (form_subst (b_pair b_id t) Phi) (at level 40, left associativity) : surface_scope.
 Open Scope surface_scope.
 
-(* ================================================================= *)
-(* WELLFORMED FORMULAS (WFF)                                         *)
-(* ================================================================= *)
 
 Inductive WellFormed {Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} (I : b_ty) : @h_ty Func Pred -> Type :=
@@ -93,9 +78,6 @@ Inductive WellFormed {Func Pred : Type}
   | WF_All    : forall A Phi, WellFormed (b_Prod I A) Phi -> WellFormed I (Ty_All A Phi)
   | WF_Ex     : forall A Phi, WellFormed (b_Prod I A) Phi -> WellFormed I (Ty_Ex A Phi).
 
-(* ================================================================= *)
-(* 2.5 FORMULA EKVIVALENCIA                                          *)
-(* ================================================================= *)
 
 Inductive form_equiv {Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} (I : b_ty)
@@ -123,9 +105,6 @@ Inductive form_equiv {Func Pred : Type}
       WellFormed J Phi ->
       form_equiv I (form_subst f Phi) (form_subst g Phi).
 
-(* ================================================================= *)
-(* 2.6 KONTEXTUS EKVIVALENCIA                                        *)
-(* ================================================================= *)
 
 Inductive All_WellFormed {Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} (J : b_ty) : @h_context Func Pred -> Type :=
@@ -142,9 +121,6 @@ Inductive ctx_equiv {Func Pred : Type}
       ctx_equiv I G1 G2 ->
       ctx_equiv I (Phi :: G1) (Psi :: G2).
 
-(* ================================================================= *)
-(* 3. DUAL CONTEXT TYPING                                            *)
-(* ================================================================= *)
 
 Inductive h_typing {Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} (I : b_ty)
@@ -209,9 +185,6 @@ Inductive h_typing {Func Pred : Type}
       h_typing (b_Prod I A) (Phi :: ctx_subst b_fst G) p2 (form_subst b_fst Chi) ->
       h_typing I G (tm_ex_elim p p2) Chi.
 
-(* ================================================================= *)
-(* 4. DUAL CONTEXT DERIVATION (Set-alapú)                            *)
-(* ================================================================= *)
 
 Inductive h_derivation {Func Pred : Type}
   `{FunctionSignature Func} `{PredicateSignature Pred} :

@@ -1,4 +1,3 @@
-(* Logic/Hyper/Simple_Ext/Hyper_Lifting.v *)
 
 
 Require Import Coq.Lists.List.
@@ -10,9 +9,7 @@ Require Import HyperLogic.Logic.Base.Simple_Ext.Base_Syntax.
 Require Import HyperLogic.Logic.Hyper.Simple_Ext.Hyper_Syntax.
 Require Import HyperLogic.Logic.Hyper.Simple_Ext.Hyper_Lemmas.
 
-(* ================================================================= *)
-(* 1. KONTEXTUS ÉS TERM SEGÉDFÜGGVÉNYEK                              *)
-(* ================================================================= *)
+(** Context reification and structural lifting for the legacy syntax. *)
 
 Fixpoint h_make_ctx_ty {Sign : Type} (G : list (@h_ty Sign)) : @h_ty Sign :=
   match G with
@@ -55,9 +52,6 @@ Fixpoint h_insert_at {Sign : Type} (n : nat) (B : @h_ty Sign) (G : h_context) : 
   | S n', nil => nil
   end.
 
-(* ================================================================= *)
-(* 2. REIFY BIZONYÍTÁSOK (Változók és Tuple-k gépelése)              *)
-(* ================================================================= *)
 
 Lemma h_var_typing : forall {Sign : Type} I G1 A G2,
   @wf_ctx Sign I (G1 ++ A :: G2) ->
@@ -92,9 +86,6 @@ Proof.
   simpl. exact wfc.
 Qed.
 
-(* ================================================================= *)
-(* 3. STRUKTURÁLIS LIFTING BIZONYÍTÁSOK                              *)
-(* ================================================================= *)
 
 Lemma h_lift_0 : forall {Sign} (t : @h_tm Sign) k, h_lift 0 k t = t.
 Proof.
@@ -137,9 +128,6 @@ Proof.
   - rewrite IHt1, IHt2; auto.
 Qed.
 
-(* ================================================================= *)
-(* 4. WEAKENING BIZONYÍTÁSOK                                         *)
-(* ================================================================= *)
 
 Lemma wf_ctx_insert : forall {Sign : Type} I n B G,
   @wf_ctx Sign I G -> 
@@ -148,13 +136,13 @@ Lemma wf_ctx_insert : forall {Sign : Type} I n B G,
 Proof.
   intros Sign I n B G wfc wfB. revert n.
   induction wfc; intros n; destruct n; simpl.
-  - (* n = 0, Üres kontextus (nil) *)
+  -
     apply WFC_cons. exact wfB. apply WFC_nil.
-  - (* n = S n', Üres kontextus (nil) *)
+  -
     apply WFC_nil.
-  - (* n = 0, Bővített kontextus (cons) *)
+  -
     apply WFC_cons. exact wfB. apply WFC_cons. exact w. exact wfc.
-  - (* n = S n', Bővített kontextus (cons) *)
+  -
     apply WFC_cons. exact w. apply IHwfc.
 Qed.
 
@@ -165,13 +153,13 @@ Lemma ctx_equiv_insert : forall {Sign : Type} I n B G1 G2,
 Proof.
   intros Sign I n B G1 G2 wfB ceq. revert n.
   induction ceq; intros n; destruct n; simpl.
-  - (* n = 0, nil *)
+  -
     apply CEQ_cons. apply FE_Refl. exact wfB. apply CEQ_nil.
-  - (* n = S n', nil *)
+  -
     apply CEQ_nil.
-  - (* n = 0, cons *)
+  -
     apply CEQ_cons. apply FE_Refl. exact wfB. apply CEQ_cons. exact f. exact ceq.
-  - (* n = S n', cons *)
+  -
     apply CEQ_cons. exact f. apply IHceq.
 Qed.
 
@@ -192,57 +180,54 @@ Proof.
   revert n B wfB.
   induction Hder; intros n0 B0 wfB0; simpl.
   
-  - (* HD_Var0 *)
+  -
     destruct n0; simpl.
     + apply HD_VarS; auto. apply HD_Var0; auto.
     + apply HD_Var0; auto. apply wf_ctx_insert; auto.
 
-  - (* HD_VarS *)
+  -
     destruct n0; simpl.
     + apply HD_VarS; auto. apply HD_VarS; auto.
     + destruct (n0 <=? i) eqn:Hle.
       * apply HD_VarS; auto.
-        (* Kényszerítjük a Sign paramétert a replace-ben! *)
         replace (tm_var (S i)) with (@h_lift Sign 1 n0 (tm_var i)).
         -- apply IHHder; auto.
         -- simpl. rewrite Hle. reflexivity.
       * apply HD_VarS; auto.
-        (* Itt is kikényszerítjük a Sign-t! *)
         replace (tm_var i) with (@h_lift Sign 1 n0 (tm_var i)).
         -- apply IHHder; auto.
         -- simpl. rewrite Hle. reflexivity.
-  - (* HD_Conv *) eapply HD_Conv; eauto.
-  - (* HD_Unit *) apply HD_Unit. apply wf_ctx_insert; auto.
-  - (* HD_Lam *) apply HD_Lam. apply (IHHder (S n0) B0 wfB0).
-  - (* HD_App *) eapply HD_App; eauto.
-  - (* HD_Pair *) apply HD_Pair; eauto.
-  - (* HD_Fst *) eapply HD_Fst; eauto.
-  - (* HD_Snd *) eapply HD_Snd; eauto.
-  - (* HD_Inl *) apply HD_Inl; eauto.
-  - (* HD_Inr *) apply HD_Inr; eauto.
-  - (* HD_Case *) eapply HD_Case.
+  -   eapply HD_Conv; eauto.
+  -   apply HD_Unit. apply wf_ctx_insert; auto.
+  -   apply HD_Lam. apply (IHHder (S n0) B0 wfB0).
+  -   eapply HD_App; eauto.
+  -   apply HD_Pair; eauto.
+  -   eapply HD_Fst; eauto.
+  -   eapply HD_Snd; eauto.
+  -   apply HD_Inl; eauto.
+  -   apply HD_Inr; eauto.
+  -   eapply HD_Case.
     + apply (IHHder1 n0 B0 wfB0).
     + apply (IHHder2 (S n0) B0 wfB0).
     + apply (IHHder3 (S n0) B0 wfB0).
-  - (* HD_Absurd *) apply HD_Absurd; eauto.
+  -   apply HD_Absurd; eauto.
   
-  (* Hyper Szabályok *)
-  - (* HD_All_Intro *)
+  -
     apply HD_All_Intro.
     + apply wf_ctx_insert; auto.
     + rewrite ctx_pullback_insert.
       apply (IHHder n0 (form_pullback b_fst B0)).
       eapply wf_pullback; eauto. apply BT_Fst.
-  - (* HD_All_Elim *)
+  -
     eapply HD_All_Elim; eauto.
-  - (* HD_Ex_Intro *)
+  -
     eapply HD_Ex_Intro; eauto.
-  - (* HD_Ctx_Conv *)
+  -
     eapply HD_Ctx_Conv.
     + apply (IHHder n0 B0 wfB0).
     + apply ctx_equiv_insert; auto.
     + apply wf_ctx_insert; auto.
-  - (* HD_Ex_Elim *)
+  -
     eapply HD_Ex_Elim.
     + exact w.
     + apply (IHHder1 n0 B0 wfB0).
@@ -258,11 +243,11 @@ Theorem h_weakening_from_nil : forall {Sign : Type} (I : b_ty) (G : h_context) (
 Proof.
   intros Sign I G p Phi wfc Hnil.
   induction wfc.
-  - (* nil ág *)
+  -
     simpl. rewrite h_lift_0. exact Hnil.
-  - (* cons ág *)
+  -
     simpl.
-    (* Itt a varázslat: Phi0-t kell beszúrni a 0. pozícióba, nem Phi-t! *)
+    (* Insert [Phi0], the actual bound formula, at position zero. *)
     apply (@h_weakening_general Sign I G _ Phi Phi0 0) in IHwfc.
     + rewrite h_lift_add in IHwfc.
       replace (1 + length G) with (S (length G)) in IHwfc by lia.
